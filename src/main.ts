@@ -1,11 +1,28 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin } from 'obsidian';
 import { DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
+import { addIcons } from './icons';
+import { WordPressPublishView, WordPressPublishViewType } from './wp-publish-view';
 
 export default class WordpressPlugin extends Plugin {
+
 	settings: WordpressPluginSettings;
 
 	async onload() {
 		await this.loadSettings();
+
+    this.registerView(
+      WordPressPublishViewType,
+      leaf => new WordPressPublishView(leaf, this.settings)
+    );
+
+    addIcons();
+
+    if (this.settings.showRibbonIcon) {
+      this.addRibbonIcon('wp-logo', 'WordPress Publish', () => {
+        this.toggleWordPressPublishView();
+      });
+    }
+
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
@@ -80,6 +97,22 @@ export default class WordpressPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
+  private async toggleWordPressPublishView(): Promise<void> {
+    const existing = this.app.workspace.getLeavesOfType(WordPressPublishViewType);
+    if (existing.length) {
+      this.app.workspace.revealLeaf(existing[0]);
+      return;
+    }
+
+    await this.app.workspace.getRightLeaf(false).setViewState({
+      type: WordPressPublishViewType,
+      active: true,
+    });
+
+    this.app.workspace.revealLeaf(this.app.workspace.getLeavesOfType(WordPressPublishViewType)[0]);
+  }
+
 }
 
 class SampleModal extends Modal {
