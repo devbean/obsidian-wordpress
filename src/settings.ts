@@ -2,14 +2,30 @@ import { App, PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 
 export interface WordpressPluginSettings {
-  showRibbonIcon: boolean;
+  /**
+   * Endpoint.
+   */
+  endpoint: string;
 
-	mySetting: string;
+  /**
+   * WordPress user name.
+   */
+  userName: string;
+
+  /**
+   * Password of WordPress user.
+   */
+  password: string;
+
+  showRibbonIcon: boolean;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
-  showRibbonIcon: true,
-	mySetting: 'default'
+  endpoint: '',
+  userName: '',
+  password: '',
+
+  showRibbonIcon: true
 }
 
 export class WordpressSettingTab extends PluginSettingTab {
@@ -28,36 +44,36 @@ export class WordpressSettingTab extends PluginSettingTab {
 		containerEl.createEl('h2', {text: 'Settings for WordPress Publish plugin'});
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
+			.setName('WordPress URL')
+			.setDesc('Full path of xmlrpc.php, for example, http://example.com/wordpress/xmlrpc.php')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('http://example.com/wordpress/xmlrpc.php')
+				.setValue(this.plugin.settings.endpoint)
 				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
+					console.log('Endpoint: ' + value);
+					this.plugin.settings.endpoint = value;
 					await this.plugin.saveSettings();
 				}));
     new Setting(containerEl)
-      .setName('Setting #1')
-      .setDesc('It\'s a secret')
+      .setName('WordPress User Name')
+      .setDesc('User name of WordPress')
       .addText(text => text
-        .setPlaceholder('Enter your secret')
-        .setValue(this.plugin.settings.mySetting)
+        .setPlaceholder('User name')
+        .setValue(this.plugin.settings.userName)
         .onChange(async (value) => {
-          console.log('Secret: ' + value);
-          this.plugin.settings.mySetting = value;
+          console.log('User name: ' + value);
+          this.plugin.settings.userName = value;
           await this.plugin.saveSettings();
         }));
     new Setting(containerEl)
-      .setName('Setting #1')
-      .setDesc('It\'s a secret')
+      .setName('WordPress Password')
+      .setDesc('Password of WordPress')
       .addText(text => text
-        .setPlaceholder('Enter your secret')
-        .setValue(this.plugin.settings.mySetting)
+        .setPlaceholder('Password')
+        .setValue(this.plugin.settings.password)
         .onChange(async (value) => {
-          console.log('Secret: ' + value);
-          this.plugin.settings.mySetting = value;
+          console.log('Password: ' + value);
+          this.plugin.settings.password = value;
           await this.plugin.saveSettings();
         }));
 	}
