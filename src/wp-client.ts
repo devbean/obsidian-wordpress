@@ -1,8 +1,9 @@
 import { WordpressPluginSettings } from './settings';
 import { Client, createClient, createSecureClient } from 'xmlrpc';
+import { WordPressPost } from './wp-types';
 
 export interface WordPressClient {
-  publish(): Promise<boolean>;
+  newPost(post: WordPressPost): Promise<boolean>;
 }
 
 export function createWordPressClient(settings: WordpressPluginSettings, type: 'xmlrpc'): WordPressClient {
@@ -36,14 +37,25 @@ class WpXmlRpcClient implements WordPressClient {
         path: `${url.pathname}xmlrpc.php`
       });
     }
-    this.client.methodCall('demo.sayHello', [ this.settings.userName, this.settings.password ],  (error, value) => {
-      // Results of the method response
-      console.log('Method response for \'wp.getPost\': ', value, error);
-    });
   }
 
-  publish(): Promise<boolean> {
-    return Promise.resolve(false);
+  newPost(post: WordPressPost): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.client.methodCall('wp.newPost', [
+        0,
+        this.settings.userName,
+        this.settings.password,
+        post
+      ], (error, value) => {
+        if (error) {
+          reject(error);
+        } else {
+          // Results of the method response
+          console.log('Method response for \'wp.getPost\': ', value, error);
+          resolve(true);
+        }
+      });
+    });
   }
 
 }

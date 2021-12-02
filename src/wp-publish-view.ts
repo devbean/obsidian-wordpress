@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from 'obsidian';
+import { ItemView, Notice, WorkspaceLeaf } from 'obsidian';
 import { WordpressPluginSettings } from './settings';
 import { createWordPressClient } from './wp-client';
 
@@ -48,6 +48,17 @@ export class WordPressPublishView extends ItemView {
     button.onClickEvent(() => {
       console.log(this.settings);
       const client = createWordPressClient(this.settings, 'xmlrpc');
+      client.newPost({
+        post_type: 'post',
+        post_status: 'draft',
+        post_title: 'Hello, Obsidian!',
+        post_content: 'This is a new post from Obsidian!'
+      })
+        .then(success => {
+          if (success) {
+            new Notice('Post published successfully!');
+          }
+        });
     });
     // book.createEl('small', { text: 'Sönke Ahrens', cls: 'book__author' });
 
