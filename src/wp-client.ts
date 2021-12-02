@@ -1,6 +1,5 @@
 import { WordpressPluginSettings } from './settings';
 import { Client, createClient, createSecureClient } from 'xmlrpc';
-import { XmlRpcClient } from '@foxglove/xmlrpc';
 
 export interface WordPressClient {
   publish(): Promise<boolean>;
@@ -37,16 +36,9 @@ class WpXmlRpcClient implements WordPressClient {
         path: `${url.pathname}xmlrpc.php`
       });
     }
-    // this.client.methodCall('wp.getUsersBlogs', [ this.settings.userName, this.settings.password ],  (error, value) => {
-    //   // Results of the method response
-    //   console.log('Method response for \'wp.getPost\': ', value, error);
-    // });
-
-    const c = new XmlRpcClient(this.settings.endpoint);
-    c.methodCall('wp.getUsersBlogs', [
-      this.settings.userName, this.settings.password
-    ]).then(data => {
-      console.log('>>>', data);
+    this.client.methodCall('demo.sayHello', [ this.settings.userName, this.settings.password ],  (error, value) => {
+      // Results of the method response
+      console.log('Method response for \'wp.getPost\': ', value, error);
     });
   }
 

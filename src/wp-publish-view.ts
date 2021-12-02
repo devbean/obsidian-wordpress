@@ -46,6 +46,7 @@ export class WordPressPublishView extends ItemView {
     const button = container.createEl('div', { cls: 'book' });
     button.createEl('div', { text: 'Publish', cls: 'action-button' });
     button.onClickEvent(() => {
+      console.log(this.settings);
       const client = createWordPressClient(this.settings, 'xmlrpc');
     });
     // book.createEl('small', { text: 'Sönke Ahrens', cls: 'book__author' });
