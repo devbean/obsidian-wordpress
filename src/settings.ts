@@ -50,7 +50,7 @@ export class WordpressSettingTab extends PluginSettingTab {
 				.setPlaceholder('https://example.com/wordpress/xmlrpc.php')
 				.setValue(this.plugin.settings.endpoint)
 				.onChange(async (value) => {
-					console.debug('Endpoint: ' + value);
+					console.log('Endpoint: ' + value);
           try {
             new URL(value);
             this.plugin.settings.endpoint = value;

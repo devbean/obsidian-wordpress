@@ -2,8 +2,18 @@ import { WordpressPluginSettings } from './settings';
 import { Client, createClient, createSecureClient } from 'xmlrpc';
 import { WordPressPost } from './wp-types';
 
+export enum WordPressClientReturnCode {
+  OK,
+  Error
+}
+
+export interface WordPressClientResult {
+  code: WordPressClientReturnCode;
+  data: any; // eslint-disable-line
+}
+
 export interface WordPressClient {
-  newPost(post: WordPressPost): Promise<boolean>;
+  newPost(post: WordPressPost): Promise<WordPressClientResult>;
 }
 
 export function createWordPressClient(settings: WordpressPluginSettings, type: 'xmlrpc'): WordPressClient {
@@ -23,7 +33,7 @@ class WpXmlRpcClient implements WordPressClient {
     private readonly settings: WordpressPluginSettings
   ) {
     const url = new URL(settings.endpoint);
-    console.debug(url);
+    console.log(url);
     if (url.protocol === 'https:') {
       this.client = createSecureClient({
         host: url.hostname,
@@ -39,20 +49,22 @@ class WpXmlRpcClient implements WordPressClient {
     }
   }
 
-  newPost(post: WordPressPost): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
+  newPost(post: WordPressPost): Promise<WordPressClientResult> {
+    return new Promise<WordPressClientResult>((resolve, reject) => {
       this.client.methodCall('wp.newPost', [
         0,
         this.settings.userName,
         this.settings.password,
         post
       ], (error, value) => {
+        console.log('Method response for \'wp.newPost\': ', value, error);
         if (error) {
           reject(error);
         } else {
-          // Results of the method response
-          console.log('Method response for \'wp.getPost\': ', value, error);
-          resolve(true);
+          resolve({
+            code: WordPressClientReturnCode.OK,
+            data: value
+          });
         }
       });
     });

@@ -8,6 +8,8 @@ export default class WordpressPlugin extends Plugin {
 	settings: WordpressPluginSettings;
 
 	async onload() {
+    console.log('loading obsidian-wordpress plugin');
+
 		await this.loadSettings();
 
     this.registerView(

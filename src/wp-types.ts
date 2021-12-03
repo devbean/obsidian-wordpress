@@ -5,7 +5,7 @@ export interface WordPressPost {
   post_content: string;
 }
 
-export function createWordPressPost(post: WordPressPost): WordPressPost {
+export function createWordPressPost(post: Partial<WordPressPost>): WordPressPost {
   return {
     post_type: post.post_type ?? 'post',
     post_status: post.post_status ?? 'draft',
