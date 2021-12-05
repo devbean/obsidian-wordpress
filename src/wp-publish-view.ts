@@ -1,4 +1,4 @@
-import { ButtonComponent, ItemView, Notice, WorkspaceLeaf } from 'obsidian';
+import { ButtonComponent, Editor, ItemView, MarkdownView, Notice, TFile, WorkspaceLeaf } from 'obsidian';
 import { WordpressPluginSettings } from './settings';
 import { createWordPressClient, WordPressClientReturnCode } from './wp-client';
 import { createWordPressPost } from './wp-types';
@@ -49,10 +49,20 @@ export class WordPressPublishView extends ItemView {
       .setButtonText('Publish')
       .setClass('mod-cta')
       .onClick(() => {
+        let editor: Editor;
+        const leaf = this.app.workspace.getMostRecentLeaf();
+        if (leaf.view instanceof MarkdownView) {
+          editor = leaf.view.editor;
+          console.log(editor.getValue());
+        } else {
+          console.warn('Advanced Tables: Unable to determine current editor.');
+          return;
+        }
+        const file = this.app.workspace.getActiveFile();
         const client = createWordPressClient(this.settings, 'xmlrpc');
         client.newPost(createWordPressPost({
-          post_title: 'Hello, Obsidian!',
-          post_content: 'This is a new post from Obsidian!'
+          post_title: file?.basename ?? 'A Post from Obsidian!',
+          post_content: editor.getValue() ?? '',
         }))
           .then(result => {
             new Notice('Post published successfully!');
