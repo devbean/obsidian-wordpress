@@ -25,7 +25,7 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   userName: '',
   password: '',
 
-  showRibbonIcon: true
+  showRibbonIcon: false
 }
 
 export class WordpressSettingTab extends PluginSettingTab {
@@ -81,5 +81,21 @@ export class WordpressSettingTab extends PluginSettingTab {
           this.plugin.settings.password = value;
           await this.plugin.saveSettings();
         }));
+
+    new Setting(containerEl)
+      .setName('Show icon in sidebar')
+      .setDesc(`
+If enabled, a button which opens publish panel will be added to the Obsidian sidebar.
+Changes only take effect on reload.
+      `)
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showRibbonIcon)
+          .onChange(async (value) => {
+            this.plugin.settings.showRibbonIcon = value;
+            await this.plugin.saveSettings();
+            // this.display();
+          }),
+      );
 	}
 }

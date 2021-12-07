@@ -28,7 +28,7 @@ export default class WordpressPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'publish',
-			name: 'Publish current post',
+			name: 'Publish current document',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
         const client = createWordPressClient(this.settings, this.app.workspace, 'xmlrpc');
         client.newPost().then();
