@@ -45,9 +45,9 @@ export class WordpressSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('WordPress URL')
-			.setDesc('Full path of xmlrpc.php, for example, https://example.com/wordpress/xmlrpc.php')
+			.setDesc('Full path of installed WordPress, for example, https://example.com/wordpress')
 			.addText(text => text
-				.setPlaceholder('https://example.com/wordpress/xmlrpc.php')
+				.setPlaceholder('https://example.com/wordpress')
 				.setValue(this.plugin.settings.endpoint)
 				.onChange(async (value) => {
 					console.log('Endpoint: ' + value);

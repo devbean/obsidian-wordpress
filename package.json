@@ -1,15 +1,21 @@
 {
 	"name": "obsidian-wordpress-plugin",
-	"version": "0.12.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"version": "0.0.0",
+	"description": "A plugin for publishing Obsidian documents to WordPress",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
-		"build": "node esbuild.config.mjs production"
+		"build": "node esbuild.config.mjs production",
+		"release": "standard-version"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "MIT",
+	"keywords": [
+		"wp",
+		"wordpress",
+		"obsidian",
+		"plugin"
+	],
+	"author": "devbean",
+	"license": "GPLv3",
 	"devDependencies": {
 		"@types/marked": "^4.0.1",
 		"@types/node": "^16.11.6",
@@ -21,6 +27,7 @@
 		"esbuild": "0.13.12",
 		"marked": "^4.0.6",
 		"obsidian": "^0.12.17",
+		"standard-version": "^9.3.2",
 		"tslib": "2.3.1",
 		"typescript": "4.4.4",
 		"wpapi": "^1.2.2",
