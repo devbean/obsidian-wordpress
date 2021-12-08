@@ -15,7 +15,7 @@ export default class WordpressPlugin extends Plugin {
 
     this.registerView(
       WordPressPublishViewType,
-      leaf => new WordPressPublishView(leaf, this.settings)
+      leaf => new WordPressPublishView(leaf, this)
     );
 
     addIcons();
@@ -30,7 +30,7 @@ export default class WordpressPlugin extends Plugin {
 			id: 'publish',
 			name: 'Publish current document',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-        const client = createWordPressClient(this.settings, this.app.workspace, 'xmlrpc');
+        const client = createWordPressClient(this.app, this, 'xmlrpc');
         client.newPost().then();
 			}
 		});

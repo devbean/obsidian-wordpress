@@ -10,30 +10,32 @@ export interface WordpressPluginSettings {
   /**
    * WordPress user name.
    */
-  userName: string;
+  userName?: string;
 
   /**
-   * Password of WordPress user.
+   * Save user name to local data.
    */
-  password: string;
+  saveUserName: boolean;
 
+  /**
+   * Show plugin icon in side.
+   */
   showRibbonIcon: boolean;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   endpoint: '',
-  userName: '',
-  password: '',
-
+  saveUserName: false,
   showRibbonIcon: false
 }
 
 export class WordpressSettingTab extends PluginSettingTab {
-	plugin: WordpressPlugin;
 
-	constructor(app: App, plugin: WordpressPlugin) {
+	constructor(
+    app: App,
+    private readonly plugin: WordpressPlugin
+  ) {
 		super(app, plugin);
-		this.plugin = plugin;
 	}
 
 	display(): void {
@@ -50,51 +52,49 @@ export class WordpressSettingTab extends PluginSettingTab {
 				.setPlaceholder('https://example.com/wordpress')
 				.setValue(this.plugin.settings.endpoint)
 				.onChange(async (value) => {
-					console.log('Endpoint: ' + value);
-          try {
-            new URL(value);
-            this.plugin.settings.endpoint = value;
-            await this.plugin.saveSettings();
-          } catch (e) {
-            console.error(e);
-          }
+          this.plugin.settings.endpoint = value;
+          await this.plugin.saveSettings();
+          this.display();
 				}));
     new Setting(containerEl)
-      .setName('WordPress User Name')
-      .setDesc('User name of WordPress')
-      .addText(text => text
-        .setPlaceholder('User name')
-        .setValue(this.plugin.settings.userName)
-        .onChange(async (value) => {
-          console.log('User name: ' + value);
-          this.plugin.settings.userName = value;
-          await this.plugin.saveSettings();
-        }));
-    new Setting(containerEl)
-      .setName('WordPress Password')
-      .setDesc('Password of WordPress')
-      .addText(text => text
-        .setPlaceholder('Password')
-        .setValue(this.plugin.settings.password)
-        .onChange(async (value) => {
-          console.log('Password: ' + value);
-          this.plugin.settings.password = value;
-          await this.plugin.saveSettings();
-        }));
-
+      .setName('Save User Name')
+      .setDesc(`If enabled, the WordPress user name you typed will be saved in local data.
+This might be user name disclosure in synchronize services.`)
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.saveUserName)
+          .onChange(async (value) => {
+            this.plugin.settings.saveUserName = value;
+            await this.plugin.saveSettings();
+            this.display();
+          }),
+      );
+    if (this.plugin.settings.saveUserName) {
+      new Setting(containerEl)
+        .setName('WordPress User Name')
+        .setDesc('User name of WordPress')
+        .addText(text => text
+          .setPlaceholder('User name')
+          .setValue(this.plugin.settings.userName)
+          .onChange(async (value) => {
+            this.plugin.settings.userName = value;
+            await this.plugin.saveSettings();
+            this.display();
+          }));
+    } else {
+      delete this.plugin.settings.userName;
+    }
     new Setting(containerEl)
       .setName('Show icon in sidebar')
-      .setDesc(`
-If enabled, a button which opens publish panel will be added to the Obsidian sidebar.
-Changes only take effect on reload.
-      `)
+      .setDesc(`If enabled, a button which opens publish panel will be added to the Obsidian sidebar.
+Changes only take effect on reload.`)
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.showRibbonIcon)
           .onChange(async (value) => {
             this.plugin.settings.showRibbonIcon = value;
             await this.plugin.saveSettings();
-            // this.display();
+            this.display();
           }),
       );
 	}

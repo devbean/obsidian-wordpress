@@ -1,13 +1,16 @@
 {
-	"name": "obsidian-wordpress-plugin",
+	"name": "obsidian-wordpress",
 	"version": "0.0.0",
-	"description": "A plugin for publishing Obsidian documents to WordPress",
+	"description": "A plugin for publishing Obsidian documents to WordPress.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "node esbuild.config.mjs production",
 		"release": "standard-version"
-	},
+  },
+  "standard-version": {
+    "t": ""
+  },
 	"keywords": [
 		"wp",
 		"wordpress",

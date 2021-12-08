@@ -1,6 +1,6 @@
-import { WordpressPluginSettings } from './settings';
 import { Client, createClient, createSecureClient } from 'xmlrpc';
-import { MarkdownView, Notice, Workspace } from 'obsidian';
+import { App, MarkdownView, Modal, Notice, Setting } from 'obsidian';
+import WordpressPlugin from './main';
 import { marked } from 'marked';
 
 export enum WordPressClientReturnCode {
@@ -18,13 +18,13 @@ export interface WordPressClient {
 }
 
 export function createWordPressClient(
-  settings: WordpressPluginSettings,
-  workspace: Workspace,
+  app: App,
+  plugin: WordpressPlugin,
   type: 'xmlrpc'
 ): WordPressClient {
   switch (type) {
     case 'xmlrpc':
-      return new WpXmlRpcClient(settings, workspace);
+      return new WpXmlRpcClient(app, plugin);
     default:
       return null;
   }
@@ -35,10 +35,10 @@ class WpXmlRpcClient implements WordPressClient {
   private readonly client: Client;
 
   constructor(
-    private readonly settings: WordpressPluginSettings,
-    private readonly workspace: Workspace
+    private readonly app: App,
+    private readonly plugin: WordpressPlugin
   ) {
-    const url = new URL(settings.endpoint);
+    const url = new URL(plugin.settings.endpoint);
     console.log(url);
     if (url.protocol === 'https:') {
       this.client = createSecureClient({
@@ -56,40 +56,95 @@ class WpXmlRpcClient implements WordPressClient {
   }
 
   newPost(): Promise<WordPressClientResult> {
-    const leaf = this.workspace.getMostRecentLeaf();
-    if (leaf.view instanceof MarkdownView) {
-      const title = this.workspace.getActiveFile()?.basename;
-      const content = leaf.view.getViewData();
-      return new Promise<WordPressClientResult>((resolve, reject) => {
-        this.client.methodCall('wp.newPost', [
-          0,
-          this.settings.userName,
-          this.settings.password,
-          {
-            post_type: 'post',
-            post_status: 'draft',
-            post_title: title ?? 'A post from Obsidian!',
-            post_content: marked.parse(content) ?? '',
-          }
-        ], (error: Error, value) => {
-          console.log('Method response for \'wp.newPost\': ', value, error);
-          if (error) {
-            new Notice(`[Error] ${error.message}`);
-            reject(error);
-          } else {
-            new Notice('Post published successfully!');
-            resolve({
-              code: WordPressClientReturnCode.OK,
-              data: value
+    return new Promise((resolve, reject) => {
+      const { workspace } = this.app;
+      const activeView = workspace.getActiveViewOfType(MarkdownView);
+      if (activeView) {
+        new WpLoginModal(
+          this.app,
+          this.plugin,
+          (userName, password) => {
+            const title = activeView.file.basename;
+            const content = activeView.getViewData();
+            this.client.methodCall('wp.newPost', [
+              0,
+              userName,
+              password,
+              {
+                post_type: 'post',
+                post_status: 'draft',
+                post_title: title ?? 'A post from Obsidian!',
+                post_content: marked.parse(content) ?? '',
+              }
+            ], (error: Error, value) => {
+              console.log('Method response for \'wp.newPost\': ', value, error);
+              if (error) {
+                new Notice(`[Error] ${error.message}`);
+                reject(error);
+              } else {
+                new Notice('Post published successfully!');
+                resolve({
+                  code: WordPressClientReturnCode.OK,
+                  data: value
+                });
+              }
             });
           }
-        });
-      });
-    } else {
-      const error = 'There is no editor found. Nothing will be published.';
-      console.warn(error);
-      return Promise.reject(new Error(error));
-    }
+        ).open();
+      } else {
+        const error = 'There is no editor found. Nothing will be published.';
+        console.warn(error);
+        reject(new Error(error));
+      }
+    });
   }
 
+}
+
+class WpLoginModal extends Modal {
+
+  constructor(
+    app: App,
+    private readonly plugin: WordpressPlugin,
+    private readonly onSubmit: (userName: string, password: string) => void
+  ) {
+    super(app);
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+
+    contentEl.createEl('h1', { text: 'WordPress Login' });
+
+    let password = '';
+    new Setting(contentEl)
+      .setName('User Name')
+      .addText(text => text
+        .setValue(this.plugin.settings.userName ?? '')
+        .onChange(async (value) => {
+          if (this.plugin.settings.saveUserName) {
+            this.plugin.settings.userName = value;
+            await this.plugin.saveSettings();
+          }
+        }));
+    new Setting(contentEl)
+      .setName('Password')
+      .addText(text => text
+        .onChange(async (value) => {
+          password = value;
+        }));
+    new Setting(contentEl)
+      .addButton(button => button
+        .setButtonText('Publish')
+        .setClass('mod-cta')
+        .onClick(() => {
+          this.onSubmit(this.plugin.settings.userName, password);
+        })
+      );
+  }
+
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
 }

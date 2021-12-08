@@ -1,5 +1,5 @@
 import { ButtonComponent, ItemView, WorkspaceLeaf } from 'obsidian';
-import { WordpressPluginSettings } from './settings';
+import WordpressPlugin from './main';
 import { createWordPressClient } from './wp-client';
 
 export const WordPressPublishViewType = 'wp-publish-options';
@@ -8,10 +8,9 @@ export class WordPressPublishView extends ItemView {
 
   constructor(
     leaf: WorkspaceLeaf,
-    private readonly settings: WordpressPluginSettings
+    private readonly plugin: WordpressPlugin
   ) {
     super(leaf);
-    this.settings = settings;
   }
 
   getDisplayText(): string {
@@ -48,7 +47,7 @@ export class WordPressPublishView extends ItemView {
       .setButtonText('Publish')
       .setClass('mod-cta')
       .onClick(() => {
-        const client = createWordPressClient(this.settings, this.app.workspace, 'xmlrpc');
+        const client = createWordPressClient(this.app, this.plugin, 'xmlrpc');
         client.newPost().then();
       });
 
