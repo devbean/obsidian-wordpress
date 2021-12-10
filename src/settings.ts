@@ -1,7 +1,18 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 
+export const enum ApiType {
+  XML_RPC = 'xml-rpc',
+  RestAPI_Jetpack = 'restapi-jetpack'
+}
+
 export interface WordpressPluginSettings {
+
+  /**
+   * API type.
+   */
+  apiType: ApiType;
+
   /**
    * Endpoint.
    */
@@ -24,6 +35,7 @@ export interface WordpressPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
+  apiType: ApiType.XML_RPC,
   endpoint: '',
   saveUserName: false,
   showRibbonIcon: false
@@ -57,32 +69,50 @@ export class WordpressSettingTab extends PluginSettingTab {
           this.display();
 				}));
     new Setting(containerEl)
-      .setName('Save User Name')
-      .setDesc(`If enabled, the WordPress user name you typed will be saved in local data.
-This might be user name disclosure in synchronize services.`)
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.saveUserName)
-          .onChange(async (value) => {
-            this.plugin.settings.saveUserName = value;
+      .setName('API Type')
+      .setDesc(`Select which API you want to use.
+- XML-RPC: Enabled by default but some host may disable it
+- RESTful API with Jetpack`)
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOption(ApiType.XML_RPC, 'XML-RPC')
+          .addOption(ApiType.RestAPI_Jetpack, 'RESTful API with Jetpack')
+          .setValue(this.plugin.settings.apiType)
+          .onChange(async (value: ApiType) => {
+            this.plugin.settings.apiType = value;
             await this.plugin.saveSettings();
             this.display();
-          }),
-      );
-    if (this.plugin.settings.saveUserName) {
+          });
+      });
+    if (this.plugin.settings.apiType === ApiType.XML_RPC) {
       new Setting(containerEl)
-        .setName('WordPress User Name')
-        .setDesc('User name of WordPress')
-        .addText(text => text
-          .setPlaceholder('User name')
-          .setValue(this.plugin.settings.userName)
-          .onChange(async (value) => {
-            this.plugin.settings.userName = value;
-            await this.plugin.saveSettings();
-            this.display();
-          }));
-    } else {
-      delete this.plugin.settings.userName;
+        .setName('Save User Name')
+        .setDesc(`If enabled, the WordPress user name you typed will be saved in local data.
+This might be user name disclosure in synchronize services.`)
+        .addToggle((toggle) =>
+          toggle
+            .setValue(this.plugin.settings.saveUserName)
+            .onChange(async (value) => {
+              this.plugin.settings.saveUserName = value;
+              await this.plugin.saveSettings();
+              this.display();
+            }),
+        );
+      if (this.plugin.settings.saveUserName) {
+        new Setting(containerEl)
+          .setName('WordPress User Name')
+          .setDesc('User name of WordPress')
+          .addText(text => text
+            .setPlaceholder('User name')
+            .setValue(this.plugin.settings.userName)
+            .onChange(async (value) => {
+              this.plugin.settings.userName = value;
+              await this.plugin.saveSettings();
+              this.display();
+            }));
+      } else {
+        delete this.plugin.settings.userName;
+      }
     }
     new Setting(containerEl)
       .setName('Show icon in sidebar')

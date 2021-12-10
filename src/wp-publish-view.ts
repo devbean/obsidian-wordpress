@@ -36,8 +36,10 @@ export class WordPressPublishView extends ItemView {
       .setButtonText('Publish')
       .setClass('mod-cta')
       .onClick(() => {
-        const client = createWordPressClient(this.app, this.plugin, 'xmlrpc');
-        client.newPost().then();
+        const client = createWordPressClient(this.app, this.plugin);
+        if (client) {
+          client.newPost().then();
+        }
       });
   }
 

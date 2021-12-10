@@ -30,8 +30,10 @@ export default class WordpressPlugin extends Plugin {
 			id: 'publish',
 			name: 'Publish current document',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-        const client = createWordPressClient(this.app, this, 'xmlrpc');
-        client.newPost().then();
+        const client = createWordPressClient(this.app, this);
+        if (client) {
+          client.newPost().then();
+        }
 			}
 		});
 
