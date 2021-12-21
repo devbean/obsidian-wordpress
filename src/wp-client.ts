@@ -63,32 +63,38 @@ class WpXmlRpcClient implements WordPressClient {
         new WpLoginModal(
           this.app,
           this.plugin,
-          (userName, password) => {
-            const title = activeView.file.basename;
-            const content = activeView.getViewData();
-            this.client.methodCall('wp.newPost', [
-              0,
-              userName,
-              password,
-              {
-                post_type: 'post',
-                post_status: 'draft',
-                post_title: title ?? 'A post from Obsidian!',
-                post_content: marked.parse(content) ?? '',
-              }
-            ], (error: Error, value) => {
-              console.log('Method response for \'wp.newPost\': ', value, error);
-              if (error) {
-                new Notice(`[Error] ${error.message}`);
-                reject(error);
-              } else {
-                new Notice('Post published successfully!');
-                resolve({
-                  code: WordPressClientReturnCode.OK,
-                  data: value
+          (userName, password, modal) => {
+            this.app.vault.read(activeView.file)
+              .then(content => {
+                const title = activeView.file.basename;
+                this.client.methodCall('wp.newPost', [
+                  0,
+                  userName,
+                  password,
+                  {
+                    post_type: 'post',
+                    post_status: 'draft',
+                    post_title: title ?? 'A post from Obsidian!',
+                    post_content: marked.parse(content) ?? '',
+                  }
+                ], (error: Error, value) => {
+                  console.log('Method response for \'wp.newPost\': ', value, error);
+                  if (error) {
+                    new Notice(`[Error] ${error.message}`);
+                    reject(error);
+                  } else {
+                    new Notice('Post published successfully!');
+                    modal.close();
+                    resolve({
+                      code: WordPressClientReturnCode.OK,
+                      data: value
+                    });
+                  }
                 });
-              }
-            });
+              })
+              .catch(error => {
+                console.log('Reading file content for \'wp.newPost\' failed: ', error);
+              });
           }
         ).open();
       } else {
@@ -106,7 +112,7 @@ class WpLoginModal extends Modal {
   constructor(
     app: App,
     private readonly plugin: WordpressPlugin,
-    private readonly onSubmit: (userName: string, password: string) => void
+    private readonly onSubmit: (userName: string, password: string, modal: Modal) => void
   ) {
     super(app);
   }
@@ -119,6 +125,7 @@ class WpLoginModal extends Modal {
     let password = '';
     new Setting(contentEl)
       .setName('User Name')
+      .setDesc(`User name for ${this.plugin.settings.endpoint}`)
       .addText(text => text
         .setValue(this.plugin.settings.userName ?? '')
         .onChange(async (value) => {
@@ -138,7 +145,7 @@ class WpLoginModal extends Modal {
         .setButtonText('Publish')
         .setClass('mod-cta')
         .onClick(() => {
-          this.onSubmit(this.plugin.settings.userName, password);
+          this.onSubmit(this.plugin.settings.userName, password, this);
         })
       );
   }
