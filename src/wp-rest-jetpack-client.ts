@@ -2,6 +2,7 @@ import { WordPressClient, WordPressClientResult, WordPressClientReturnCode } fro
 import { Client } from 'xmlrpc';
 import { App, MarkdownView } from 'obsidian';
 import WordpressPlugin from './main';
+import WPAPI from 'wpapi';
 
 export class WpRestJetpackClient implements WordPressClient {
 
@@ -20,6 +21,13 @@ export class WpRestJetpackClient implements WordPressClient {
       const { workspace } = this.app;
       const activeView = workspace.getActiveViewOfType(MarkdownView);
       if (activeView) {
+        const endpoint = 'https://public-api.wordpress.com/rest/v1/sites/devbean.great-site.net/posts/';
+        const wp = new WPAPI({ endpoint });
+        wp.posts().then(function( data ) {
+          console.log(data);
+        }).catch(function( err ) {
+          console.log(err);
+        });
         resolve({
           code: WordPressClientReturnCode.OK,
           data: ''

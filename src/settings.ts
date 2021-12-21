@@ -3,7 +3,8 @@ import WordpressPlugin from './main';
 
 export const enum ApiType {
   XML_RPC = 'xml-rpc',
-  RestAPI_Jetpack = 'restapi-jetpack'
+  RestAPI_Jetpack = 'restapi-jetpack',
+  RestAPI_OAuth2 = 'restapi-oauth2'
 }
 
 export interface WordpressPluginSettings {
@@ -72,11 +73,13 @@ export class WordpressSettingTab extends PluginSettingTab {
       .setName('API Type')
       .setDesc(`Select which API you want to use.
 - XML-RPC: Enabled by default but some host may disable it
-- RESTful API with Jetpack`)
+- REST API with Jetpack
+- REST API with OAuth2`)
       .addDropdown((dropdown) => {
         dropdown
           .addOption(ApiType.XML_RPC, 'XML-RPC')
-          .addOption(ApiType.RestAPI_Jetpack, 'RESTful API with Jetpack')
+          .addOption(ApiType.RestAPI_Jetpack, 'REST API with Jetpack')
+          .addOption(ApiType.RestAPI_OAuth2, 'REST API with OAuth2')
           .setValue(this.plugin.settings.apiType)
           .onChange(async (value: ApiType) => {
             this.plugin.settings.apiType = value;

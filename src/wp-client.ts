@@ -3,6 +3,7 @@ import WordpressPlugin from './main';
 import { ApiType } from './settings';
 import { WpXmlRpcClient } from './wp-xml-rpc-client';
 import { WpRestJetpackClient } from './wp-rest-jetpack-client';
+import { WpRestOAuth2Client } from './wp-rest-oauth2-client';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -28,6 +29,8 @@ export function createWordPressClient(
       return new WpXmlRpcClient(app, plugin);
     case ApiType.RestAPI_Jetpack:
       return new WpRestJetpackClient(app, plugin);
+    case ApiType.RestAPI_OAuth2:
+      return new WpRestOAuth2Client(app, plugin);
     default:
       // This should not happen!
       new Notice('No approved WordPress API.\nPlease check it in settings.');
