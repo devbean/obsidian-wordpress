@@ -39,35 +39,35 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   endpoint: '',
   saveUserName: false,
   showRibbonIcon: false
-}
+};
 
 export class WordpressSettingTab extends PluginSettingTab {
 
-	constructor(
+  constructor(
     app: App,
     private readonly plugin: WordpressPlugin
   ) {
-		super(app, plugin);
-	}
+    super(app, plugin);
+  }
 
-	display(): void {
-		const {containerEl} = this;
+  display(): void {
+    const {containerEl} = this;
 
-		containerEl.empty();
+    containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for WordPress Publish plugin'});
+    containerEl.createEl('h2', {text: 'Settings for WordPress Publish plugin'});
 
-		new Setting(containerEl)
-			.setName('WordPress URL')
-			.setDesc('Full path of installed WordPress, for example, https://example.com/wordpress')
-			.addText(text => text
-				.setPlaceholder('https://example.com/wordpress')
-				.setValue(this.plugin.settings.endpoint)
-				.onChange(async (value) => {
+    new Setting(containerEl)
+      .setName('WordPress URL')
+      .setDesc('Full path of installed WordPress, for example, https://example.com/wordpress')
+      .addText(text => text
+        .setPlaceholder('https://example.com/wordpress')
+        .setValue(this.plugin.settings.endpoint)
+        .onChange(async (value) => {
           this.plugin.settings.endpoint = value;
           await this.plugin.saveSettings();
           this.display();
-				}));
+        }));
     new Setting(containerEl)
       .setName('API Type')
       .setDesc(`Select which API you want to use.
@@ -127,5 +127,5 @@ Changes only take effect on reload.`)
             this.display();
           }),
       );
-	}
+  }
 }

@@ -31,7 +31,7 @@ export class WpXmlRpcClient implements WordPressClient {
 
   newPost(): Promise<WordPressClientResult> {
     return new Promise((resolve, reject) => {
-      const { workspace } = this.app;
+      const {workspace} = this.app;
       const activeView = workspace.getActiveViewOfType(MarkdownView);
       if (activeView) {
         new WpLoginModal(
@@ -86,9 +86,9 @@ class WpLoginModal extends Modal {
   }
 
   onOpen() {
-    const { contentEl } = this;
+    const {contentEl} = this;
 
-    contentEl.createEl('h1', { text: 'WordPress Login' });
+    contentEl.createEl('h1', {text: 'WordPress Login'});
 
     let password = '';
     new Setting(contentEl)
@@ -118,7 +118,7 @@ class WpLoginModal extends Modal {
   }
 
   onClose() {
-    const { contentEl } = this;
+    const {contentEl} = this;
     contentEl.empty();
   }
 }

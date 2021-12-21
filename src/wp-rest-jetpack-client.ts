@@ -17,7 +17,7 @@ export class WpRestJetpackClient implements WordPressClient {
 
   newPost(): Promise<WordPressClientResult> {
     return new Promise((resolve, reject) => {
-      const { workspace } = this.app;
+      const {workspace} = this.app;
       const activeView = workspace.getActiveViewOfType(MarkdownView);
       if (activeView) {
         resolve({
