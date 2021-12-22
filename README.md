@@ -18,4 +18,4 @@ by default but some may disable it because of security problems.
 And some shared hosts might disable XML-RPC by default which you have
 no way to enable it. So this won't work if XML-RPC is disabled.
 
-This will be changed in future versions by adding WordPress RESTful API support.
+This will be changed in future versions by adding WordPress REST API support.
