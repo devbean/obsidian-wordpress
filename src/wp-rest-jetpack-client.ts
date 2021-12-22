@@ -18,14 +18,14 @@ export class WpRestJetpackClient implements WordPressClient {
 
   newPost(): Promise<WordPressClientResult> {
     return new Promise((resolve, reject) => {
-      const {workspace} = this.app;
+      const { workspace } = this.app;
       const activeView = workspace.getActiveViewOfType(MarkdownView);
       if (activeView) {
         const endpoint = 'https://public-api.wordpress.com/rest/v1/sites/devbean.great-site.net/posts/';
         const wp = new WPAPI({ endpoint });
-        wp.posts().then(function( data ) {
+        wp.posts().then(function (data) {
           console.log(data);
-        }).catch(function( err ) {
+        }).catch(function (err) {
           console.log(err);
         });
         resolve({

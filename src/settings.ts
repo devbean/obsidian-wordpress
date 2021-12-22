@@ -52,11 +52,11 @@ export class WordpressSettingTab extends PluginSettingTab {
   }
 
   display(): void {
-    const {containerEl} = this;
+    const { containerEl } = this;
 
     containerEl.empty();
 
-    containerEl.createEl('h2', {text: 'Settings for WordPress Publish plugin'});
+    containerEl.createEl('h2', { text: 'Settings for WordPress Publish plugin' });
 
     new Setting(containerEl)
       .setName('WordPress URL')
