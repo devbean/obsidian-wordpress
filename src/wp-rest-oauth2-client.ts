@@ -2,7 +2,6 @@ import { WordPressClient, WordPressClientResult, WordPressClientReturnCode } fro
 import { Client } from 'xmlrpc';
 import { App, MarkdownView } from 'obsidian';
 import WordpressPlugin from './main';
-import axios from 'axios';
 
 export class WpRestOAuth2Client implements WordPressClient {
 
@@ -36,20 +35,20 @@ export class WpRestOAuth2Client implements WordPressClient {
         //   scopes: [ 'basic' ]
         // });
         // wpAuth.token.getToken()
-        axios.get('https://blog.galaxyworld.org/oauth/authorize', {
-          params: {
-            client_id: 'o7po3eDmTI7dRU6vDYp5idKZUAniVLPjiHw0RLGM',
-            response_type: 'code',
-            scope: 'basic',
-            redirect_uri: 'app://obsidian.md'
-          }
-        })
-          .then(response => {
-            console.log('>>>>>>>>>>', response);
-          })
-          .catch(error => {
-            console.log('ERROR>>>>>>>>>>', error);
-          });
+        // axios.get('https://blog.galaxyworld.org/oauth/authorize', {
+        //   params: {
+        //     client_id: 'o7po3eDmTI7dRU6vDYp5idKZUAniVLPjiHw0RLGM',
+        //     response_type: 'code',
+        //     scope: 'basic',
+        //     redirect_uri: 'app://obsidian.md'
+        //   }
+        // })
+        //   .then(response => {
+        //     console.log('>>>>>>>>>>', response);
+        //   })
+        //   .catch(error => {
+        //     console.log('ERROR>>>>>>>>>>', error);
+        //   });
         // fetch('https://blog.galaxyworld.org/oauth/authorize')
         //   .then(response => {
         //

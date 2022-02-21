@@ -3,8 +3,11 @@ import WordpressPlugin from './main';
 
 export const enum ApiType {
   XML_RPC = 'xml-rpc',
-  RestAPI_Jetpack = 'restapi-jetpack',
-  RestAPI_OAuth2 = 'restapi-oauth2'
+  RestAPI = 'restapi'
+}
+
+export const enum RestApiPlugin {
+  Authentication_miniOrange = 'miniOrange'
 }
 
 export interface WordpressPluginSettings {
@@ -13,6 +16,11 @@ export interface WordpressPluginSettings {
    * API type.
    */
   apiType: ApiType;
+
+  /**
+   * Plugin for REST API.
+   */
+  restApiPlugin?: RestApiPlugin;
 
   /**
    * Endpoint.
@@ -56,7 +64,7 @@ export class WordpressSettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: 'Settings for WordPress Publish plugin' });
+    containerEl.createEl('h2', { text: 'Settings for WordPress plugin' });
 
     new Setting(containerEl)
       .setName('WordPress URL')
@@ -73,13 +81,11 @@ export class WordpressSettingTab extends PluginSettingTab {
       .setName('API Type')
       .setDesc(`Select which API you want to use.
 - XML-RPC: Enabled by default but some host may disable it
-- REST API with Jetpack
-- REST API with OAuth2`)
+- REST API`)
       .addDropdown((dropdown) => {
         dropdown
           .addOption(ApiType.XML_RPC, 'XML-RPC')
-          .addOption(ApiType.RestAPI_Jetpack, 'REST API with Jetpack')
-          .addOption(ApiType.RestAPI_OAuth2, 'REST API with OAuth2')
+          .addOption(ApiType.RestAPI, 'REST API')
           .setValue(this.plugin.settings.apiType)
           .onChange(async (value: ApiType) => {
             this.plugin.settings.apiType = value;
@@ -116,6 +122,23 @@ This might be user name disclosure in synchronize services.`)
       } else {
         delete this.plugin.settings.userName;
       }
+    } else if (this.plugin.settings.apiType === ApiType.RestAPI) {
+      if (!this.plugin.settings.restApiPlugin) {
+        this.plugin.settings.restApiPlugin = RestApiPlugin.Authentication_miniOrange;
+      }
+      new Setting(containerEl)
+        .setName('REST API Plugin')
+        .setDesc(`Select which auth plugin for REST API you installed.`)
+        .addDropdown((dropdown) => {
+          dropdown
+            .addOption(RestApiPlugin.Authentication_miniOrange, 'WordPress REST API Authentication by miniOrange')
+            .setValue(this.plugin.settings.restApiPlugin)
+            .onChange(async (value: RestApiPlugin) => {
+              this.plugin.settings.restApiPlugin = value;
+              await this.plugin.saveSettings();
+              this.display();
+            });
+        });
     }
     new Setting(containerEl)
       .setName('Show icon in sidebar')
