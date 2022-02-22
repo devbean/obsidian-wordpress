@@ -108,3 +108,6 @@ dist
 
 # Compiled files
 dist/
+
+# User data file
+data.json
