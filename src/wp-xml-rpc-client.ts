@@ -1,31 +1,20 @@
-import { WordPressClient, WordPressClientResult, WordPressClientReturnCode } from './wp-client';
-import { Client, createClient, createSecureClient } from 'xmlrpc';
 import { App, MarkdownView, Modal, Notice, Setting } from 'obsidian';
 import WordpressPlugin from './main';
+import { WordPressClient, WordPressClientResult, WordPressClientReturnCode } from './wp-client';
+import { XmlRpcClient } from './xmlrpc/client';
 import { marked } from 'marked';
 
 export class WpXmlRpcClient implements WordPressClient {
 
-  private readonly client: Client;
+  private readonly client: XmlRpcClient;
 
   constructor(
     private readonly app: App,
     private readonly plugin: WordpressPlugin
   ) {
-    const url = new URL(plugin.settings.endpoint);
-    if (url.protocol === 'https:') {
-      this.client = createSecureClient({
-        host: url.hostname,
-        port: 443,
-        path: `${url.pathname}xmlrpc.php`
-      });
-    } else {
-      this.client = createClient({
-        host: url.hostname,
-        port: 80,
-        path: `${url.pathname}xmlrpc.php`
-      });
-    }
+    this.client = new XmlRpcClient({
+      url: new URL(plugin.settings.endpoint)
+    });
   }
 
   newPost(): Promise<WordPressClientResult> {
@@ -40,7 +29,7 @@ export class WpXmlRpcClient implements WordPressClient {
             this.app.vault.read(activeView.file)
               .then(content => {
                 const title = activeView.file.basename;
-                this.client.methodCall('wp.newPost', [
+                return this.client.methodCall('wp.newPost', [
                   0,
                   userName,
                   password,
@@ -50,23 +39,31 @@ export class WpXmlRpcClient implements WordPressClient {
                     post_title: title ?? 'A post from Obsidian!',
                     post_content: marked.parse(content) ?? '',
                   }
-                ], (error: Error, value) => {
-                  console.log('Method response for \'wp.newPost\': ', value, error);
-                  if (error) {
-                    new Notice(`[Error] ${error.message}`);
-                    reject(error);
-                  } else {
-                    new Notice('Post published successfully!');
-                    modal.close();
-                    resolve({
-                      code: WordPressClientReturnCode.OK,
-                      data: value
-                    });
-                  }
-                });
+                ]);
+              })
+              .then((response: any) => { // eslint-disable-line
+                if (response.faultCode && response.faultString) {
+                  // it means error happens
+                  new Notice(`Post published failed!\n${response.faultCode}: ${response.faultString}`);
+                  return {
+                    code: WordPressClientReturnCode.Error,
+                    data: {
+                      code: response.faultCode,
+                      message: response.faultString
+                    }
+                  };
+                } else {
+                  new Notice('Post published successfully!');
+                  modal.close();
+                  return {
+                    code: WordPressClientReturnCode.OK,
+                    data: response
+                  };
+                }
               })
               .catch(error => {
                 console.log('Reading file content for \'wp.newPost\' failed: ', error);
+                new Notice(error.toString());
               });
           }
         ).open();

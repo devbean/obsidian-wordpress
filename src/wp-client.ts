@@ -1,9 +1,7 @@
-import { App, Notice } from 'obsidian';
+import { Client, createClient, createSecureClient } from 'xmlrpc';
+import { App, MarkdownView, Modal, Notice, Setting } from 'obsidian';
 import WordpressPlugin from './main';
-import { ApiType } from './settings';
-import { WpXmlRpcClient } from './wp-xml-rpc-client';
-import { WpRestJetpackClient } from './wp-rest-jetpack-client';
-import { WpRestOAuth2Client } from './wp-rest-oauth2-client';
+import { marked } from 'marked';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -12,7 +10,7 @@ export enum WordPressClientReturnCode {
 
 export interface WordPressClientResult {
   code: WordPressClientReturnCode;
-  data: any; // eslint-disable-line
+  data: unknown;
 }
 
 export interface WordPressClient {
@@ -21,19 +19,13 @@ export interface WordPressClient {
 
 export function createWordPressClient(
   app: App,
-  plugin: WordpressPlugin
-): WordPressClient | null {
-  const type = plugin.settings.apiType;
+  plugin: WordpressPlugin,
+  type: ApiType
+): WordPressClient {
   switch (type) {
     case ApiType.XML_RPC:
       return new WpXmlRpcClient(app, plugin);
-    case ApiType.RestAPI_Jetpack:
-      return new WpRestJetpackClient(app, plugin);
-    case ApiType.RestAPI_OAuth2:
-      return new WpRestOAuth2Client(app, plugin);
     default:
-      // This should not happen!
-      new Notice('No approved WordPress API.\nPlease check it in settings.');
       return null;
   }
 }

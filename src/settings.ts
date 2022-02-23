@@ -44,38 +44,36 @@ export interface WordpressPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
-  apiType: ApiType.XML_RPC,
   endpoint: '',
   saveUserName: false,
   showRibbonIcon: false
-};
+}
 
 export class WordpressSettingTab extends PluginSettingTab {
 
-  constructor(
+	constructor(
     app: App,
     private readonly plugin: WordpressPlugin
   ) {
-    super(app, plugin);
-  }
+		super(app, plugin);
+	}
 
-  display(): void {
-    const { containerEl } = this;
+	display(): void {
+		const {containerEl} = this;
 
-    containerEl.empty();
+		containerEl.empty();
 
     containerEl.createEl('h2', { text: 'Settings for WordPress plugin' });
 
-    new Setting(containerEl)
-      .setName('WordPress URL')
-      .setDesc('Full path of installed WordPress, for example, https://example.com/wordpress')
-      .addText(text => text
-        .setPlaceholder('https://example.com/wordpress')
-        .setValue(this.plugin.settings.endpoint)
-        .onChange(async (value) => {
+		new Setting(containerEl)
+			.setName('WordPress URL')
+			.setDesc('Full path of installed WordPress, for example, https://example.com/wordpress')
+			.addText(text => text
+				.setPlaceholder('https://example.com/wordpress')
+				.setValue(this.plugin.settings.endpoint)
+				.onChange(async (value) => {
           this.plugin.settings.endpoint = value;
           await this.plugin.saveSettings();
-          this.display();
         }));
     new Setting(containerEl)
       .setName('API Type')
@@ -117,7 +115,6 @@ This might be user name disclosure in synchronize services.`)
             .onChange(async (value) => {
               this.plugin.settings.userName = value;
               await this.plugin.saveSettings();
-              this.display();
             }));
       } else {
         delete this.plugin.settings.userName;
@@ -153,5 +150,5 @@ Changes only take effect on reload.`)
             this.display();
           }),
       );
-  }
+	}
 }

@@ -6,12 +6,12 @@ import { createWordPressClient } from './wp-client';
 
 export default class WordpressPlugin extends Plugin {
 
-  settings: WordpressPluginSettings;
+	settings: WordpressPluginSettings;
 
-  async onload() {
+	async onload() {
     console.log('loading obsidian-wordpress plugin');
 
-    await this.loadSettings();
+		await this.loadSettings();
 
     this.registerView(
       WordPressPublishViewType,
@@ -30,26 +30,24 @@ export default class WordpressPlugin extends Plugin {
       id: 'publish',
       name: 'Publish current document',
       editorCallback: (editor: Editor, view: MarkdownView) => {
-        const client = createWordPressClient(this.app, this);
-        if (client) {
-          client.newPost().then();
-        }
+        const client = createWordPressClient(this.app, this, 'xmlrpc');
+        client.newPost().then();
       }
     });
 
-    this.addSettingTab(new WordpressSettingTab(this.app, this));
-  }
+		this.addSettingTab(new WordpressSettingTab(this.app, this));
+	}
 
-  onunload() {
-  }
+	onunload() {
+	}
 
-  async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-  }
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
 
-  async saveSettings() {
-    await this.saveData(this.settings);
-  }
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
 
   private async toggleWordPressPublishView(): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(WordPressPublishViewType);
