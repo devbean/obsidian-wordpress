@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-wordpress",
 	"name": "Wordpress",
-	"version": "0.0.2",
+	"version": "0.1.0",
 	"minAppVersion": "0.12.0",
 	"description": "A plugin for publishing Obsidian documents to WordPress.",
 	"author": "devbean",
