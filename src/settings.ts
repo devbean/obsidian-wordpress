@@ -54,7 +54,6 @@ export class WordpressSettingTab extends PluginSettingTab {
         .onChange(async (value) => {
           this.plugin.settings.endpoint = value;
           await this.plugin.saveSettings();
-          this.display();
         }));
     new Setting(containerEl)
       .setName('Save User Name')
@@ -79,7 +78,6 @@ This might be user name disclosure in synchronize services.`)
           .onChange(async (value) => {
             this.plugin.settings.userName = value;
             await this.plugin.saveSettings();
-            this.display();
           }));
     } else {
       delete this.plugin.settings.userName;
