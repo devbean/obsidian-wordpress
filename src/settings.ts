@@ -44,6 +44,7 @@ export interface WordpressPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
+  apiType: ApiType.XML_RPC,
   endpoint: '',
   saveUserName: false,
   showRibbonIcon: false

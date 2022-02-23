@@ -1,7 +1,7 @@
-import { Client, createClient, createSecureClient } from 'xmlrpc';
-import { App, MarkdownView, Modal, Notice, Setting } from 'obsidian';
+import { App } from 'obsidian';
 import WordpressPlugin from './main';
-import { marked } from 'marked';
+import { ApiType } from './settings';
+import { WpXmlRpcClient } from './wp-xml-rpc-client';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -21,7 +21,7 @@ export function createWordPressClient(
   app: App,
   plugin: WordpressPlugin,
   type: ApiType
-): WordPressClient {
+): WordPressClient | null {
   switch (type) {
     case ApiType.XML_RPC:
       return new WpXmlRpcClient(app, plugin);

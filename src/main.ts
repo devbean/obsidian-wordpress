@@ -1,5 +1,5 @@
 import { Editor, MarkdownView, Plugin } from 'obsidian';
-import { DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
+import { ApiType, DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
 import { WordPressPublishView, WordPressPublishViewType } from './wp-publish-view';
 import { createWordPressClient } from './wp-client';
@@ -30,8 +30,10 @@ export default class WordpressPlugin extends Plugin {
       id: 'publish',
       name: 'Publish current document',
       editorCallback: (editor: Editor, view: MarkdownView) => {
-        const client = createWordPressClient(this.app, this, 'xmlrpc');
-        client.newPost().then();
+        const client = createWordPressClient(this.app, this, ApiType.XML_RPC);
+        if (client) {
+          client.newPost().then();
+        }
       }
     });
 
