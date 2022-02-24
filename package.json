@@ -1,12 +1,17 @@
 {
 	"name": "obsidian-wordpress",
-	"version": "0.0.2",
+	"version": "0.1.0",
 	"description": "A plugin for publishing Obsidian documents to WordPress.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "node esbuild.config.mjs production",
-		"release": "standard-version"
+		"release": "standard-version",
+		"release-test": "standard-version --dry-run",
+		"release-major": "standard-version --release-as major",
+		"release-major-test": "standard-version --dry-run --release-as major",
+		"release-minor": "standard-version --release-as minor",
+		"release-minor-test": "standard-version --dry-run --release-as minor"
 	},
 	"standard-version": {
 		"t": ""
