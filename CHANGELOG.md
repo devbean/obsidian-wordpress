@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.1](https://github.com/devbean/obsidian-wordpress/compare/0.1.0...0.1.1) (2022-02-24)
+
+
+### Features
+
+* Ribbon icon could be refreshed if plugin options updates. ([9620ddd](https://github.com/devbean/obsidian-wordpress/commit/9620ddd48cfe3654e6583d6be2039e821e5a6da6))
+
 ## [0.1.0](https://github.com/devbean/obsidian-wordpress/compare/0.0.2...0.1.0) (2022-02-24)
 
 
