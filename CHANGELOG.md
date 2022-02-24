@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0](https://github.com/devbean/obsidian-wordpress/compare/0.0.2...0.1.0) (2022-02-24)
+
+
+### Features
+
+* Use own XML-RPC implementation in order to support mobile. ([d0cc528](https://github.com/devbean/obsidian-wordpress/commit/d0cc5280d64ee2eded8c124205ef4cf9df9d60dd))
+
 ### [0.0.2](https://github.com/devbean/obsidian-wordpress/compare/0.0.1...0.0.2) (2021-12-22)
 
 
