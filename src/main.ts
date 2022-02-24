@@ -20,11 +20,7 @@ export default class WordpressPlugin extends Plugin {
 
     addIcons();
 
-    if (this.settings.showRibbonIcon) {
-      this.addRibbonIcon('wp-logo', 'WordPress Publish', () => {
-        this.toggleWordPressPublishView();
-      });
-    }
+    this.updateRibbonIcon();
 
     this.addCommand({
       id: 'publish',
@@ -47,6 +43,23 @@ export default class WordpressPlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  updateRibbonIcon(): void {
+    const ribbonIconTitle = 'WordPress Publish';
+    if (this.settings.showRibbonIcon) {
+      this.addRibbonIcon('wp-logo', ribbonIconTitle, () => {
+        this.toggleWordPressPublishView();
+      });
+    } else {
+      const leftRibbon: any = this.app.workspace.leftRibbon;
+      const children = leftRibbon.ribbonActionsEl.children;
+      for (let i = 0; i < children.length; i++) {
+        if (children.item(i).getAttribute('aria-label') === ribbonIconTitle) {
+          (children.item(i) as HTMLElement).style.display = 'none';
+        }
+      }
+    }
   }
 
   private async toggleWordPressPublishView(): Promise<void> {

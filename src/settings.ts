@@ -93,6 +93,8 @@ Changes only take effect on reload.`)
             this.plugin.settings.showRibbonIcon = value;
             await this.plugin.saveSettings();
             this.display();
+
+            this.plugin.updateRibbonIcon();
           }),
       );
   }
