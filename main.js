@@ -17620,6 +17620,7 @@ Changes only take effect on reload.`).addToggle((toggle) => toggle.setValue(this
       this.plugin.settings.showRibbonIcon = value;
       yield this.plugin.saveSettings();
       this.display();
+      this.plugin.updateRibbonIcon();
     })));
   }
 };
@@ -23484,11 +23485,7 @@ var WordpressPlugin = class extends import_obsidian6.Plugin {
       yield this.loadSettings();
       this.registerView(WordPressPublishViewType, (leaf) => new WordPressPublishView(leaf, this));
       addIcons();
-      if (this.settings.showRibbonIcon) {
-        this.addRibbonIcon("wp-logo", "WordPress Publish", () => {
-          this.toggleWordPressPublishView();
-        });
-      }
+      this.updateRibbonIcon();
       this.addCommand({
         id: "publish",
         name: "Publish current document",
@@ -23513,6 +23510,22 @@ var WordpressPlugin = class extends import_obsidian6.Plugin {
     return __async(this, null, function* () {
       yield this.saveData(this.settings);
     });
+  }
+  updateRibbonIcon() {
+    const ribbonIconTitle = "WordPress Publish";
+    if (this.settings.showRibbonIcon) {
+      this.addRibbonIcon("wp-logo", ribbonIconTitle, () => {
+        this.toggleWordPressPublishView();
+      });
+    } else {
+      const leftRibbon = this.app.workspace.leftRibbon;
+      const children = leftRibbon.ribbonActionsEl.children;
+      for (let i = 0; i < children.length; i++) {
+        if (children.item(i).getAttribute("aria-label") === ribbonIconTitle) {
+          children.item(i).style.display = "none";
+        }
+      }
+    }
   }
   toggleWordPressPublishView() {
     return __async(this, null, function* () {
