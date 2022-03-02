@@ -77,6 +77,33 @@ export class WordpressSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
     new Setting(containerEl)
+      .setName('Save User Name')
+      .setDesc(`If enabled, the WordPress user name you typed will be saved in local data.
+This might be user name disclosure in synchronize services.`)
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.saveUserName)
+          .onChange(async (value) => {
+            this.plugin.settings.saveUserName = value;
+            await this.plugin.saveSettings();
+            this.display();
+          }),
+      );
+    if (this.plugin.settings.saveUserName) {
+      new Setting(containerEl)
+        .setName('WordPress User Name')
+        .setDesc('User name of WordPress')
+        .addText(text => text
+          .setPlaceholder('User name')
+          .setValue(this.plugin.settings.userName)
+          .onChange(async (value) => {
+            this.plugin.settings.userName = value;
+            await this.plugin.saveSettings();
+          }));
+    } else {
+      delete this.plugin.settings.userName;
+    }
+    new Setting(containerEl)
       .setName('API Type')
       .setDesc(`Select which API you want to use.
 - XML-RPC: Enabled by default but some host may disable it
@@ -93,33 +120,7 @@ export class WordpressSettingTab extends PluginSettingTab {
           });
       });
     if (this.plugin.settings.apiType === ApiType.XML_RPC) {
-      new Setting(containerEl)
-        .setName('Save User Name')
-        .setDesc(`If enabled, the WordPress user name you typed will be saved in local data.
-This might be user name disclosure in synchronize services.`)
-        .addToggle((toggle) =>
-          toggle
-            .setValue(this.plugin.settings.saveUserName)
-            .onChange(async (value) => {
-              this.plugin.settings.saveUserName = value;
-              await this.plugin.saveSettings();
-              this.display();
-            }),
-        );
-      if (this.plugin.settings.saveUserName) {
-        new Setting(containerEl)
-          .setName('WordPress User Name')
-          .setDesc('User name of WordPress')
-          .addText(text => text
-            .setPlaceholder('User name')
-            .setValue(this.plugin.settings.userName)
-            .onChange(async (value) => {
-              this.plugin.settings.userName = value;
-              await this.plugin.saveSettings();
-            }));
-      } else {
-        delete this.plugin.settings.userName;
-      }
+      // something for XML-RPC
     } else if (this.plugin.settings.apiType === ApiType.RestAPI) {
       if (!this.plugin.settings.restApiPlugin) {
         this.plugin.settings.restApiPlugin = RestApiPlugin.Authentication_miniOrange;

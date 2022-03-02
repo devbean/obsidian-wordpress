@@ -1,0 +1,54 @@
+import { App, Modal, Setting } from 'obsidian';
+import WordpressPlugin from './main';
+
+/**
+ * WordPress login modal with user name and password inputs.
+ */
+export class WpLoginModal extends Modal {
+
+  constructor(
+    app: App,
+    private readonly plugin: WordpressPlugin,
+    private readonly onSubmit: (userName: string, password: string, modal: Modal) => void
+  ) {
+    super(app);
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+
+    contentEl.createEl('h1', { text: 'WordPress Login' });
+
+    let password = '';
+    new Setting(contentEl)
+      .setName('User Name')
+      .setDesc(`User name for ${this.plugin.settings.endpoint}`)
+      .addText(text => text
+        .setValue(this.plugin.settings.userName ?? '')
+        .onChange(async (value) => {
+          if (this.plugin.settings.saveUserName) {
+            this.plugin.settings.userName = value;
+            await this.plugin.saveSettings();
+          }
+        }));
+    new Setting(contentEl)
+      .setName('Password')
+      .addText(text => text
+        .onChange(async (value) => {
+          password = value;
+        }));
+    new Setting(contentEl)
+      .addButton(button => button
+        .setButtonText('Publish')
+        .setClass('mod-cta')
+        .onClick(() => {
+          this.onSubmit(this.plugin.settings.userName, password, this);
+        })
+      );
+  }
+
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+}
