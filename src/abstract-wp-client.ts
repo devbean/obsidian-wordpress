@@ -2,6 +2,7 @@ import { App, MarkdownView, Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpLoginModal } from './wp-login-modal';
 import { WordPressClient, WordPressClientResult, WordPressClientReturnCode } from './wp-client';
+import { marked } from 'marked';
 
 export abstract class AbstractWordPressClient implements WordPressClient {
 
@@ -31,10 +32,13 @@ export abstract class AbstractWordPressClient implements WordPressClient {
             this.app.vault.read(activeView.file)
               .then(content => {
                 const title = activeView.file.basename;
-                return this.publish(title, content, {
-                  userName,
-                  password
-                });
+                return this.publish(
+                  title ?? 'A post from Obsidian!',
+                  marked.parse(content) ?? '',
+                  {
+                    userName,
+                    password
+                  });
               })
               .then(result => {
                 if (result.code === WordPressClientReturnCode.Error) {

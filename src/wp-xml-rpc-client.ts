@@ -1,8 +1,7 @@
 import { App } from 'obsidian';
-import { marked } from 'marked';
 import WordpressPlugin from './main';
 import { WordPressClientResult, WordPressClientReturnCode } from './wp-client';
-import { XmlRpcClient } from './xmlrpc/client';
+import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 
 export class WpXmlRpcClient extends AbstractWordPressClient {
@@ -27,8 +26,8 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       {
         post_type: 'post',
         post_status: 'draft',
-        post_title: title ?? 'A post from Obsidian!',
-        post_content: marked.parse(content) ?? '',
+        post_title: title,
+        post_content: content,
       }
     ])
       .then((response: any) => { // eslint-disable-line

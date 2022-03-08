@@ -106,8 +106,8 @@ This might be user name disclosure in synchronize services.`)
     new Setting(containerEl)
       .setName('API Type')
       .setDesc(`Select which API you want to use.
-- XML-RPC: Enabled by default but some host may disable it
-- REST API`)
+- XML-RPC: Enabled by default but some host may disable it fot safety problems.
+- REST API: Enabled by default but need extra plugins to protect core writable APIs.`)
       .addDropdown((dropdown) => {
         dropdown
           .addOption(ApiType.XML_RPC, 'XML-RPC')
