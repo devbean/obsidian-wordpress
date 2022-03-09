@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-wordpress",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"description": "A plugin for publishing Obsidian documents to WordPress.",
 	"main": "main.js",
 	"scripts": {
