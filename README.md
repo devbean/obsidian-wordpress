@@ -13,9 +13,13 @@ The document will be published to the WordPress URL that you set.
 
 ## Limits
 
-The plugin uses XML-RPC to publish to WordPress. XML-RPC is enabled
-by default but some may disable it because of security problems.
+This plugin uses XML-RPC or REST protocol to publish to WordPress.
+
+XML-RPC is enabled by default but some may disable it because of security problems.
 And some shared hosts might disable XML-RPC by default which you have
 no way to enable it. So this won't work if XML-RPC is disabled.
 
-This will be changed in future versions by adding WordPress REST API support.
+REST is enabled by default but you should install some extra plugins
+in order to protect writable APIs.
+
+Read [this page](https://devbean.github.io/obsidian-wordpress) for details.
