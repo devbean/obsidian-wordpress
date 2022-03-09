@@ -1,6 +1,8 @@
 import { App } from 'obsidian';
 import WordpressPlugin from './main';
+import { ApiType, RestApiPlugin } from './settings';
 import { WpXmlRpcClient } from './wp-xml-rpc-client';
+import { WpRestMiniOrangeClient } from './wp-rest-miniOrange-client';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -19,11 +21,20 @@ export interface WordPressClient {
 export function createWordPressClient(
   app: App,
   plugin: WordpressPlugin,
-  type: 'xmlrpc'
-): WordPressClient {
+  type: ApiType,
+  options?: {
+    restPlugin: RestApiPlugin
+  }
+): WordPressClient | null {
   switch (type) {
-    case 'xmlrpc':
+    case ApiType.XML_RPC:
       return new WpXmlRpcClient(app, plugin);
+    case ApiType.RestAPI:
+      switch (options?.restPlugin) {
+        case RestApiPlugin.Authentication_miniOrange:
+          return new WpRestMiniOrangeClient(app, plugin);
+      }
+      return null;
     default:
       return null;
   }

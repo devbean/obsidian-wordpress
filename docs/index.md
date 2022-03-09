@@ -1,37 +1,49 @@
-## Welcome to GitHub Pages
+## Obsidian WordPress Plugin
 
-You can use the [editor on GitHub](https://github.com/devbean/obsidian-wordpress/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+This an obsidian plugin for publishing documents to WordPress CMS.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## How to install
 
-### Markdown
+The plugin could be installed in `Community plugins` by searching `wordpress` as keyword.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## How to use
 
-```markdown
-Syntax highlighted code block
+Before publishing, necessary WordPress settings should be done in `WordPress` tab of Settings.
 
-# Header 1
-## Header 2
-### Header 3
+![Settings](/obsidian-wordpress/assets/images/settings-main.png)
 
-- Bulleted
-- List
+You can find settings as following:
 
-1. Numbered
-2. List
+Let's say a WordPress could be access by https://www.mywp.com.
 
-**Bold** and _Italic_ and `Code` text
+* **WordPress URL**: A full path of WordPress. It should be https://www.mywp.com.
+* **Save User Name**: Both user name and password must be given before publishing.
+  If this checked, we will remember user name so you can skip input every time.
+  For security reason, no password will be stored at this version.
+* **API Type**: At this version we support following API types:
+  * XML-RPC: Enabled by default but some host may disable it fot safety problems.
+  * REST API: Enabled by default but need extra plugins to protect core writable APIs.
+  
+  If XML-RPC selected, no more actions while if REST API selected, which plugin need to be decided. We now support
+  following plugins:
+  * WordPress REST API Authentication by miniOrange
+  
+  **Note** The plugin you selected muse be installed in WordPress and configured correctly as follows.
+* **Show icon in sidebar**: Show WordPress logo in sidebar so you could click it
+  to show a `Publish` pane in right side of application.
 
-[Link](url) and ![Image](src)
-```
+## How to config WordPress REST plugins
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+### WordPress REST API Authentication by miniOrange
 
-### Jekyll Themes
+In the plugin settings page, select `BASIC AUTHENTICATION`.
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/devbean/obsidian-wordpress/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+![miniOrange](/obsidian-wordpress/assets/images/wp-miniOrange-1.png)
 
-### Support or Contact
+In the next page, select `Username & Password with Base64 Encoding` then `Next`.
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+![miniOrange](/obsidian-wordpress/assets/images/wp-miniOrange-2.png)
+
+Finally, click `Finish`.
+
+![miniOrange](/obsidian-wordpress/assets/images/wp-miniOrange-3.png)

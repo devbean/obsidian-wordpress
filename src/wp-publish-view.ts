@@ -1,6 +1,7 @@
 import { ButtonComponent, ItemView, WorkspaceLeaf } from 'obsidian';
 import WordpressPlugin from './main';
 import { createWordPressClient } from './wp-client';
+import { ApiType } from './settings';
 
 export const WordPressPublishViewType = 'wp-publish-options';
 
@@ -36,8 +37,10 @@ export class WordPressPublishView extends ItemView {
       .setButtonText('Publish')
       .setClass('mod-cta')
       .onClick(() => {
-        const client = createWordPressClient(this.app, this.plugin, 'xmlrpc');
-        client.newPost().then();
+        const client = createWordPressClient(this.app, this.plugin, ApiType.XML_RPC);
+        if (client) {
+          client.newPost().then();
+        }
       });
   }
 

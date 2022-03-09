@@ -23,7 +23,7 @@
 		"plugin"
 	],
 	"author": "devbean",
-	"license": "GPLv3",
+	"license": "GPL-3.0-or-later",
 	"devDependencies": {
 		"@types/lodash-es": "^4.17.6",
 		"@types/marked": "^4.0.1",

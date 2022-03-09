@@ -1,7 +1,27 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 
+export const enum ApiType {
+  XML_RPC = 'xml-rpc',
+  RestAPI = 'restapi'
+}
+
+export const enum RestApiPlugin {
+  Authentication_miniOrange = 'miniOrange'
+}
+
 export interface WordpressPluginSettings {
+
+  /**
+   * API type.
+   */
+  apiType: ApiType;
+
+  /**
+   * Plugin for REST API.
+   */
+  restApiPlugin?: RestApiPlugin;
+
   /**
    * Endpoint.
    */
@@ -24,34 +44,35 @@ export interface WordpressPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
+  apiType: ApiType.XML_RPC,
   endpoint: '',
   saveUserName: false,
   showRibbonIcon: false
-};
+}
 
 export class WordpressSettingTab extends PluginSettingTab {
 
-  constructor(
+	constructor(
     app: App,
     private readonly plugin: WordpressPlugin
   ) {
-    super(app, plugin);
-  }
+		super(app, plugin);
+	}
 
-  display(): void {
-    const { containerEl } = this;
+	display(): void {
+		const {containerEl} = this;
 
-    containerEl.empty();
+		containerEl.empty();
 
-    containerEl.createEl('h2', { text: 'Settings for WordPress Publish plugin' });
+    containerEl.createEl('h2', { text: 'Settings for WordPress plugin' });
 
-    new Setting(containerEl)
-      .setName('WordPress URL')
-      .setDesc('Full path of installed WordPress, for example, https://example.com/wordpress')
-      .addText(text => text
-        .setPlaceholder('https://example.com/wordpress')
-        .setValue(this.plugin.settings.endpoint)
-        .onChange(async (value) => {
+		new Setting(containerEl)
+			.setName('WordPress URL')
+			.setDesc('Full path of installed WordPress, for example, https://example.com/wordpress')
+			.addText(text => text
+				.setPlaceholder('https://example.com/wordpress')
+				.setValue(this.plugin.settings.endpoint)
+				.onChange(async (value) => {
           this.plugin.settings.endpoint = value;
           await this.plugin.saveSettings();
         }));
@@ -83,6 +104,40 @@ This might be user name disclosure in synchronize services.`)
       delete this.plugin.settings.userName;
     }
     new Setting(containerEl)
+      .setName('API Type')
+      .setDesc('Select which API you want to use.')
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOption(ApiType.XML_RPC, 'XML-RPC')
+          .addOption(ApiType.RestAPI, 'REST API')
+          .setValue(this.plugin.settings.apiType)
+          .onChange(async (value: ApiType) => {
+            this.plugin.settings.apiType = value;
+            await this.plugin.saveSettings();
+            this.display();
+          });
+      });
+    if (this.plugin.settings.apiType === ApiType.XML_RPC) {
+      // something for XML-RPC
+    } else if (this.plugin.settings.apiType === ApiType.RestAPI) {
+      if (!this.plugin.settings.restApiPlugin) {
+        this.plugin.settings.restApiPlugin = RestApiPlugin.Authentication_miniOrange;
+      }
+      new Setting(containerEl)
+        .setName('REST API Plugin')
+        .setDesc(`Select which auth plugin for REST API you installed.`)
+        .addDropdown((dropdown) => {
+          dropdown
+            .addOption(RestApiPlugin.Authentication_miniOrange, 'WordPress REST API Authentication by miniOrange')
+            .setValue(this.plugin.settings.restApiPlugin)
+            .onChange(async (value: RestApiPlugin) => {
+              this.plugin.settings.restApiPlugin = value;
+              await this.plugin.saveSettings();
+              this.display();
+            });
+        });
+    }
+    new Setting(containerEl)
       .setName('Show icon in sidebar')
       .setDesc(`If enabled, a button which opens publish panel will be added to the Obsidian sidebar.
 Changes only take effect on reload.`)
@@ -97,5 +152,5 @@ Changes only take effect on reload.`)
             this.plugin.updateRibbonIcon();
           }),
       );
-  }
+	}
 }
