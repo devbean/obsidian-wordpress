@@ -1,6 +1,6 @@
 import { App } from 'obsidian';
 import WordpressPlugin from './main';
-import { WordPressClientResult, WordPressClientReturnCode } from './wp-client';
+import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
 import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 
@@ -18,14 +18,18 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     });
   }
 
-  publish(title: string, content: string, wp: { userName: string, password: string }): Promise<WordPressClientResult> {
+  publish(title: string, content: string, wp: {
+    userName: string,
+    password: string,
+    params: WordPressPostParams
+  }): Promise<WordPressClientResult> {
     return this.client.methodCall('wp.newPost', [
       0,
       wp.userName,
       wp.password,
       {
         post_type: 'post',
-        post_status: 'draft',
+        post_status: wp.params.status,
         post_title: title,
         post_content: content,
       }

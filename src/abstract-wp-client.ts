@@ -1,7 +1,7 @@
 import { App, MarkdownView, Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpLoginModal } from './wp-login-modal';
-import { WordPressClient, WordPressClientResult, WordPressClientReturnCode } from './wp-client';
+import { WordPressClient, WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
 import { marked } from 'marked';
 
 export abstract class AbstractWordPressClient implements WordPressClient {
@@ -16,11 +16,12 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     content: string,
     wp: {
       userName: string,
-      password: string
+      password: string,
+      params: WordPressPostParams
     }
   ): Promise<WordPressClientResult>;
 
-  newPost(): Promise<WordPressClientResult> {
+  newPost(params: WordPressPostParams): Promise<WordPressClientResult> {
     return new Promise((resolve, reject) => {
       const { workspace } = this.app;
       const activeView = workspace.getActiveViewOfType(MarkdownView);
@@ -37,7 +38,8 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                   marked.parse(content) ?? '',
                   {
                     userName,
-                    password
+                    password,
+                    params
                   });
               })
               .then(result => {

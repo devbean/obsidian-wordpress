@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
+import { PostStatus } from './wp-api';
 
 export const enum ApiType {
   XML_RPC = 'xml-rpc',
@@ -41,13 +42,19 @@ export interface WordpressPluginSettings {
    * Show plugin icon in side.
    */
   showRibbonIcon: boolean;
+
+  /**
+   * Default post status.
+   */
+  defaultPostStatus: PostStatus;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   apiType: ApiType.XML_RPC,
   endpoint: '',
   saveUserName: false,
-  showRibbonIcon: false
+  showRibbonIcon: false,
+  defaultPostStatus: PostStatus.Draft
 }
 
 export class WordpressSettingTab extends PluginSettingTab {
@@ -152,5 +159,21 @@ Changes only take effect on reload.`)
             this.plugin.updateRibbonIcon();
           }),
       );
+
+    new Setting(containerEl)
+      .setName('Default Post Status')
+      .setDesc('Post status which will be published to WordPress.')
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOption(PostStatus.Draft, 'draft')
+          .addOption(PostStatus.Publish, 'publish')
+          .addOption(PostStatus.Future, 'future')
+          .setValue(this.plugin.settings.defaultPostStatus)
+          .onChange(async (value: PostStatus) => {
+            this.plugin.settings.defaultPostStatus = value;
+            await this.plugin.saveSettings();
+            this.display();
+          });
+      });
 	}
 }

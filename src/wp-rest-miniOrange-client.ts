@@ -1,5 +1,5 @@
 import { App } from 'obsidian';
-import { WordPressClientResult } from './wp-client';
+import { WordPressClientResult, WordPressPostParams } from './wp-client';
 import WordpressPlugin from './main';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import { WpRestClient } from './wp-rest-client';
@@ -18,12 +18,16 @@ export class WpRestMiniOrangeClient extends AbstractWordPressClient {
     });
   }
 
-  publish(title: string, content: string, wp: { userName: string; password: string }): Promise<WordPressClientResult> {
+  publish(title: string, content: string, wp: {
+    userName: string,
+    password: string,
+    params: WordPressPostParams
+  }): Promise<WordPressClientResult> {
     return this.client.post(
       {
         title,
         content,
-        status: 'draft'
+        status: wp.params.status
       },
       {
         headers: {

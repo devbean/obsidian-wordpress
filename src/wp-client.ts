@@ -3,6 +3,7 @@ import WordpressPlugin from './main';
 import { ApiType, RestApiPlugin } from './settings';
 import { WpXmlRpcClient } from './wp-xml-rpc-client';
 import { WpRestMiniOrangeClient } from './wp-rest-miniOrange-client';
+import { PostStatus } from './wp-api';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -14,8 +15,12 @@ export interface WordPressClientResult {
   data: unknown;
 }
 
+export interface WordPressPostParams {
+  status: PostStatus;
+}
+
 export interface WordPressClient {
-  newPost(): Promise<WordPressClientResult>;
+  newPost(params: WordPressPostParams): Promise<WordPressClientResult>;
 }
 
 export function createWordPressClient(
