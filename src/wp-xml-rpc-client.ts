@@ -18,10 +18,9 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     });
   }
 
-  publish(title: string, content: string, wp: {
+  publish(title: string, content: string, postParams: WordPressPostParams, wp: {
     userName: string,
-    password: string,
-    params: WordPressPostParams
+    password: string
   }): Promise<WordPressClientResult> {
     return this.client.methodCall('wp.newPost', [
       0,
@@ -29,7 +28,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       wp.password,
       {
         post_type: 'post',
-        post_status: wp.params.status,
+        post_status: postParams.status,
         post_title: title,
         post_content: content,
       }

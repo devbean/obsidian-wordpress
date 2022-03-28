@@ -1,27 +1,56 @@
-import { request } from 'obsidian';
-import { WordPressClientResult, WordPressClientReturnCode } from './wp-client';
+import { App, request } from 'obsidian';
+import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
+import { AbstractWordPressClient } from './abstract-wp-client';
+import WordpressPlugin from './main';
 
 interface RestOptions {
   url: URL;
 }
 
-export class WpRestClient {
+export class WpRestClient extends AbstractWordPressClient {
+
+  private readonly options: RestOptions;
 
   constructor(
-    private readonly options: RestOptions
+    readonly app: App,
+    readonly plugin: WordpressPlugin,
+    private readonly context: WpRestClientContext
   ) {
-    console.log(options);
+    super(app, plugin);
+    this.options = {
+      url: new URL(plugin.settings.endpoint)
+    };
   }
 
-  post(body: unknown, options?: {
-    headers: Record<string, string>
+  publish(title: string, content: string, postParams: WordPressPostParams, wp: {
+    userName: string,
+    password: string
   }): Promise<WordPressClientResult> {
+    return this.httpPost(
+      'wp-json/wp/v2/posts',
+      {
+        title,
+        content,
+        status: postParams.status
+      },
+      {
+        headers: this.context.getHeaders(wp)
+      });
+  }
+
+  protected httpPost(
+    path: string,
+    body: unknown,
+    options?: {
+      headers: Record<string, string>
+    }): Promise<WordPressClientResult> {
     const opts = {
       headers: {},
       ...options
-    };
+    }
+    console.log('REST POST', `${this.options.url.toString()}${path}`, opts);
     return request({
-      url: this.options.url.toString(),
+      url: `${this.options.url.toString()}${path}`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -31,6 +60,7 @@ export class WpRestClient {
       body: JSON.stringify(body)
     })
       .then(response => {
+        console.log('WpRestClient.post response', response);
         try {
           const resp = JSON.parse(response);
           if (resp.code && resp.message) {
@@ -48,6 +78,7 @@ export class WpRestClient {
             };
           }
         } catch (e) {
+          console.log('WpRestClient.post', e);
           return {
             code: WordPressClientReturnCode.Error,
             data: {
@@ -59,4 +90,20 @@ export class WpRestClient {
       });
   }
 
+}
+
+interface WpRestClientContext {
+  name: string;
+
+  getHeaders(wp: { userName: string, password: string }): Record<string, string>;
+}
+
+export class WpRestClientMiniOrangeContext implements WpRestClientContext {
+  name: 'WpRestClientMiniOrangeContext';
+
+  getHeaders(wp: { userName: string, password: string }): Record<string, string> {
+    return {
+      'Authorization': `Basic ${Buffer.from(`${wp.userName}:${wp.password}`).toString('base64')}`
+    }
+  }
 }

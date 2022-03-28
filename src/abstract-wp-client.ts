@@ -1,8 +1,15 @@
-import { App, MarkdownView, Notice } from 'obsidian';
+import { App, MarkdownView, Modal, Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpLoginModal } from './wp-login-modal';
-import { WordPressClient, WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
+import {
+  WordPressClient,
+  WordPressClientResult,
+  WordPressClientReturnCode,
+  WordPressPostParams
+} from './wp-client';
 import { marked } from 'marked';
+import { WpPublishModal } from './wp-publish-modal';
+
 
 export abstract class AbstractWordPressClient implements WordPressClient {
 
@@ -14,14 +21,14 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   abstract publish(
     title: string,
     content: string,
+    postParams: WordPressPostParams,
     wp: {
       userName: string,
-      password: string,
-      params: WordPressPostParams
+      password: string
     }
   ): Promise<WordPressClientResult>;
 
-  newPost(params: WordPressPostParams): Promise<WordPressClientResult> {
+  newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
     return new Promise((resolve, reject) => {
       const { workspace } = this.app;
       const activeView = workspace.getActiveViewOfType(MarkdownView);
@@ -29,33 +36,32 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         new WpLoginModal(
           this.app,
           this.plugin,
-          (userName, password, modal) => {
-            this.app.vault.read(activeView.file)
-              .then(content => {
-                const title = activeView.file.basename;
-                return this.publish(
-                  title ?? 'A post from Obsidian!',
-                  marked.parse(content) ?? '',
-                  {
+          async (userName, password, loginModal) => {
+            const content = await this.app.vault.read(activeView.file);
+            const title = activeView.file.basename;
+            if (defaultPostParams) {
+              await this.doPublish({
+                title,
+                content,
+                userName,
+                password,
+                postParams: defaultPostParams
+              }, loginModal);
+            } else {
+              new WpPublishModal(
+                this.app,
+                this.plugin,
+                async (postParams, publishModal) => {
+                  await this.doPublish({
+                    title,
+                    content,
                     userName,
                     password,
-                    params
-                  });
-              })
-              .then(result => {
-                if (result.code === WordPressClientReturnCode.Error) {
-                  const data = result.data as any; // eslint-disable-line
-                  new Notice(`Post published failed!\n${data.code}: ${data.message}`);
-                } else {
-                  new Notice('Post published successfully!');
-                  modal.close();
+                    postParams
+                  }, loginModal, publishModal);
                 }
-                return result;
-              })
-              .catch(error => {
-                console.log('Reading file content for \'newPost\' failed: ', error);
-                new Notice(error.toString());
-              });
+              ).open();
+            }
           }
         ).open();
       } else {
@@ -64,5 +70,44 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         reject(new Error(error));
       }
     });
+  }
+
+  private async doPublish(
+    wpParams: {
+      title: string,
+      content: string,
+      userName: string,
+      password: string,
+      postParams: WordPressPostParams
+    },
+    loginModal: Modal,
+    publishModal?: Modal
+  ): Promise<WordPressClientResult> {
+    const { title, content, userName, password, postParams } = wpParams;
+    try {
+      const result = await this.publish(
+        title ?? 'A post from Obsidian!',
+        marked.parse(content) ?? '',
+        postParams,
+        {
+          userName,
+          password
+        });
+      console.log('newPost', result);
+      if (result.code === WordPressClientReturnCode.Error) {
+        const data = result.data as any; // eslint-disable-line
+        new Notice(`Post published failed!\n${data.code}: ${data.message}`);
+      } else {
+        new Notice('Post published successfully!');
+        if (publishModal) {
+          publishModal.close();
+        }
+        loginModal.close();
+      }
+      return result;
+    } catch (error) {
+      console.log('Reading file content for \'newPost\' failed: ', error);
+      new Notice(error.toString());
+    }
   }
 }
