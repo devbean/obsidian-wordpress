@@ -1,8 +1,7 @@
 import { Editor, MarkdownView, Plugin } from 'obsidian';
-import { ApiType, DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
+import { DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
-import { WordPressPublishView, WordPressPublishViewType } from './wp-publish-view';
-import { createWordPressClient } from './wp-client';
+import { createWordPressClient, WordPressPostParams } from './wp-client';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -13,23 +12,26 @@ export default class WordpressPlugin extends Plugin {
 
 		await this.loadSettings();
 
-    this.registerView(
-      WordPressPublishViewType,
-      leaf => new WordPressPublishView(leaf, this)
-    );
-
     addIcons();
 
     this.updateRibbonIcon();
 
     this.addCommand({
+      id: 'defaultPublish',
+      name: 'Publish current document with default options',
+      editorCallback: (editor: Editor, view: MarkdownView) => {
+        const params: WordPressPostParams = {
+          status: this.settings.defaultPostStatus
+        };
+        this.publishPost(params);
+      }
+    });
+
+    this.addCommand({
       id: 'publish',
       name: 'Publish current document',
       editorCallback: (editor: Editor, view: MarkdownView) => {
-        const client = createWordPressClient(this.app, this, ApiType.XML_RPC);
-        if (client) {
-          client.newPost().then();
-        }
+        this.publishPost();
       }
     });
 
@@ -51,10 +53,10 @@ export default class WordpressPlugin extends Plugin {
     const ribbonIconTitle = 'WordPress Publish';
     if (this.settings.showRibbonIcon) {
       this.addRibbonIcon('wp-logo', ribbonIconTitle, () => {
-        this.toggleWordPressPublishView();
+        this.publishPost();
       });
     } else {
-      const leftRibbon: any = this.app.workspace.leftRibbon;
+      const leftRibbon: any = this.app.workspace.leftRibbon; // eslint-disable-line
       const children = leftRibbon.ribbonActionsEl.children;
       for (let i = 0; i < children.length; i++) {
         if (children.item(i).getAttribute('aria-label') === ribbonIconTitle) {
@@ -64,19 +66,11 @@ export default class WordpressPlugin extends Plugin {
     }
   }
 
-  private async toggleWordPressPublishView(): Promise<void> {
-    const existing = this.app.workspace.getLeavesOfType(WordPressPublishViewType);
-    if (existing.length) {
-      this.app.workspace.revealLeaf(existing[0]);
-      return;
+  private publishPost(defaultPostParams?: WordPressPostParams): void {
+    const client = createWordPressClient(this.app, this);
+    if (client) {
+      client.newPost(defaultPostParams).then();
     }
-
-    await this.app.workspace.getRightLeaf(false).setViewState({
-      type: WordPressPublishViewType,
-      active: true,
-    });
-
-    this.app.workspace.revealLeaf(this.app.workspace.getLeavesOfType(WordPressPublishViewType)[0]);
   }
 
 }

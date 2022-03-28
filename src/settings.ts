@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
+import { PostStatus } from './wp-api';
 
 export const enum ApiType {
   XML_RPC = 'xml-rpc',
@@ -41,13 +42,19 @@ export interface WordpressPluginSettings {
    * Show plugin icon in side.
    */
   showRibbonIcon: boolean;
+
+  /**
+   * Default post status.
+   */
+  defaultPostStatus: PostStatus;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   apiType: ApiType.XML_RPC,
   endpoint: '',
   saveUserName: false,
-  showRibbonIcon: false
+  showRibbonIcon: false,
+  defaultPostStatus: PostStatus.Draft
 }
 
 export class WordpressSettingTab extends PluginSettingTab {
@@ -60,7 +67,7 @@ export class WordpressSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
@@ -76,33 +83,6 @@ export class WordpressSettingTab extends PluginSettingTab {
           this.plugin.settings.endpoint = value;
           await this.plugin.saveSettings();
         }));
-    new Setting(containerEl)
-      .setName('Save User Name')
-      .setDesc(`If enabled, the WordPress user name you typed will be saved in local data.
-This might be user name disclosure in synchronize services.`)
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.saveUserName)
-          .onChange(async (value) => {
-            this.plugin.settings.saveUserName = value;
-            await this.plugin.saveSettings();
-            this.display();
-          }),
-      );
-    if (this.plugin.settings.saveUserName) {
-      new Setting(containerEl)
-        .setName('WordPress User Name')
-        .setDesc('User name of WordPress')
-        .addText(text => text
-          .setPlaceholder('User name')
-          .setValue(this.plugin.settings.userName)
-          .onChange(async (value) => {
-            this.plugin.settings.userName = value;
-            await this.plugin.saveSettings();
-          }));
-    } else {
-      delete this.plugin.settings.userName;
-    }
     new Setting(containerEl)
       .setName('API Type')
       .setDesc('Select which API you want to use.')
@@ -152,5 +132,21 @@ Changes only take effect on reload.`)
             this.plugin.updateRibbonIcon();
           }),
       );
+
+    new Setting(containerEl)
+      .setName('Default Post Status')
+      .setDesc('Post status which will be published to WordPress.')
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOption(PostStatus.Draft, 'draft')
+          .addOption(PostStatus.Publish, 'publish')
+          // .addOption(PostStatus.Future, 'future')
+          .setValue(this.plugin.settings.defaultPostStatus)
+          .onChange(async (value: PostStatus) => {
+            this.plugin.settings.defaultPostStatus = value;
+            await this.plugin.saveSettings();
+            this.display();
+          });
+      });
 	}
 }
