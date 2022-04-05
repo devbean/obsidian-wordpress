@@ -17,22 +17,16 @@ You can find settings as following:
 Let's say a WordPress could be access by https://www.mywp.com.
 
 * **WordPress URL**: A full path of WordPress. It should be https://www.mywp.com.
-* **Save User Name**: Both user name and password must be given before publishing.
-  If this checked, we will remember user name so you can skip input every time.
-  For security reason, no password will be stored at this version.
 * **API Type**: At this version we support following API types:
   * XML-RPC: Enabled by default but some host may disable it fot safety problems.
-  * REST API: Enabled by default but need extra plugins to protect core writable APIs.
-  
-  If XML-RPC selected, no more actions while if REST API selected, which plugin need to be decided. We now support
-  following plugins:
-  * WordPress REST API Authentication by miniOrange
-  
-  **Note** The plugin you selected muse be installed in WordPress and configured correctly as follows.
+  * REST API Authentication by miniOrange: REST API is enabled by default
+    but need plugin miniOrange installed in order to protect core writable APIs.
+
+  **Note** The mentioned plugins muse be installed in WordPress and configured correctly as follows.
 * **Show icon in sidebar**: Show WordPress logo in sidebar so you could click it
   to show a `Publish` pane in right side of application.
 
-## How to config WordPress REST plugins
+## How to config WordPress plugins
 
 ### WordPress REST API Authentication by miniOrange
 
