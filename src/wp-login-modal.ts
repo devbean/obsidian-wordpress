@@ -38,8 +38,23 @@ export class WpLoginModal extends Modal {
           password = value;
         }));
     new Setting(contentEl)
+      .setName('Remember User Name')
+      .setDesc(`If enabled, the WordPress user name you typed will be saved in local data.
+This might be user name disclosure in synchronize services.`)
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.saveUserName)
+          .onChange(async (value) => {
+            this.plugin.settings.saveUserName = value;
+            await this.plugin.saveSettings();
+            if (!this.plugin.settings.saveUserName) {
+              delete this.plugin.settings.userName;
+            }
+          }),
+      );
+    new Setting(contentEl)
       .addButton(button => button
-        .setButtonText('Publish')
+        .setButtonText('Login')
         .setClass('mod-cta')
         .onClick(() => {
           this.onSubmit(this.plugin.settings.userName, password, this);

@@ -1,7 +1,7 @@
 import { request } from 'obsidian';
 import { create } from 'xmlbuilder2';
 import { XMLBuilder } from 'xmlbuilder2/lib/interfaces';
-import { get, isArray, isDate, isNumber, isObject, isSafeInteger } from 'lodash-es';
+import { get, isArray, isBoolean, isDate, isNumber, isObject, isSafeInteger } from 'lodash-es';
 import { format, parse } from 'date-fns';
 
 interface XmlRpcOptions {
@@ -63,12 +63,12 @@ export class XmlRpcClient {
     } else if (isBoolean(data)) {
       value.ele('boolean').txt(data ? '1' : '0');
     } else if (isDate(data)) {
-      value.ele('dateTime.iso8601').txt(format(data, 'yyyyMMddTHH:mm:ss'));
+      value.ele('dateTime.iso8601').txt(format(data as Date, 'yyyyMMddTHH:mm:ss'));
     } else if (isArray(data)) {
       const array = value
         .ele('array')
         .ele('data');
-      data.forEach(it => this.createValue(it, array));
+      (data as unknown[]).forEach(it => this.createValue(it, array));
     } else if (isObject(data)) {
       const struct = value.ele('struct');
       for (const [ prop, value] of Object.entries(data)) {
