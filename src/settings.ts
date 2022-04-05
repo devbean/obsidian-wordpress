@@ -4,11 +4,7 @@ import { PostStatus } from './wp-api';
 
 export const enum ApiType {
   XML_RPC = 'xml-rpc',
-  RestAPI = 'restapi'
-}
-
-export const enum RestApiPlugin {
-  Authentication_miniOrange = 'miniOrange'
+  RestAPI_miniOrange = 'miniOrange'
 }
 
 export interface WordpressPluginSettings {
@@ -17,11 +13,6 @@ export interface WordpressPluginSettings {
    * API type.
    */
   apiType: ApiType;
-
-  /**
-   * Plugin for REST API.
-   */
-  restApiPlugin?: RestApiPlugin;
 
   /**
    * Endpoint.
@@ -89,7 +80,7 @@ export class WordpressSettingTab extends PluginSettingTab {
       .addDropdown((dropdown) => {
         dropdown
           .addOption(ApiType.XML_RPC, 'XML-RPC')
-          .addOption(ApiType.RestAPI, 'REST API')
+          .addOption(ApiType.RestAPI_miniOrange, 'REST API Authentication by miniOrange')
           .setValue(this.plugin.settings.apiType)
           .onChange(async (value: ApiType) => {
             this.plugin.settings.apiType = value;
@@ -97,26 +88,6 @@ export class WordpressSettingTab extends PluginSettingTab {
             this.display();
           });
       });
-    if (this.plugin.settings.apiType === ApiType.XML_RPC) {
-      // something for XML-RPC
-    } else if (this.plugin.settings.apiType === ApiType.RestAPI) {
-      if (!this.plugin.settings.restApiPlugin) {
-        this.plugin.settings.restApiPlugin = RestApiPlugin.Authentication_miniOrange;
-      }
-      new Setting(containerEl)
-        .setName('REST API Plugin')
-        .setDesc(`Select which auth plugin for REST API you installed.`)
-        .addDropdown((dropdown) => {
-          dropdown
-            .addOption(RestApiPlugin.Authentication_miniOrange, 'WordPress REST API Authentication by miniOrange')
-            .setValue(this.plugin.settings.restApiPlugin)
-            .onChange(async (value: RestApiPlugin) => {
-              this.plugin.settings.restApiPlugin = value;
-              await this.plugin.saveSettings();
-              this.display();
-            });
-        });
-    }
     new Setting(containerEl)
       .setName('Show icon in sidebar')
       .setDesc(`If enabled, a button which opens publish panel will be added to the Obsidian sidebar.

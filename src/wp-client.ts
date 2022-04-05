@@ -1,6 +1,6 @@
 import { App } from 'obsidian';
 import WordpressPlugin from './main';
-import { ApiType, RestApiPlugin } from './settings';
+import { ApiType } from './settings';
 import { WpXmlRpcClient } from './wp-xml-rpc-client';
 import { PostStatus } from './wp-api';
 import { WpRestClient, WpRestClientMiniOrangeContext } from './wp-rest-client';
@@ -36,12 +36,8 @@ export function createWordPressClient(
   switch (plugin.settings.apiType) {
     case ApiType.XML_RPC:
       return new WpXmlRpcClient(app, plugin);
-    case ApiType.RestAPI:
-      switch (plugin.settings.restApiPlugin) {
-        case RestApiPlugin.Authentication_miniOrange:
-          return new WpRestClient(app, plugin, new WpRestClientMiniOrangeContext());
-      }
-      return null;
+    case ApiType.RestAPI_miniOrange:
+      return new WpRestClient(app, plugin, new WpRestClientMiniOrangeContext());
     default:
       return null;
   }
