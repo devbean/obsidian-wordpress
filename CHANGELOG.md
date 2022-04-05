@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/devbean/obsidian-wordpress/compare/0.2.0...0.3.0) (2022-04-05)
+
+
+### Features
+
+* Simplify API types. ([99bd146](https://github.com/devbean/obsidian-wordpress/commit/99bd146cef4eef02faf3b592668e3e17e7e7439b))
+* You can set post status now. ([0661893](https://github.com/devbean/obsidian-wordpress/commit/06618936fda714d62240198377a48ea81553f596))
+
 ## [0.2.0](https://github.com/devbean/obsidian-wordpress/compare/0.1.1...0.2.0) (2022-03-09)
 
 
