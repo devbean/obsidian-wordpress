@@ -1,7 +1,8 @@
 import { Editor, MarkdownView, Plugin } from 'obsidian';
 import { DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
-import { createWordPressClient, WordPressPostParams } from './wp-client';
+import { WordPressPostParams } from './wp-client';
+import { getWordPressClient } from './wp-clients';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -67,7 +68,7 @@ export default class WordpressPlugin extends Plugin {
   }
 
   private publishPost(defaultPostParams?: WordPressPostParams): void {
-    const client = createWordPressClient(this.app, this);
+    const client = getWordPressClient(this.app, this);
     if (client) {
       client.newPost(defaultPostParams).then();
     }

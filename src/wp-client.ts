@@ -1,9 +1,4 @@
-import { App } from 'obsidian';
-import WordpressPlugin from './main';
-import { ApiType } from './settings';
-import { WpXmlRpcClient } from './wp-xml-rpc-client';
 import { PostStatus } from './wp-api';
-import { WpRestClient, WpRestClientMiniOrangeContext } from './wp-rest-client';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -27,18 +22,5 @@ export interface WordPressClient {
    * @param defaultPostParams Use this parameter instead of popup publish modal if this is not undefined.
    */
   newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult>;
-}
 
-export function createWordPressClient(
-  app: App,
-  plugin: WordpressPlugin
-): WordPressClient | null {
-  switch (plugin.settings.apiType) {
-    case ApiType.XML_RPC:
-      return new WpXmlRpcClient(app, plugin);
-    case ApiType.RestAPI_miniOrange:
-      return new WpRestClient(app, plugin, new WpRestClientMiniOrangeContext());
-    default:
-      return null;
-  }
 }
