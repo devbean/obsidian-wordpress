@@ -1,7 +1,7 @@
 import { App, Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { WordPressPostParams } from './wp-client';
-import { PostStatus } from './wp-api';
+import { PostStatus, Term } from './wp-api';
 
 /**
  * WordPress publish modal.
@@ -11,6 +11,7 @@ export class WpPublishModal extends Modal {
   constructor(
     app: App,
     private readonly plugin: WordpressPlugin,
+    private readonly categories: Term[],
     private readonly onSubmit: (params: WordPressPostParams, modal: Modal) => void
   ) {
     super(app);
@@ -37,6 +38,19 @@ export class WpPublishModal extends Modal {
             params.status = value;
           });
       });
+    if (this.categories.length > 0) {
+      new Setting(contentEl)
+        .setName('Category')
+        .addDropdown((dropdown) => {
+          this.categories.forEach(it => {
+            dropdown.addOption(it.term_id, it.name);
+          });
+          dropdown
+            .onChange(async (value: PostStatus) => {
+              params.status = value;
+            });
+        });
+    }
     new Setting(contentEl)
       .addButton(button => button
         .setButtonText('Publish')

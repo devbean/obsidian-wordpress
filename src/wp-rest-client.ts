@@ -2,6 +2,7 @@ import { App, request } from 'obsidian';
 import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
+import { Term } from './wp-api';
 
 interface RestOptions {
   url: URL;
@@ -36,6 +37,10 @@ export class WpRestClient extends AbstractWordPressClient {
       {
         headers: this.context.getHeaders(wp)
       });
+  }
+
+  getCategories(wp: { userName: string; password: string }): Promise<Term[]> {
+    return Promise.resolve([]);
   }
 
   protected httpPost(

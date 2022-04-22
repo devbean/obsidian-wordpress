@@ -3,6 +3,7 @@ import WordpressPlugin from './main';
 import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
 import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
+import { Term } from './wp-api';
 
 export class WpXmlRpcClient extends AbstractWordPressClient {
 
@@ -50,6 +51,16 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
           }
         }
       });
+  }
+
+  getCategories(wp: { userName: string; password: string }): Promise<Term[]> {
+    return this.client.methodCall('wp.getTerms', [
+      0,
+      wp.userName,
+      wp.password,
+      'category'
+    ])
+      .then(data => (data as Term[] ?? []));
   }
 
 }
