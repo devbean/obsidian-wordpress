@@ -40,7 +40,7 @@ export class WpPublishModal extends Modal {
     new Setting(contentEl)
       .addButton(button => button
         .setButtonText('Publish')
-        .setClass('mod-cta')
+        .setCta()
         .onClick(() => {
           this.onSubmit(params, this);
         })

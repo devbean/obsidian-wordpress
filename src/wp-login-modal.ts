@@ -55,7 +55,7 @@ This might be user name disclosure in synchronize services.`)
     new Setting(contentEl)
       .addButton(button => button
         .setButtonText('Login')
-        .setClass('mod-cta')
+        .setCta()
         .onClick(() => {
           this.onSubmit(this.plugin.settings.userName, password, this);
         })
