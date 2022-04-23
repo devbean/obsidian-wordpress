@@ -2,6 +2,7 @@ import { App, Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { WordPressPostParams } from './wp-client';
 import { PostStatus, Term } from './wp-api';
+import { toNumber } from 'lodash-es';
 
 /**
  * WordPress publish modal.
@@ -19,7 +20,8 @@ export class WpPublishModal extends Modal {
 
   onOpen() {
     const params: WordPressPostParams = {
-      status: this.plugin.settings.defaultPostStatus
+      status: this.plugin.settings.defaultPostStatus,
+      categories: [ 1 ]
     };
 
     const { contentEl } = this;
@@ -43,11 +45,12 @@ export class WpPublishModal extends Modal {
         .setName('Category')
         .addDropdown((dropdown) => {
           this.categories.forEach(it => {
-            dropdown.addOption(it.term_id, it.name);
+            dropdown.addOption(it.id, it.name);
           });
           dropdown
-            .onChange(async (value: PostStatus) => {
-              params.status = value;
+            .setValue("1")
+            .onChange(async (value: string) => {
+              params.categories = [ toNumber(value) ];
             });
         });
     }
