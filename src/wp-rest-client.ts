@@ -1,4 +1,4 @@
-import { App, request } from 'obsidian';
+import { App, requestUrl } from 'obsidian';
 import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
@@ -32,15 +32,72 @@ export class WpRestClient extends AbstractWordPressClient {
       {
         title,
         content,
-        status: postParams.status
+        status: postParams.status,
+        categories: postParams.categories
       },
       {
         headers: this.context.getHeaders(wp)
+      })
+      .then((resp: any) => {
+        console.log('WpRestClient response', resp);
+        if (resp.code && resp.message) {
+          return {
+            code: WordPressClientReturnCode.Error,
+            data: {
+              code: resp.code,
+              message: resp.message
+            }
+          };
+        } else if (resp.id) {
+          return {
+            code: WordPressClientReturnCode.OK,
+            data: resp
+          };
+        } else {
+          return {
+            code: WordPressClientReturnCode.Error,
+            data: {
+              code: 500,
+              message: 'Cannot parse WordPress REST API response.'
+            }
+          };
+        }
       });
   }
 
   getCategories(wp: { userName: string; password: string }): Promise<Term[]> {
-    return Promise.resolve([]);
+    return this.httpGet(
+      'wp-json/wp/v2/categories',
+      {
+        headers: this.context.getHeaders(wp)
+      })
+      .then(data => data as Term[] ?? []);
+  }
+
+  protected httpGet(
+    path: string,
+    options?: {
+      headers: Record<string, string>
+    }
+  ): Promise<unknown> {
+    const opts = {
+      headers: {},
+      ...options
+    }
+    console.log('REST GET', `${this.options.url.toString()}${path}`, opts);
+    return requestUrl({
+      url: `${this.options.url.toString()}${path}`,
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'obsidian.md',
+        ...opts.headers
+      }
+    })
+      .then(response => {
+        console.log('GET response', response);
+        return response.json;
+      });
   }
 
   protected httpPost(
@@ -48,13 +105,13 @@ export class WpRestClient extends AbstractWordPressClient {
     body: unknown,
     options?: {
       headers: Record<string, string>
-    }): Promise<WordPressClientResult> {
+    }): Promise<unknown> {
     const opts = {
       headers: {},
       ...options
     }
     console.log('REST POST', `${this.options.url.toString()}${path}`, opts);
-    return request({
+    return requestUrl({
       url: `${this.options.url.toString()}${path}`,
       method: 'POST',
       headers: {
@@ -65,33 +122,8 @@ export class WpRestClient extends AbstractWordPressClient {
       body: JSON.stringify(body)
     })
       .then(response => {
-        console.log('WpRestClient.post response', response);
-        try {
-          const resp = JSON.parse(response);
-          if (resp.code && resp.message) {
-            return {
-              code: WordPressClientReturnCode.Error,
-              data: {
-                code: resp.code,
-                message: resp.message
-              }
-            };
-          } else if (resp.id) {
-            return {
-              code: WordPressClientReturnCode.OK,
-              data: resp
-            };
-          }
-        } catch (e) {
-          console.log('WpRestClient.post', e);
-          return {
-            code: WordPressClientReturnCode.Error,
-            data: {
-              code: 500,
-              message: 'Cannot parse WordPress REST API response.'
-            }
-          };
-        }
+        console.log('POST response', response);
+        return response.json;
       });
   }
 

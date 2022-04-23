@@ -5,12 +5,11 @@ export const enum PostStatus {
 }
 
 export interface Term {
-  term_id: string;
+  id: string;
   name: string;
   slug: string;
-  term_group: string;
   taxonomy: string;
   description: string;
   parent: string;
-  count: string;
+  count: number;
 }

@@ -32,6 +32,9 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         post_status: postParams.status,
         post_title: title,
         post_content: content,
+        terms: {
+          'category': postParams.categories
+        }
       }
     ])
       .then((response: any) => { // eslint-disable-line
@@ -60,7 +63,12 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       wp.password,
       'category'
     ])
-      .then(data => (data as Term[] ?? []));
+      .then((data: unknown[]) => {
+        return data.map((it: any) => ({
+          ...it,
+          id: it.term_id
+        })) ?? [];
+      });
   }
 
 }

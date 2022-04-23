@@ -12,6 +12,7 @@ export interface WordPressClientResult {
 
 export interface WordPressPostParams {
   status: PostStatus;
+  categories: number[];
 }
 
 export interface WordPressClient {
