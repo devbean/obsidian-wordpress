@@ -9,6 +9,7 @@ import {
 } from './wp-client';
 import { marked } from 'marked';
 import { WpPublishModal } from './wp-publish-modal';
+import { Term } from './wp-api';
 
 
 export abstract class AbstractWordPressClient implements WordPressClient {
@@ -27,6 +28,13 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       password: string
     }
   ): Promise<WordPressClientResult>;
+
+  abstract getCategories(
+    wp: {
+      userName: string,
+      password: string
+    }
+  ): Promise<Term[]>;
 
   newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
     return new Promise((resolve, reject) => {
@@ -48,9 +56,14 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                 postParams: defaultPostParams
               }, loginModal);
             } else {
+              const categories = await this.getCategories({
+                userName,
+                password
+              });
               new WpPublishModal(
                 this.app,
                 this.plugin,
+                categories,
                 async (postParams, publishModal) => {
                   await this.doPublish({
                     title,

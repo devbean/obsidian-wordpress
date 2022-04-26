@@ -79,7 +79,7 @@ export class XmlRpcClient {
         this.createValue(value, member);
       }
     } else {
-      value.ele('string').txt(data.toString());
+      value.ele('string').dat(data.toString());
     }
   }
 
@@ -103,11 +103,15 @@ export class XmlRpcClient {
     } else if (get(value, 'dateTime.iso8601')) {
       return parse(get(value, 'dateTime.iso8601'), 'yyyyMMddTHH:mm:ss', new Date());
     } else if (get(value, 'array')) {
-      const array: any[] = []; // eslint-disable-line
+      const array: unknown[] = [];
       const data = get(value, 'array.data.value');
-      data.forEach((it: unknown) => {
-        array.push(this.fromValue(it));
-      });
+      if (isArray(data)) {
+        data.forEach((it: unknown) => {
+          array.push(this.fromValue(it));
+        });
+      } else {
+        array.push(this.fromValue(data));
+      }
       return array;
     } else if (get(value, 'struct')) {
       const struct: any = {}; // eslint-disable-line

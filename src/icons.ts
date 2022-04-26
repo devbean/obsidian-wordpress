@@ -1,6 +1,6 @@
 import { addIcon } from 'obsidian';
 
-export const icons: Record<string, string> = {
+const icons: Record<string, string> = {
   'wp-logo': `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <g fill="currentColor">
