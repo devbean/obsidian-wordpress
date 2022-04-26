@@ -79,7 +79,7 @@ export class XmlRpcClient {
         this.createValue(value, member);
       }
     } else {
-      value.ele('string').txt(data.toString());
+      value.ele('string').dat(data.toString());
     }
   }
 
