@@ -14,7 +14,6 @@ All notable changes to this project will be documented in this file. See [standa
 ### Bug Fixes
 
 * Fix 'not well formed' bug if post content is very long using XML-RPC. ([1e8ac85](https://github.com/devbean/obsidian-wordpress/commit/1e8ac854ecfe9f485751d9d10b658ad4002fab95))
-* Fix 'not well formed' bug if post content is very long using XML-RPC. ([f79f8f4](https://github.com/devbean/obsidian-wordpress/commit/f79f8f42f69fe17b5bc8358f0f8bef39f6a1f616))
 * Fix a bug if XML-RPC returns an array with only one item. ([08f53be](https://github.com/devbean/obsidian-wordpress/commit/08f53beeb553cc370fb1d6736b44171d0fb0fafe))
 
 ## [0.3.0](https://github.com/devbean/obsidian-wordpress/compare/0.2.0...0.3.0) (2022-04-05)
