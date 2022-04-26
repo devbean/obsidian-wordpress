@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0](https://github.com/devbean/obsidian-wordpress/compare/0.3.0...0.4.0) (2022-04-26)
+
+
+### Features
+
+* Now you can set post category by fetching categories with XML-RPC. ([2393092](https://github.com/devbean/obsidian-wordpress/commit/23930923dd9b626c07cc1b94473da723acbdcb02))
+* Now you can set post one category using REST api, too. ([d7c723e](https://github.com/devbean/obsidian-wordpress/commit/d7c723e61e0a6b7838b97ce5fee094434e341dfe))
+
+
+### Bug Fixes
+
+* Fix 'not well formed' bug if post content is very long using XML-RPC. ([1e8ac85](https://github.com/devbean/obsidian-wordpress/commit/1e8ac854ecfe9f485751d9d10b658ad4002fab95))
+* Fix 'not well formed' bug if post content is very long using XML-RPC. ([f79f8f4](https://github.com/devbean/obsidian-wordpress/commit/f79f8f42f69fe17b5bc8358f0f8bef39f6a1f616))
+* Fix a bug if XML-RPC returns an array with only one item. ([08f53be](https://github.com/devbean/obsidian-wordpress/commit/08f53beeb553cc370fb1d6736b44171d0fb0fafe))
+
 ## [0.3.0](https://github.com/devbean/obsidian-wordpress/compare/0.2.0...0.3.0) (2022-04-05)
 
 
