@@ -22,7 +22,8 @@ export default class WordpressPlugin extends Plugin {
       name: 'Publish current document with default options',
       editorCallback: (editor: Editor, view: MarkdownView) => {
         const params: WordPressPostParams = {
-          status: this.settings.defaultPostStatus
+          status: this.settings.defaultPostStatus,
+          categories: []
         };
         this.publishPost(params);
       }

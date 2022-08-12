@@ -2,6 +2,10 @@
 
 This plugin makes you publish Obsidian documents to WordPress.
 
+There are some introduction videos you can watch:
+* [YouTube (Chinese) by 简睿学堂-emisjerry](https://youtu.be/7YECfr_W1WM)
+* [Bilibili (Chinese) by 简睿学堂-emisjerry](https://www.bilibili.com/video/BV1FT411A77m/?vd_source=8d3e1ef8cd3aab146af84cfad2f5076f)
+
 ## How to use
 
 Set your WordPress URL in settings as well as username if you want.

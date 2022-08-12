@@ -25,9 +25,19 @@ export interface WordpressPluginSettings {
   userName?: string;
 
   /**
+   * WordPress password.
+   */
+  password?: string;
+
+  /**
    * Save user name to local data.
    */
   saveUserName: boolean;
+
+  /**
+   * Save user password to local data.
+   */
+  savePassword: boolean;
 
   /**
    * Show plugin icon in side.
@@ -44,6 +54,7 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   apiType: ApiType.XML_RPC,
   endpoint: '',
   saveUserName: false,
+  savePassword: false,
   showRibbonIcon: false,
   defaultPostStatus: PostStatus.Draft
 }
