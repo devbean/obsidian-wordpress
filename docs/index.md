@@ -25,6 +25,7 @@ Let's say a WordPress could be access by https://www.mywp.com.
   **Note** The mentioned plugins muse be installed in WordPress and configured correctly as follows.
 * **Show icon in sidebar**: Show WordPress logo in sidebar so you could click it
   to show a `Publish` pane in right side of application.
+* **Default Post Status**: Default post status when publishing.
 
 ## How to config WordPress plugins
 
@@ -41,3 +42,14 @@ In the next page, select `Username & Password with Base64 Encoding` then `Next`.
 Finally, click `Finish`.
 
 ![miniOrange](/obsidian-wordpress/assets/images/wp-miniOrange-3.png)
+
+## How to use with WordPress.com
+
+WordPress.com enables XML-RPC by default so you could select this API type.
+
+When using with WordPress.com, the username may not be the same as your login username.
+You could find the correct one here:
+
+![wordpress.com users](/obsidian-wordpress/assets/images/wp-com-users.png)
+
+And password should be the password of this username (usually the account login password).
