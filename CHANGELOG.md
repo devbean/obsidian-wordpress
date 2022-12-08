@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5.0](https://github.com/devbean/obsidian-wordpress/compare/0.4.0...0.5.0) (2022-08-15)
+
+
+### Features
+
+* You can remember password on login modal. Be careful! ([4dd257d](https://github.com/devbean/obsidian-wordpress/commit/4dd257d2151d12cc93752d4396ed479b880f3de3))
+
 ## [0.4.0](https://github.com/devbean/obsidian-wordpress/compare/0.3.0...0.4.0) (2022-04-26)
 
 
