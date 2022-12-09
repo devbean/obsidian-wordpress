@@ -122,5 +122,6 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       console.log('Reading file content for \'newPost\' failed: ', error);
       new Notice(error.toString());
     }
+    return Promise.reject('You should not be here!');
   }
 }

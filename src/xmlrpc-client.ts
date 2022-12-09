@@ -57,7 +57,7 @@ export class XmlRpcClient {
   private createValue(data: unknown, param: XMLBuilder): void {
     const value = param.ele('value');
     if (isSafeInteger(data)) {
-      value.ele('i4').txt(data.toString());
+      value.ele('i4').txt((data as any).toString());
     } else if (isNumber(data)) {
       value.ele('double').txt(data.toString());
     } else if (isBoolean(data)) {
@@ -79,7 +79,7 @@ export class XmlRpcClient {
         this.createValue(value, member);
       }
     } else {
-      value.ele('string').dat(data.toString());
+      value.ele('string').dat((data as any).toString());
     }
   }
 
@@ -101,7 +101,12 @@ export class XmlRpcClient {
     } else if (get(value, 'boolean')) {
       return get(value, 'boolean') === '1';
     } else if (get(value, 'dateTime.iso8601')) {
-      return parse(get(value, 'dateTime.iso8601'), 'yyyyMMddTHH:mm:ss', new Date());
+      const datetime = get(value, 'dateTime.iso8601');
+      if (datetime) {
+        return parse(datetime, 'yyyyMMddTHH:mm:ss', new Date());
+      } else {
+        return new Date();
+      }
     } else if (get(value, 'array')) {
       const array: unknown[] = [];
       const data: unknown = get(value, 'array.data.value');

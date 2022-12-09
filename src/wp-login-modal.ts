@@ -1,5 +1,6 @@
 import { App, Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
+import { TranslateKey } from './i18n';
 
 /**
  * WordPress login modal with username and password inputs.
@@ -15,13 +16,17 @@ export class WpLoginModal extends Modal {
   }
 
   onOpen() {
+    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
+      return this.plugin.i18n.t(key, vars);
+    };
+
     const { contentEl } = this;
 
-    contentEl.createEl('h1', { text: 'WordPress Login' });
+    contentEl.createEl('h1', { text: t('loginModal_title') });
 
     new Setting(contentEl)
-      .setName('User Name')
-      .setDesc(`User name for ${this.plugin.settings.endpoint}`)
+      .setName(t('loginModal_username'))
+      .setDesc(t('loginModal_usernameDesc', { url: this.plugin.settings.endpoint }))
       .addText(text => text
         .setValue(this.plugin.settings.userName ?? '')
         .onChange(async (value) => {
@@ -31,8 +36,8 @@ export class WpLoginModal extends Modal {
           }
         }));
     new Setting(contentEl)
-      .setName('Password')
-      .setDesc(`Password for ${this.plugin.settings.endpoint}`)
+      .setName(t('loginModal_password'))
+      .setDesc(t('loginModal_passwordDesc', { url: this.plugin.settings.endpoint }))
       .addText(text => text
         .setValue(this.plugin.settings.password ?? '')
         .onChange(async (value) => {
@@ -42,9 +47,8 @@ export class WpLoginModal extends Modal {
           }
         }));
     new Setting(contentEl)
-      .setName('Remember User Name')
-      .setDesc(`If enabled, the WordPress user name you typed will be saved in local data.
-This might be disclosure in synchronize services.`)
+      .setName(t('loginModal_rememberUsername'))
+      .setDesc(t('loginModal_rememberUsernameDesc'))
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.saveUserName)
@@ -57,9 +61,8 @@ This might be disclosure in synchronize services.`)
           }),
       );
     new Setting(contentEl)
-      .setName('Remember Password')
-      .setDesc(`If enabled, the WordPress password you typed will be saved in local data.
-This might be disclosure in synchronize services.`)
+      .setName(t('loginModal_rememberPassword'))
+      .setDesc(t('loginModal_rememberPasswordDesc'))
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.savePassword)
@@ -73,10 +76,10 @@ This might be disclosure in synchronize services.`)
       );
     new Setting(contentEl)
       .addButton(button => button
-        .setButtonText('Login')
+        .setButtonText(t('loginModal_loginButtonText'))
         .setCta()
         .onClick(() => {
-          this.onSubmit(this.plugin.settings.userName, this.plugin.settings.password, this);
+          this.onSubmit(this.plugin.settings.userName!, this.plugin.settings.password!, this);
         })
       );
   }

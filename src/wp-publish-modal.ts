@@ -3,6 +3,7 @@ import WordpressPlugin from './main';
 import { WordPressPostParams } from './wp-client';
 import { PostStatus, Term } from './wp-api';
 import { toNumber } from 'lodash-es';
+import { TranslateKey } from './i18n';
 
 /**
  * WordPress publish modal.
@@ -19,6 +20,10 @@ export class WpPublishModal extends Modal {
   }
 
   onOpen() {
+    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
+      return this.plugin.i18n.t(key, vars);
+    };
+
     const params: WordPressPostParams = {
       status: this.plugin.settings.defaultPostStatus,
       categories: [ 1 ]
@@ -26,14 +31,14 @@ export class WpPublishModal extends Modal {
 
     const { contentEl } = this;
 
-    contentEl.createEl('h1', { text: 'Publish to WordPress' });
+    contentEl.createEl('h1', { text: t('publishModal_title') });
 
     new Setting(contentEl)
-      .setName('Post Status')
+      .setName(t('publishModal_postStatus'))
       .addDropdown((dropdown) => {
         dropdown
-          .addOption(PostStatus.Draft, 'draft')
-          .addOption(PostStatus.Publish, 'publish')
+          .addOption(PostStatus.Draft, t('publishModal_postStatusDraft'))
+          .addOption(PostStatus.Publish, t('publishModal_postStatusPublish'))
           // .addOption(PostStatus.Future, 'future')
           .setValue(this.plugin.settings.defaultPostStatus)
           .onChange(async (value: PostStatus) => {
@@ -42,7 +47,7 @@ export class WpPublishModal extends Modal {
       });
     if (this.categories.length > 0) {
       new Setting(contentEl)
-        .setName('Category')
+        .setName(t('publishModal_category'))
         .addDropdown((dropdown) => {
           this.categories.forEach(it => {
             dropdown.addOption(it.id, it.name);
@@ -56,7 +61,7 @@ export class WpPublishModal extends Modal {
     }
     new Setting(contentEl)
       .addButton(button => button
-        .setButtonText('Publish')
+        .setButtonText(t('publishModal_publishButtonText'))
         .setCta()
         .onClick(() => {
           this.onSubmit(params, this);
