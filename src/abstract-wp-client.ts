@@ -38,6 +38,10 @@ export abstract class AbstractWordPressClient implements WordPressClient {
 
   newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
     return new Promise((resolve, reject) => {
+      if (!this.plugin.settings.endpoint || this.plugin.settings.endpoint.length === 0) {
+        new Notice(this.plugin.i18n.t('error_noEndpoint'));
+        reject(new Error('No endpoint set.'));
+      }
       const { workspace } = this.app;
       const activeView = workspace.getActiveViewOfType(MarkdownView);
       if ( activeView ) {

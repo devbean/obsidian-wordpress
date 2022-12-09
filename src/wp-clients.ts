@@ -1,4 +1,4 @@
-import { App } from 'obsidian';
+import { App, Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import { ApiType } from './settings';
 import { WpXmlRpcClient } from './wp-xml-rpc-client';
@@ -12,6 +12,10 @@ export function getWordPressClient(
   app: App,
   plugin: WordpressPlugin
 ): WordPressClient | null {
+  if (!plugin.settings.endpoint || plugin.settings.endpoint.length === 0) {
+    new Notice(plugin.i18n.t('error_noEndpoint'));
+    return null;
+  }
   const cached = wpClientsCache.get(plugin.settings.apiType);
   if (cached) {
     return cached;
