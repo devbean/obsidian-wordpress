@@ -2,7 +2,7 @@ import { App, Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 
 /**
- * WordPress login modal with user name and password inputs.
+ * WordPress login modal with username and password inputs.
  */
 export class WpLoginModal extends Modal {
 

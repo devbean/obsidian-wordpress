@@ -104,7 +104,7 @@ export class XmlRpcClient {
       return parse(get(value, 'dateTime.iso8601'), 'yyyyMMddTHH:mm:ss', new Date());
     } else if (get(value, 'array')) {
       const array: unknown[] = [];
-      const data = get(value, 'array.data.value');
+      const data: unknown = get(value, 'array.data.value');
       if (isArray(data)) {
         data.forEach((it: unknown) => {
           array.push(this.fromValue(it));
@@ -115,13 +115,19 @@ export class XmlRpcClient {
       return array;
     } else if (get(value, 'struct')) {
       const struct: any = {}; // eslint-disable-line
-      const members = get(value, 'struct.member');
+      const members: unknown = get(value, 'struct.member');
       if (isArray(members)) {
         members.forEach((member: unknown) => {
-          struct[get(member, 'name')] = this.fromValue(get(member, 'value'));
+          const name = get(member, 'name');
+          if (name) {
+            struct[name] = this.fromValue(get(member, 'value'));
+          }
         });
       } else {
-        struct[get(members, 'name')] = this.fromValue(get(members, 'value'));
+        const name = get(members, 'name');
+        if (name) {
+          struct[name] = this.fromValue(get(members, 'value'));
+        }
       }
       return struct;
     } else {
