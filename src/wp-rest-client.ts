@@ -1,8 +1,8 @@
-import { App, requestUrl } from 'obsidian';
-import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
-import { AbstractWordPressClient } from './abstract-wp-client';
+import {App, requestUrl} from 'obsidian';
+import {WordPressAuthParams, WordPressClientResult, WordPressClientReturnCode, WordPressPostParams} from './wp-client';
+import {AbstractWordPressClient} from './abstract-wp-client';
 import WordpressPlugin from './main';
-import { Term } from './wp-api';
+import {Term} from './wp-api';
 
 interface RestOptions {
   url: URL;
@@ -23,10 +23,7 @@ export class WpRestClient extends AbstractWordPressClient {
     };
   }
 
-  publish(title: string, content: string, postParams: WordPressPostParams, wp: {
-    username: string,
-    password: string
-  }): Promise<WordPressClientResult> {
+  publish(title: string, content: string, postParams: WordPressPostParams, wp: WordPressAuthParams): Promise<WordPressClientResult> {
     return this.httpPost(
       'wp-json/wp/v2/posts',
       {
@@ -65,13 +62,33 @@ export class WpRestClient extends AbstractWordPressClient {
       });
   }
 
-  getCategories(wp: { username: string; password: string }): Promise<Term[]> {
+  getCategories(wp: WordPressAuthParams): Promise<Term[]> {
     return this.httpGet(
       'wp-json/wp/v2/categories',
       {
         headers: this.context.getHeaders(wp)
       })
       .then(data => data as Term[] ?? []);
+  }
+
+  checkUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
+    return this.httpGet(
+      `wp-json/wp/v2/users/?username=${certificate.username}`,
+      {
+        headers: this.context.getHeaders(certificate)
+      })
+      .then(data => {
+        return {
+          code: WordPressClientReturnCode.OK,
+          data: data
+        };
+      })
+      .catch(error => {
+        return {
+          code: WordPressClientReturnCode.Error,
+          data: this.plugin.i18n.t('error_invalidUser')
+        };
+      });
   }
 
   protected httpGet(
@@ -132,13 +149,13 @@ export class WpRestClient extends AbstractWordPressClient {
 interface WpRestClientContext {
   name: string;
 
-  getHeaders(wp: { username: string, password: string }): Record<string, string>;
+  getHeaders(wp: WordPressAuthParams): Record<string, string>;
 }
 
 export class WpRestClientMiniOrangeContext implements WpRestClientContext {
   name: 'WpRestClientMiniOrangeContext';
 
-  getHeaders(wp: { username: string, password: string }): Record<string, string> {
+  getHeaders(wp: WordPressAuthParams): Record<string, string> {
     return {
       'Authorization': `Basic ${Buffer.from(`${wp.username}:${wp.password}`).toString('base64')}`
     }

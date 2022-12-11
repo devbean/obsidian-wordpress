@@ -1,15 +1,17 @@
-import { App, MarkdownView, Modal, Notice } from 'obsidian';
+import {App, MarkdownView, Modal, Notice} from 'obsidian';
 import WordpressPlugin from './main';
-import { WpLoginModal } from './wp-login-modal';
+import {WpLoginModal} from './wp-login-modal';
 import {
+  WordPressAuthParams,
   WordPressClient,
   WordPressClientResult,
   WordPressClientReturnCode,
-  WordPressPostParams
+  WordPressPostParams,
+  WordPressPublishParams
 } from './wp-client';
-import { marked } from 'marked';
-import { WpPublishModal } from './wp-publish-modal';
-import { Term } from './wp-api';
+import {marked} from 'marked';
+import {WpPublishModal} from './wp-publish-modal';
+import {Term} from './wp-api';
 
 
 export abstract class AbstractWordPressClient implements WordPressClient {
@@ -23,10 +25,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     title: string,
     content: string,
     postParams: WordPressPostParams,
-    wp: {
-      username: string,
-      password: string
-    }
+    wp: WordPressAuthParams
   ): Promise<WordPressClientResult>;
 
   abstract getCategories(
@@ -35,6 +34,10 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       password: string
     }
   ): Promise<Term[]>;
+
+  abstract checkUser(
+    certificate: WordPressAuthParams
+  ): Promise<WordPressClientResult>;
 
   newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
     return new Promise((resolve, reject) => {
@@ -49,35 +52,42 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           this.app,
           this.plugin,
           async (username, password, loginModal) => {
-            const content = await this.app.vault.read(activeView.file);
-            const title = activeView.file.basename;
-            if (defaultPostParams) {
-              await this.doPublish({
-                title,
-                content,
-                username,
-                password,
-                postParams: defaultPostParams
-              }, loginModal);
+            const checkUserResult = await this.checkUser({ username, password });
+            if (checkUserResult.code === WordPressClientReturnCode.OK) {
+              const content = await this.app.vault.read(activeView.file);
+              const title = activeView.file.basename;
+              if (defaultPostParams) {
+                await this.doPublish({
+                  title,
+                  content,
+                  username,
+                  password,
+                  postParams: defaultPostParams
+                }, loginModal);
+              } else {
+                const categories = await this.getCategories({
+                  username,
+                  password
+                });
+                new WpPublishModal(
+                  this.app,
+                  this.plugin,
+                  categories,
+                  async (postParams, publishModal) => {
+                    await this.doPublish({
+                      title,
+                      content,
+                      username,
+                      password,
+                      postParams
+                    }, loginModal, publishModal);
+                  }
+                ).open();
+              }
             } else {
-              const categories = await this.getCategories({
-                username,
-                password
-              });
-              new WpPublishModal(
-                this.app,
-                this.plugin,
-                categories,
-                async (postParams, publishModal) => {
-                  await this.doPublish({
-                    title,
-                    content,
-                    username,
-                    password,
-                    postParams
-                  }, loginModal, publishModal);
-                }
-              ).open();
+              const invalidUsernameOrPassword = this.plugin.i18n.t('error_invalidUser');
+              new Notice(invalidUsernameOrPassword);
+              reject(new Error(invalidUsernameOrPassword));
             }
           }
         ).open();
@@ -90,13 +100,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private async doPublish(
-    wpParams: {
-      title: string,
-      content: string,
-      username: string,
-      password: string,
-      postParams: WordPressPostParams
-    },
+    wpParams: WordPressPublishParams,
     loginModal: Modal,
     publishModal?: Modal
   ): Promise<WordPressClientResult> {

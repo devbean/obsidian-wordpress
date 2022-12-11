@@ -2,6 +2,7 @@
   "error_noEndpoint": "没有设置 WordPress URL",
   "error_noUsername": "没有设置用户名",
   "error_noPassword": "没有设置密码",
+  "error_invalidUser": "用户名或密码错误",
   "ribbon_iconTitle": "发布到 WordPress",
   "command_publish": "发布当前笔记",
   "command_publishWithDefault": "使用默认参数发布当前笔记",

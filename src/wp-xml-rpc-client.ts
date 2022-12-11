@@ -1,9 +1,9 @@
-import { App, Notice } from 'obsidian';
+import {App, Notice} from 'obsidian';
 import WordpressPlugin from './main';
-import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
-import { XmlRpcClient } from './xmlrpc-client';
-import { AbstractWordPressClient } from './abstract-wp-client';
-import { Term } from './wp-api';
+import {WordPressAuthParams, WordPressClientResult, WordPressClientReturnCode, WordPressPostParams} from './wp-client';
+import {XmlRpcClient} from './xmlrpc-client';
+import {AbstractWordPressClient} from './abstract-wp-client';
+import {Term} from './wp-api';
 
 interface FaultResponse {
   faultCode: string;
@@ -28,10 +28,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     });
   }
 
-  publish(title: string, content: string, postParams: WordPressPostParams, wp: {
-    username: string,
-    password: string
-  }): Promise<WordPressClientResult> {
+  publish(title: string, content: string, postParams: WordPressPostParams, wp: WordPressAuthParams): Promise<WordPressClientResult> {
     return this.client.methodCall('wp.newPost', [
       0,
       wp.username,
@@ -63,7 +60,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       });
   }
 
-  getCategories(wp: { username: string; password: string }): Promise<Term[]> {
+  getCategories(wp: WordPressAuthParams): Promise<Term[]> {
     return this.client.methodCall('wp.getTerms', [
       0,
       wp.username,
@@ -83,6 +80,27 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
           ...it,
           id: it.term_id
         })) ?? [];
+      });
+  }
+
+  checkUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
+    return this.client.methodCall('wp.getProfile', [
+      0,
+      certificate.username,
+      certificate.password
+    ])
+      .then(response => {
+        if (isFaultResponse(response)) {
+          return {
+            code: WordPressClientReturnCode.Error,
+            data: `${response.faultCode}: ${response.faultString}`
+          };
+        } else {
+          return {
+            code: WordPressClientReturnCode.OK,
+            data: response
+          };
+        }
       });
   }
 

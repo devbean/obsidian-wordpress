@@ -2,6 +2,7 @@
   "error_noEndpoint": "No WordPress URL set.",
   "error_noUsername": "No username",
   "error_noPassword": "No password",
+  "error_invalidUser": "Invalid username or password",
   "ribbon_iconTitle": "WordPress Publish",
   "command_publish": "Publish current note",
   "command_publishWithDefault": "Publish current note with default options",
