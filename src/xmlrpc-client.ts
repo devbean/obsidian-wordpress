@@ -1,4 +1,4 @@
-import { request } from 'obsidian';
+import { Notice, request } from 'obsidian';
 import { create } from 'xmlbuilder2';
 import { XMLBuilder } from 'xmlbuilder2/lib/interfaces';
 import { get, isArray, isBoolean, isDate, isNumber, isObject, isSafeInteger } from 'lodash-es';
@@ -20,7 +20,7 @@ export class XmlRpcClient {
     method: string,
     params: unknown
   ): Promise<unknown> {
-    console.log(`Endpoint: ${this.options.url.href}xmlrpc.php`);
+    console.log(`Endpoint: ${this.options.url.href}xmlrpc.php, ${method}`, params);
 
     const xml = this.objectToXml(method, params).end({ prettyPrint: true });
     console.log(xml);
@@ -34,10 +34,7 @@ export class XmlRpcClient {
       },
       body: xml
     })
-      .then(res => {
-        console.log(res);
-        return this.responseToObject(res);
-      });
+      .then(res => this.responseToObject(res));
   }
 
   private objectToXml(method: string, ...obj: unknown[]): XMLBuilder {

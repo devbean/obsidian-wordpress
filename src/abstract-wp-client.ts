@@ -24,14 +24,14 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     content: string,
     postParams: WordPressPostParams,
     wp: {
-      userName: string,
+      username: string,
       password: string
     }
   ): Promise<WordPressClientResult>;
 
   abstract getCategories(
     wp: {
-      userName: string,
+      username: string,
       password: string
     }
   ): Promise<Term[]>;
@@ -48,20 +48,20 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         new WpLoginModal(
           this.app,
           this.plugin,
-          async (userName, password, loginModal) => {
+          async (username, password, loginModal) => {
             const content = await this.app.vault.read(activeView.file);
             const title = activeView.file.basename;
             if (defaultPostParams) {
               await this.doPublish({
                 title,
                 content,
-                userName,
+                username,
                 password,
                 postParams: defaultPostParams
               }, loginModal);
             } else {
               const categories = await this.getCategories({
-                userName,
+                username,
                 password
               });
               new WpPublishModal(
@@ -72,7 +72,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                   await this.doPublish({
                     title,
                     content,
-                    userName,
+                    username,
                     password,
                     postParams
                   }, loginModal, publishModal);
@@ -93,21 +93,21 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     wpParams: {
       title: string,
       content: string,
-      userName: string,
+      username: string,
       password: string,
       postParams: WordPressPostParams
     },
     loginModal: Modal,
     publishModal?: Modal
   ): Promise<WordPressClientResult> {
-    const { title, content, userName, password, postParams } = wpParams;
+    const { title, content, username, password, postParams } = wpParams;
     try {
       const result = await this.publish(
         title ?? 'A post from Obsidian!',
         marked.parse(content) ?? '',
         postParams,
         {
-          userName,
+          username,
           password
         });
       console.log('newPost', result);

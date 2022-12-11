@@ -1,9 +1,18 @@
-import { App } from 'obsidian';
+import { App, Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
 import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import { Term } from './wp-api';
+
+interface FaultResponse {
+  faultCode: string;
+  faultString: string;
+}
+
+function isFaultResponse(response: unknown): response is FaultResponse {
+  return (response as FaultResponse).faultCode !== undefined;
+}
 
 export class WpXmlRpcClient extends AbstractWordPressClient {
 
@@ -20,12 +29,12 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
   }
 
   publish(title: string, content: string, postParams: WordPressPostParams, wp: {
-    userName: string,
+    username: string,
     password: string
   }): Promise<WordPressClientResult> {
     return this.client.methodCall('wp.newPost', [
       0,
-      wp.userName,
+      wp.username,
       wp.password,
       {
         post_type: 'post',
@@ -37,9 +46,8 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         }
       }
     ])
-      .then((response: any) => { // eslint-disable-line
-        if (response.faultCode && response.faultString) {
-          // it means error happens
+      .then(response => {
+        if (isFaultResponse(response)) {
           return {
             code: WordPressClientReturnCode.Error,
             data: {
@@ -47,22 +55,29 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
               message: response.faultString
             }
           };
-        } else {
-          return {
-            code: WordPressClientReturnCode.OK,
-            data: response
-          }
         }
+        return {
+          code: WordPressClientReturnCode.OK,
+          data: response
+        };
       });
   }
 
-  getCategories(wp: { userName: string; password: string }): Promise<Term[]> {
+  getCategories(wp: { username: string; password: string }): Promise<Term[]> {
     return this.client.methodCall('wp.getTerms', [
       0,
-      wp.userName,
+      wp.username,
       wp.password,
       'category'
     ])
+      .then(response => {
+        if (isFaultResponse(response)) {
+          const fault = `${response.faultCode}: ${response.faultString}`;
+          new Notice(fault);
+          throw new Error(fault);
+        }
+        return response;
+      })
       .then((data: unknown[]) => {
         return data.map((it: any) => ({
           ...it,

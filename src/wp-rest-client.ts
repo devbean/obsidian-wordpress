@@ -24,7 +24,7 @@ export class WpRestClient extends AbstractWordPressClient {
   }
 
   publish(title: string, content: string, postParams: WordPressPostParams, wp: {
-    userName: string,
+    username: string,
     password: string
   }): Promise<WordPressClientResult> {
     return this.httpPost(
@@ -65,7 +65,7 @@ export class WpRestClient extends AbstractWordPressClient {
       });
   }
 
-  getCategories(wp: { userName: string; password: string }): Promise<Term[]> {
+  getCategories(wp: { username: string; password: string }): Promise<Term[]> {
     return this.httpGet(
       'wp-json/wp/v2/categories',
       {
@@ -132,15 +132,15 @@ export class WpRestClient extends AbstractWordPressClient {
 interface WpRestClientContext {
   name: string;
 
-  getHeaders(wp: { userName: string, password: string }): Record<string, string>;
+  getHeaders(wp: { username: string, password: string }): Record<string, string>;
 }
 
 export class WpRestClientMiniOrangeContext implements WpRestClientContext {
   name: 'WpRestClientMiniOrangeContext';
 
-  getHeaders(wp: { userName: string, password: string }): Record<string, string> {
+  getHeaders(wp: { username: string, password: string }): Record<string, string> {
     return {
-      'Authorization': `Basic ${Buffer.from(`${wp.userName}:${wp.password}`).toString('base64')}`
+      'Authorization': `Basic ${Buffer.from(`${wp.username}:${wp.password}`).toString('base64')}`
     }
   }
 }
