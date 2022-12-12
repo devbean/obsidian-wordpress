@@ -117,9 +117,12 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       console.log('newPost', result);
       if (result.code === WordPressClientReturnCode.Error) {
         const data = result.data as any; // eslint-disable-line
-        new Notice(`Post published failed!\n${data.code}: ${data.message}`);
+        new Notice(this.plugin.i18n.t('error_publishFailed', {
+          code: data.code,
+          message: data.message
+        }));
       } else {
-        new Notice('Post published successfully!');
+        new Notice(this.plugin.i18n.t('message_publishSuccessfully'));
         if (publishModal) {
           publishModal.close();
         }

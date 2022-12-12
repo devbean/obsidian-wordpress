@@ -1,4 +1,4 @@
-import { PostStatus } from './wp-api';
+import { CommentStatus, PostStatus } from './wp-api';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -12,6 +12,7 @@ export interface WordPressClientResult {
 
 export interface WordPressPostParams {
   status: PostStatus;
+  commentStatus: CommentStatus;
   categories: number[];
 }
 

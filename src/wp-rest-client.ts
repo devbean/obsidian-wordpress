@@ -27,6 +27,7 @@ export class WpRestClient extends AbstractWordPressClient {
         title,
         content,
         status: postParams.status,
+        comment_status: postParams.commentStatus,
         categories: postParams.categories
       },
       {

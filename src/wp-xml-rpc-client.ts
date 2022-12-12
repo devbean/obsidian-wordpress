@@ -37,6 +37,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       {
         post_type: 'post',
         post_status: postParams.status,
+        comment_status: postParams.commentStatus,
         post_title: title,
         post_content: content,
         terms: {

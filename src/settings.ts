@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
-import { PostStatus } from './wp-api';
+import { CommentStatus, PostStatus } from './wp-api';
 import { LanguageWithAuto, TranslateKey } from './i18n';
 
 
@@ -60,6 +60,11 @@ export interface WordpressPluginSettings {
    * Default post status.
    */
   defaultPostStatus: PostStatus;
+
+  /**
+   * Default comment status.
+   */
+  defaultCommentStatus: CommentStatus;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
@@ -70,7 +75,8 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   saveUsername: false,
   savePassword: false,
   showRibbonIcon: false,
-  defaultPostStatus: PostStatus.Draft
+  defaultPostStatus: PostStatus.Draft,
+  defaultCommentStatus: CommentStatus.Open
 }
 
 export class WordpressSettingTab extends PluginSettingTab {
@@ -154,6 +160,21 @@ export class WordpressSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.defaultPostStatus)
           .onChange(async (value: PostStatus) => {
             this.plugin.settings.defaultPostStatus = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName(t('settings_defaultPostComment'))
+      .setDesc(t('settings_defaultPostCommentDesc'))
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOption(CommentStatus.Open, t('settings_defaultPostCommentOpen'))
+          .addOption(CommentStatus.Closed, t('settings_defaultPostCommentClosed'))
+          // .addOption(PostStatus.Future, 'future')
+          .setValue(this.plugin.settings.defaultCommentStatus)
+          .onChange(async (value: CommentStatus) => {
+            this.plugin.settings.defaultCommentStatus = value;
             await this.plugin.saveSettings();
           });
       });

@@ -29,6 +29,7 @@ export default class WordpressPlugin extends Plugin {
       editorCallback: (editor: Editor, view: MarkdownView) => {
         const params: WordPressPostParams = {
           status: this.settings.defaultPostStatus,
+          commentStatus: this.settings.defaultCommentStatus,
           categories: []
         };
         this.publishPost(params);
