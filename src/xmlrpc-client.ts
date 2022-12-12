@@ -108,7 +108,7 @@ export class XmlRpcClient {
     } else if (get(value, 'dateTime.iso8601')) {
       const datetime = get(value, 'dateTime.iso8601');
       if (datetime) {
-        return parse(datetime, 'yyyyMMddTHH:mm:ss', new Date());
+        return parse(datetime, "yyyyMMdd'T'HH:mm:ss", new Date());
       } else {
         return new Date();
       }
