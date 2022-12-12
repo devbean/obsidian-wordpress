@@ -60,6 +60,8 @@ export class WpLoginModal extends Modal {
             this.plugin.settings.saveUsername = value;
             if (!this.plugin.settings.saveUsername) {
               delete this.plugin.settings.username;
+            } else {
+              this.plugin.settings.username = username;
             }
             await this.plugin.saveSettings();
           }),
@@ -74,6 +76,8 @@ export class WpLoginModal extends Modal {
             this.plugin.settings.savePassword = value;
             if (!this.plugin.settings.savePassword) {
               delete this.plugin.settings.password;
+            } else {
+              this.plugin.settings.password = password;
             }
             await this.plugin.saveSettings();
           }),
@@ -90,7 +94,9 @@ export class WpLoginModal extends Modal {
             new Notice(t('error_noPassword'));
           }
           if (username && password) {
-            this.onSubmit(username, password, this);
+            console.log(this.plugin.settings);
+            //this.onSubmit(username, password, this);
+
           }
         })
       );
