@@ -30,8 +30,6 @@ export class XmlRpcClient {
     }
     console.log(`Endpoint: ${href}${xmlRpcPath}, ${method}`, params);
 
-    console.log(this.options.url);
-
     const xml = this.objectToXml(method, params).end({ prettyPrint: true });
     console.log(xml);
 
