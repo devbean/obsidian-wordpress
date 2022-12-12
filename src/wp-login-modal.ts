@@ -94,9 +94,7 @@ export class WpLoginModal extends Modal {
             new Notice(t('error_noPassword'));
           }
           if (username && password) {
-            console.log(this.plugin.settings);
-            //this.onSubmit(username, password, this);
-
+            this.onSubmit(username, password, this);
           }
         })
       );
