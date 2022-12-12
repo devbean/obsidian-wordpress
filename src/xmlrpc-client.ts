@@ -6,27 +6,57 @@ import { format, parse } from 'date-fns';
 
 interface XmlRpcOptions {
   url: URL;
+  xmlRpcPath: string;
 }
 
 export class XmlRpcClient {
+
+  /**
+   * Href without '/' at the very end.
+   * @private
+   */
+  private readonly href: string;
+
+  /**
+   * XML-RPC path without '/' at the beginning or end.
+   * @private
+   */
+  private readonly xmlRpcPath: string;
+
+  private readonly endpoint: string;
 
   constructor(
     private readonly options: XmlRpcOptions
   ) {
     console.log(options);
+
+    this.href = this.options.url.href;
+    if (this.href.endsWith('/')) {
+      this.href = this.href.substring(0, this.href.length - 1);
+    }
+
+    this.xmlRpcPath = this.options.xmlRpcPath;
+    if (this.xmlRpcPath.startsWith('/')) {
+      this.xmlRpcPath = this.xmlRpcPath.substring(1);
+    }
+    if (this.xmlRpcPath.endsWith('/')) {
+      this.xmlRpcPath = this.xmlRpcPath.substring(0, this.xmlRpcPath.length - 1);
+    }
+
+    this.endpoint = `${this.href}/${this.xmlRpcPath}`;
   }
 
   methodCall(
     method: string,
     params: unknown
   ): Promise<unknown> {
-    console.log(`Endpoint: ${this.options.url.href}xmlrpc.php`);
+    console.log(`Endpoint: ${this.endpoint}, ${method}`, params);
 
     const xml = this.objectToXml(method, params).end({ prettyPrint: true });
     console.log(xml);
 
     return request({
-      url: `${this.options.url.href}xmlrpc.php`,
+      url: this.endpoint,
       method: 'POST',
       headers: {
         'Content-Type': 'text/xml',
@@ -34,10 +64,7 @@ export class XmlRpcClient {
       },
       body: xml
     })
-      .then(res => {
-        console.log(res);
-        return this.responseToObject(res);
-      });
+      .then(res => this.responseToObject(res));
   }
 
   private objectToXml(method: string, ...obj: unknown[]): XMLBuilder {
@@ -57,7 +84,7 @@ export class XmlRpcClient {
   private createValue(data: unknown, param: XMLBuilder): void {
     const value = param.ele('value');
     if (isSafeInteger(data)) {
-      value.ele('i4').txt(data.toString());
+      value.ele('i4').txt((data as any).toString());
     } else if (isNumber(data)) {
       value.ele('double').txt(data.toString());
     } else if (isBoolean(data)) {
@@ -79,7 +106,7 @@ export class XmlRpcClient {
         this.createValue(value, member);
       }
     } else {
-      value.ele('string').dat(data.toString());
+      value.ele('string').dat((data as any).toString());
     }
   }
 
@@ -101,10 +128,15 @@ export class XmlRpcClient {
     } else if (get(value, 'boolean')) {
       return get(value, 'boolean') === '1';
     } else if (get(value, 'dateTime.iso8601')) {
-      return parse(get(value, 'dateTime.iso8601'), 'yyyyMMddTHH:mm:ss', new Date());
+      const datetime = get(value, 'dateTime.iso8601');
+      if (datetime) {
+        return parse(datetime, "yyyyMMdd'T'HH:mm:ss", new Date());
+      } else {
+        return new Date();
+      }
     } else if (get(value, 'array')) {
       const array: unknown[] = [];
-      const data = get(value, 'array.data.value');
+      const data: unknown = get(value, 'array.data.value');
       if (isArray(data)) {
         data.forEach((it: unknown) => {
           array.push(this.fromValue(it));
@@ -115,13 +147,19 @@ export class XmlRpcClient {
       return array;
     } else if (get(value, 'struct')) {
       const struct: any = {}; // eslint-disable-line
-      const members = get(value, 'struct.member');
+      const members: unknown = get(value, 'struct.member');
       if (isArray(members)) {
         members.forEach((member: unknown) => {
-          struct[get(member, 'name')] = this.fromValue(get(member, 'value'));
+          const name = get(member, 'name');
+          if (name) {
+            struct[name] = this.fromValue(get(member, 'value'));
+          }
         });
       } else {
-        struct[get(members, 'name')] = this.fromValue(get(members, 'value'));
+        const name = get(members, 'name');
+        if (name) {
+          struct[name] = this.fromValue(get(members, 'value'));
+        }
       }
       return struct;
     } else {

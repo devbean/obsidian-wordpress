@@ -1,4 +1,4 @@
-import { PostStatus } from './wp-api';
+import { CommentStatus, PostStatus } from './wp-api';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -12,7 +12,19 @@ export interface WordPressClientResult {
 
 export interface WordPressPostParams {
   status: PostStatus;
+  commentStatus: CommentStatus;
   categories: number[];
+}
+
+export interface WordPressAuthParams {
+  username: string;
+  password: string;
+}
+
+export interface WordPressPublishParams extends WordPressAuthParams {
+  title: string;
+  content: string;
+  postParams: WordPressPostParams;
 }
 
 export interface WordPressClient {
@@ -23,5 +35,11 @@ export interface WordPressClient {
    * @param defaultPostParams Use this parameter instead of popup publish modal if this is not undefined.
    */
   newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult>;
+
+  /**
+   * Checks if the login certificate is OK.
+   * @param certificate
+   */
+  checkUser(certificate: WordPressAuthParams): Promise<WordPressClientResult>;
 
 }

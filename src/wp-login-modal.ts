@@ -1,65 +1,72 @@
-import { App, Modal, Setting } from 'obsidian';
+import { App, Modal, Notice, Setting } from 'obsidian';
 import WordpressPlugin from './main';
+import { TranslateKey } from './i18n';
 
 /**
- * WordPress login modal with user name and password inputs.
+ * WordPress login modal with username and password inputs.
  */
 export class WpLoginModal extends Modal {
 
   constructor(
     app: App,
     private readonly plugin: WordpressPlugin,
-    private readonly onSubmit: (userName: string, password: string, modal: Modal) => void
+    private readonly onSubmit: (username: string, password: string, modal: Modal) => void
   ) {
     super(app);
   }
 
   onOpen() {
+    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
+      return this.plugin.i18n.t(key, vars);
+    };
+
     const { contentEl } = this;
 
-    contentEl.createEl('h1', { text: 'WordPress Login' });
+    contentEl.createEl('h1', { text: t('loginModal_title') });
 
+    let username = '';
+    let password = '';
     new Setting(contentEl)
-      .setName('User Name')
-      .setDesc(`User name for ${this.plugin.settings.endpoint}`)
+      .setName(t('loginModal_username'))
+      .setDesc(t('loginModal_usernameDesc', { url: this.plugin.settings.endpoint }))
       .addText(text => text
-        .setValue(this.plugin.settings.userName ?? '')
+        .setValue(this.plugin.settings.username ?? '')
         .onChange(async (value) => {
-          if (this.plugin.settings.saveUserName) {
-            this.plugin.settings.userName = value;
+          username = value;
+          if (this.plugin.settings.saveUsername) {
+            this.plugin.settings.username = value;
             await this.plugin.saveSettings();
           }
         }));
     new Setting(contentEl)
-      .setName('Password')
-      .setDesc(`Password for ${this.plugin.settings.endpoint}`)
+      .setName(t('loginModal_password'))
+      .setDesc(t('loginModal_passwordDesc', { url: this.plugin.settings.endpoint }))
       .addText(text => text
         .setValue(this.plugin.settings.password ?? '')
         .onChange(async (value) => {
+          password = value;
           if (this.plugin.settings.savePassword) {
             this.plugin.settings.password = value;
             await this.plugin.saveSettings();
           }
         }));
     new Setting(contentEl)
-      .setName('Remember User Name')
-      .setDesc(`If enabled, the WordPress user name you typed will be saved in local data.
-This might be disclosure in synchronize services.`)
+      .setName(t('loginModal_rememberUsername'))
+      .setDesc(t('loginModal_rememberUsernameDesc'))
       .addToggle((toggle) =>
         toggle
-          .setValue(this.plugin.settings.saveUserName)
+          .setValue(this.plugin.settings.saveUsername)
           .onChange(async (value) => {
-            this.plugin.settings.saveUserName = value;
-            if (!this.plugin.settings.saveUserName) {
-              delete this.plugin.settings.userName;
+            this.plugin.settings.saveUsername = value;
+            if (!this.plugin.settings.saveUsername) {
+              delete this.plugin.settings.username;
             }
             await this.plugin.saveSettings();
           }),
       );
     new Setting(contentEl)
-      .setName('Remember Password')
-      .setDesc(`If enabled, the WordPress password you typed will be saved in local data.
-This might be disclosure in synchronize services.`)
+      .setName(t('loginModal_rememberPassword'))
+      .setDesc(t('loginModal_rememberPasswordDesc'))
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.savePassword)
@@ -73,10 +80,18 @@ This might be disclosure in synchronize services.`)
       );
     new Setting(contentEl)
       .addButton(button => button
-        .setButtonText('Login')
+        .setButtonText(t('loginModal_loginButtonText'))
         .setCta()
         .onClick(() => {
-          this.onSubmit(this.plugin.settings.userName, this.plugin.settings.password, this);
+          if (!username) {
+            new Notice(t('error_noUsername'));
+          }
+          if (!password) {
+            new Notice(t('error_noPassword'));
+          }
+          if (username && password) {
+            this.onSubmit(username, password, this);
+          }
         })
       );
   }

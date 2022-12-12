@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.6.0](https://github.com/devbean/obsidian-wordpress/compare/0.4.0...0.6.0) (2022-12-12)
+
+
+### Features
+
+* Now you can set comment status when publishing. ([2b69006](https://github.com/devbean/obsidian-wordpress/commit/2b69006033a1543bc6451cb610eb66242dc77afd))
+* Support i18n. ([d8560ea](https://github.com/devbean/obsidian-wordpress/commit/d8560ea602f43de59db0565189710fe8645737a0))
+* You can remember password on login modal. Be careful! ([4dd257d](https://github.com/devbean/obsidian-wordpress/commit/4dd257d2151d12cc93752d4396ed479b880f3de3))
+* You can set XML-RPC path in settings, default is /xmlrpc.php ([b44be7d](https://github.com/devbean/obsidian-wordpress/commit/b44be7db1db3c24286052062a7e05422433a57af))
+
+
+### Bug Fixes
+
+* Cannot login if username and password are not saved. ([f8d2a5b](https://github.com/devbean/obsidian-wordpress/commit/f8d2a5b4f3e9cc9ce5ddce04133a130faf9f4401))
+* Fix date-fns template placeholder error. ([f5b3e32](https://github.com/devbean/obsidian-wordpress/commit/f5b3e32ff56e5ba1904d86703f3973a447c9ca5c))
+* Normalize URL. ([b25659b](https://github.com/devbean/obsidian-wordpress/commit/b25659bf5da586d3aa4eb1fcf31f4544616b4acd))
+* Remove client cache. ([b6584e7](https://github.com/devbean/obsidian-wordpress/commit/b6584e73892ab6a52915ab00b9a00cab2c5752fd))
+* Show notice if no WordPress URL set. ([baf92d7](https://github.com/devbean/obsidian-wordpress/commit/baf92d79e5f2db5f97210db7fa157f9b5ba0d531))
+* Show notice if username or password is invalided. ([577f24f](https://github.com/devbean/obsidian-wordpress/commit/577f24f7c885f6d715fd51c9bc563681a528b370))
+
 ## [0.5.0](https://github.com/devbean/obsidian-wordpress/compare/0.4.0...0.5.0) (2022-08-15)
 
 

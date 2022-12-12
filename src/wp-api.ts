@@ -4,6 +4,11 @@ export const enum PostStatus {
   // Future = 'future'
 }
 
+export const enum CommentStatus {
+  Open = 'open',
+  Closed = 'closed'
+}
+
 export interface Term {
   id: string;
   name: string;

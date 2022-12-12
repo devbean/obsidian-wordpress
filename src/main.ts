@@ -3,15 +3,21 @@ import { DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from '
 import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
+import { I18n } from './i18n';
 
 export default class WordpressPlugin extends Plugin {
 
 	settings: WordpressPluginSettings;
 
+  i18n: I18n;
+
 	async onload() {
     console.log('loading obsidian-wordpress plugin');
 
 		await this.loadSettings();
+
+    // lang should be load early, but after settings
+    this.i18n = new I18n(this.settings.lang);
 
     addIcons();
 
@@ -19,10 +25,11 @@ export default class WordpressPlugin extends Plugin {
 
     this.addCommand({
       id: 'defaultPublish',
-      name: 'Publish current document with default options',
+      name: this.i18n.t('command_publishWithDefault'),
       editorCallback: (editor: Editor, view: MarkdownView) => {
         const params: WordPressPostParams = {
           status: this.settings.defaultPostStatus,
+          commentStatus: this.settings.defaultCommentStatus,
           categories: []
         };
         this.publishPost(params);
@@ -31,7 +38,7 @@ export default class WordpressPlugin extends Plugin {
 
     this.addCommand({
       id: 'publish',
-      name: 'Publish current document',
+      name: this.i18n.t('command_publish'),
       editorCallback: (editor: Editor, view: MarkdownView) => {
         this.publishPost();
       }
@@ -52,7 +59,7 @@ export default class WordpressPlugin extends Plugin {
 	}
 
   updateRibbonIcon(): void {
-    const ribbonIconTitle = 'WordPress Publish';
+    const ribbonIconTitle = this.i18n.t('ribbon_iconTitle');
     if (this.settings.showRibbonIcon) {
       this.addRibbonIcon('wp-logo', ribbonIconTitle, () => {
         this.publishPost();
