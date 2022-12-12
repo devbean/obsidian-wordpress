@@ -1,9 +1,14 @@
-import {App, requestUrl} from 'obsidian';
-import {WordPressAuthParams, WordPressClientResult, WordPressClientReturnCode, WordPressPostParams} from './wp-client';
-import {AbstractWordPressClient} from './abstract-wp-client';
+import { App } from 'obsidian';
+import {
+  WordPressAuthParams,
+  WordPressClientResult,
+  WordPressClientReturnCode,
+  WordPressPostParams
+} from './wp-client';
+import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
-import {Term} from './wp-api';
-import {RestClient} from "./rest-client";
+import { Term } from './wp-api';
+import { RestClient } from './rest-client';
 
 export class WpRestClient extends AbstractWordPressClient {
 

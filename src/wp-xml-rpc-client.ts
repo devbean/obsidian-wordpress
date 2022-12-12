@@ -1,9 +1,14 @@
-import {App, Notice} from 'obsidian';
+import { App, Notice } from 'obsidian';
 import WordpressPlugin from './main';
-import {WordPressAuthParams, WordPressClientResult, WordPressClientReturnCode, WordPressPostParams} from './wp-client';
-import {XmlRpcClient} from './xmlrpc-client';
-import {AbstractWordPressClient} from './abstract-wp-client';
-import {Term} from './wp-api';
+import {
+  WordPressAuthParams,
+  WordPressClientResult,
+  WordPressClientReturnCode,
+  WordPressPostParams
+} from './wp-client';
+import { XmlRpcClient } from './xmlrpc-client';
+import { AbstractWordPressClient } from './abstract-wp-client';
+import { Term } from './wp-api';
 
 interface FaultResponse {
   faultCode: string;

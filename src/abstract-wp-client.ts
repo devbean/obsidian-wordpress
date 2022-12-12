@@ -1,6 +1,6 @@
-import {App, MarkdownView, Modal, Notice} from 'obsidian';
+import { App, MarkdownView, Modal, Notice } from 'obsidian';
 import WordpressPlugin from './main';
-import {WpLoginModal} from './wp-login-modal';
+import { WpLoginModal } from './wp-login-modal';
 import {
   WordPressAuthParams,
   WordPressClient,
@@ -9,9 +9,9 @@ import {
   WordPressPostParams,
   WordPressPublishParams
 } from './wp-client';
-import {marked} from 'marked';
-import {WpPublishModal} from './wp-publish-modal';
-import {Term} from './wp-api';
+import { marked } from 'marked';
+import { WpPublishModal } from './wp-publish-modal';
+import { Term } from './wp-api';
 
 
 export abstract class AbstractWordPressClient implements WordPressClient {

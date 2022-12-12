@@ -11,30 +11,52 @@ interface XmlRpcOptions {
 
 export class XmlRpcClient {
 
+  /**
+   * Href without '/' at the very end.
+   * @private
+   */
+  private readonly href: string;
+
+  /**
+   * XML-RPC path without '/' at the beginning or end.
+   * @private
+   */
+  private readonly xmlRpcPath: string;
+
+  private readonly endpoint: string;
+
   constructor(
     private readonly options: XmlRpcOptions
   ) {
     console.log(options);
+
+    this.href = this.options.url.href;
+    if (this.href.endsWith('/')) {
+      this.href = this.href.substring(0, this.href.length - 1);
+    }
+
+    this.xmlRpcPath = this.options.xmlRpcPath;
+    if (this.xmlRpcPath.startsWith('/')) {
+      this.xmlRpcPath = this.xmlRpcPath.substring(1);
+    }
+    if (this.xmlRpcPath.endsWith('/')) {
+      this.xmlRpcPath = this.xmlRpcPath.substring(0, this.xmlRpcPath.length - 1);
+    }
+
+    this.endpoint = `${this.href}/${this.xmlRpcPath}`;
   }
 
   methodCall(
     method: string,
     params: unknown
   ): Promise<unknown> {
-    const href = this.options.url.href;
-    let xmlRpcPath = this.options.xmlRpcPath;
-    if (href.endsWith('/')) {
-      if (xmlRpcPath.startsWith('/')) {
-        xmlRpcPath = xmlRpcPath.substring(1);
-      }
-    }
-    console.log(`Endpoint: ${href}${xmlRpcPath}, ${method}`, params);
+    console.log(`Endpoint: ${this.endpoint}, ${method}`, params);
 
     const xml = this.objectToXml(method, params).end({ prettyPrint: true });
     console.log(xml);
 
     return request({
-      url: `${href}${xmlRpcPath}`,
+      url: this.endpoint,
       method: 'POST',
       headers: {
         'Content-Type': 'text/xml',
