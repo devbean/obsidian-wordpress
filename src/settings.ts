@@ -27,6 +27,11 @@ export interface WordpressPluginSettings {
   endpoint: string;
 
   /**
+   * XML-RPC path.
+   */
+  xmlRpcPath: string;
+
+  /**
    * WordPress username.
    */
   username?: string;
@@ -61,6 +66,7 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   lang: 'auto',
   apiType: ApiType.XML_RPC,
   endpoint: '',
+  xmlRpcPath: '/xmlrpc.php',
   saveUsername: false,
   savePassword: false,
   showRibbonIcon: false,
@@ -111,6 +117,18 @@ export class WordpressSettingTab extends PluginSettingTab {
             this.display();
           });
       });
+    if (this.plugin.settings.apiType === ApiType.XML_RPC) {
+      new Setting(containerEl)
+        .setName(t('settings_xmlRpcPath'))
+        .setDesc(t('settings_xmlRpcPathDesc'))
+        .addText(text => text
+          .setPlaceholder('/xmlrpc.php')
+          .setValue(this.plugin.settings.xmlRpcPath)
+          .onChange(async (value) => {
+            this.plugin.settings.xmlRpcPath = value;
+            await this.plugin.saveSettings();
+          }));
+    }
     new Setting(containerEl)
       .setName(t('settings_showRibbonIcon'))
       .setDesc(t('settings_showRibbonIconDesc'))
@@ -120,7 +138,6 @@ export class WordpressSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.showRibbonIcon = value;
             await this.plugin.saveSettings();
-            this.display();
 
             this.plugin.updateRibbonIcon();
           }),
@@ -138,7 +155,6 @@ export class WordpressSettingTab extends PluginSettingTab {
           .onChange(async (value: PostStatus) => {
             this.plugin.settings.defaultPostStatus = value;
             await this.plugin.saveSettings();
-            this.display();
           });
       });
 	}

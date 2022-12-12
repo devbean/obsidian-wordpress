@@ -1,4 +1,4 @@
-import { Notice, request } from 'obsidian';
+import { request } from 'obsidian';
 import { create } from 'xmlbuilder2';
 import { XMLBuilder } from 'xmlbuilder2/lib/interfaces';
 import { get, isArray, isBoolean, isDate, isNumber, isObject, isSafeInteger } from 'lodash-es';
@@ -6,6 +6,7 @@ import { format, parse } from 'date-fns';
 
 interface XmlRpcOptions {
   url: URL;
+  xmlRpcPath: string;
 }
 
 export class XmlRpcClient {
@@ -20,13 +21,22 @@ export class XmlRpcClient {
     method: string,
     params: unknown
   ): Promise<unknown> {
-    console.log(`Endpoint: ${this.options.url.href}xmlrpc.php, ${method}`, params);
+    const href = this.options.url.href;
+    let xmlRpcPath = this.options.xmlRpcPath;
+    if (href.endsWith('/')) {
+      if (xmlRpcPath.startsWith('/')) {
+        xmlRpcPath = xmlRpcPath.substring(1);
+      }
+    }
+    console.log(`Endpoint: ${href}${xmlRpcPath}, ${method}`, params);
+
+    console.log(this.options.url);
 
     const xml = this.objectToXml(method, params).end({ prettyPrint: true });
     console.log(xml);
 
     return request({
-      url: `${this.options.url.href}xmlrpc.php`,
+      url: `${href}${xmlRpcPath}`,
       method: 'POST',
       headers: {
         'Content-Type': 'text/xml',

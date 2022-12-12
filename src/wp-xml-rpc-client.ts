@@ -24,7 +24,8 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
   ) {
     super(app, plugin);
     this.client = new XmlRpcClient({
-      url: new URL(plugin.settings.endpoint)
+      url: new URL(plugin.settings.endpoint),
+      xmlRpcPath: plugin.settings.xmlRpcPath
     });
   }
 

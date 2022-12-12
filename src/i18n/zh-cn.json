@@ -20,6 +20,8 @@
   "settings_defaultPostStatusDesc": "发布到 WordPress 的文章默认状态",
   "settings_defaultPostStatusDraft": "草稿",
   "settings_defaultPostStatusPublish": "正式发布",
+  "settings_xmlRpcPath": "XML-RPC 路径",
+  "settings_xmlRpcPathDesc": "XML-RPC 路径，默认值为 /xmlrpc.php",
   "loginModal_title": "WordPress 登录",
   "loginModal_username": "用户名",
   "loginModal_usernameDesc": "<%= url %> 用户名",

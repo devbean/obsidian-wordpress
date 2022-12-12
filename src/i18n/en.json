@@ -20,6 +20,8 @@
   "settings_defaultPostStatusDesc": "Post status which will be published to WordPress.",
   "settings_defaultPostStatusDraft": "draft",
   "settings_defaultPostStatusPublish": "publish",
+  "settings_xmlRpcPath": "XML-RPC Path",
+  "settings_xmlRpcPathDesc": "XML-RPC Path, default is /xmlrpc.php",
   "loginModal_title": "WordPress Login",
   "loginModal_username": "Username",
   "loginModal_usernameDesc": "Username for <%= url %>",
