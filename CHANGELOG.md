@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.7.0](https://github.com/devbean/obsidian-wordpress/compare/0.6.0...0.7.0) (2022-12-13)
+
+
+### Features
+
+* Support WordPress application passwords authentication. ([fce8ca8](https://github.com/devbean/obsidian-wordpress/commit/fce8ca8c18345c409a05d56c68a16e9504a5d59f))
+* Update license to Apache 2.0 ([abb19c2](https://github.com/devbean/obsidian-wordpress/commit/abb19c2687f12b7639e50727c45643b320d09cf6))
+* Update license to Apache 2.0 ([560712b](https://github.com/devbean/obsidian-wordpress/commit/560712b18103059a599276577a175b6cac09be5d))
+
+
+### Bug Fixes
+
+* Fix a bug about save username and password working. ([90b9281](https://github.com/devbean/obsidian-wordpress/commit/90b9281f53ec62dafee63453a36a86bd55168f90))
+
+## [0.5.0](https://github.com/devbean/obsidian-wordpress/compare/0.4.0...0.5.0) (2022-08-15)
+
 ## [0.6.0](https://github.com/devbean/obsidian-wordpress/compare/0.4.0...0.6.0) (2022-12-12)
 
 
