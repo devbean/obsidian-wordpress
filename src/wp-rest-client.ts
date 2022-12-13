@@ -111,3 +111,13 @@ export class WpRestClientMiniOrangeContext implements WpRestClientContext {
     }
   }
 }
+
+export class WpRestClientAppPasswordContext implements WpRestClientContext {
+  name: 'WpRestClientAppPasswordContext';
+
+  getHeaders(wp: WordPressAuthParams): Record<string, string> {
+    return {
+      'Authorization': `Basic ${Buffer.from(`${wp.username}:${wp.password}`).toString('base64')}`
+    }
+  }
+}

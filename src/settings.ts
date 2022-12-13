@@ -6,7 +6,8 @@ import { LanguageWithAuto, TranslateKey } from './i18n';
 
 export const enum ApiType {
   XML_RPC = 'xml-rpc',
-  RestAPI_miniOrange = 'miniOrange'
+  RestAPI_miniOrange = 'miniOrange',
+  RestApi_ApplicationPasswords = 'application-passwords'
 }
 
 export interface WordpressPluginSettings {
@@ -92,12 +93,26 @@ export class WordpressSettingTab extends PluginSettingTab {
     const t = (key: TranslateKey, vars?: Record<string, string>): string => {
       return this.plugin.i18n.t(key, vars);
     };
+    const getApiTypeDesc = (apiType: ApiType): string => {
+      switch (apiType) {
+        case ApiType.XML_RPC:
+          return t('settings_apiTypeXmlRpcDesc');
+        case ApiType.RestAPI_miniOrange:
+          return t('settings_apiTypeRestMiniOrangeDesc');
+        case ApiType.RestApi_ApplicationPasswords:
+          return t('settings_apiTypeRestApplicationPasswordsDesc');
+        default:
+          return '';
+      }
+    };
 
 		const { containerEl } = this;
 
 		containerEl.empty();
 
     containerEl.createEl('h1', { text: t('settings_title') });
+
+    let apiDesc = getApiTypeDesc(this.plugin.settings.apiType);
 
 		new Setting(containerEl)
 			.setName(t('settings_url'))
@@ -116,13 +131,18 @@ export class WordpressSettingTab extends PluginSettingTab {
         dropdown
           .addOption(ApiType.XML_RPC, t('settings_apiTypeXmlRpc'))
           .addOption(ApiType.RestAPI_miniOrange, t('settings_apiTypeRestMiniOrange'))
+          .addOption(ApiType.RestApi_ApplicationPasswords, t('settings_apiTypeRestApplicationPasswords'))
           .setValue(this.plugin.settings.apiType)
           .onChange(async (value: ApiType) => {
             this.plugin.settings.apiType = value;
+            apiDesc = getApiTypeDesc(this.plugin.settings.apiType);
             await this.plugin.saveSettings();
             this.display();
           });
       });
+    containerEl.createEl('p', {
+      text: apiDesc
+    });
     if (this.plugin.settings.apiType === ApiType.XML_RPC) {
       new Setting(containerEl)
         .setName(t('settings_xmlRpcPath'))
