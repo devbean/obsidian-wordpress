@@ -24,8 +24,8 @@ export class WpLoginModal extends Modal {
 
     contentEl.createEl('h1', { text: t('loginModal_title') });
 
-    let username = '';
-    let password = '';
+    let username = this.plugin.settings.username;
+    let password = this.plugin.settings.password;
     new Setting(contentEl)
       .setName(t('loginModal_username'))
       .setDesc(t('loginModal_usernameDesc', { url: this.plugin.settings.endpoint }))
@@ -60,6 +60,8 @@ export class WpLoginModal extends Modal {
             this.plugin.settings.saveUsername = value;
             if (!this.plugin.settings.saveUsername) {
               delete this.plugin.settings.username;
+            } else {
+              this.plugin.settings.username = username;
             }
             await this.plugin.saveSettings();
           }),
@@ -74,6 +76,8 @@ export class WpLoginModal extends Modal {
             this.plugin.settings.savePassword = value;
             if (!this.plugin.settings.savePassword) {
               delete this.plugin.settings.password;
+            } else {
+              this.plugin.settings.password = password;
             }
             await this.plugin.saveSettings();
           }),

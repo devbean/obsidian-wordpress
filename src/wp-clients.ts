@@ -2,7 +2,7 @@ import { App, Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import { ApiType } from './settings';
 import { WpXmlRpcClient } from './wp-xml-rpc-client';
-import { WpRestClient, WpRestClientMiniOrangeContext } from './wp-rest-client';
+import { WpRestClient, WpRestClientAppPasswordContext, WpRestClientMiniOrangeContext } from './wp-rest-client';
 import { WordPressClient } from './wp-client';
 
 export function getWordPressClient(
@@ -20,6 +20,9 @@ export function getWordPressClient(
       break;
     case ApiType.RestAPI_miniOrange:
       client = new WpRestClient(app, plugin, new WpRestClientMiniOrangeContext());
+      break;
+    case ApiType.RestApi_ApplicationPasswords:
+      client = new WpRestClient(app, plugin, new WpRestClientAppPasswordContext());
       break;
     default:
       client = null;
