@@ -24,8 +24,8 @@ export class WpLoginModal extends Modal {
 
     contentEl.createEl('h1', { text: t('loginModal_title') });
 
-    let username = '';
-    let password = '';
+    let username = this.plugin.settings.username;
+    let password = this.plugin.settings.password;
     new Setting(contentEl)
       .setName(t('loginModal_username'))
       .setDesc(t('loginModal_usernameDesc', { url: this.plugin.settings.endpoint }))
