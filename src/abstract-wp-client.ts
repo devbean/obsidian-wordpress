@@ -42,7 +42,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
     return new Promise((resolve, reject) => {
       if (!this.plugin.settings.endpoint || this.plugin.settings.endpoint.length === 0) {
-        new Notice(this.plugin.i18n.t('error_noEndpoint'));
+        new Notice(this.plugin.i18n.t('error_noEndpoint'), 0);
         reject(new Error('No endpoint set.'));
       }
       const { workspace } = this.app;
@@ -86,7 +86,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
               }
             } else {
               const invalidUsernameOrPassword = this.plugin.i18n.t('error_invalidUser');
-              new Notice(invalidUsernameOrPassword);
+              new Notice(invalidUsernameOrPassword, 0);
               reject(new Error(invalidUsernameOrPassword));
             }
           }
@@ -120,7 +120,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         new Notice(this.plugin.i18n.t('error_publishFailed', {
           code: data.code,
           message: data.message
-        }));
+        }), 0);
       } else {
         new Notice(this.plugin.i18n.t('message_publishSuccessfully'));
         if (publishModal) {
@@ -131,7 +131,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       return result;
     } catch (error) {
       console.log('Reading file content for \'newPost\' failed: ', error);
-      new Notice(error.toString());
+      new Notice(error.toString(), 0);
     }
     return Promise.reject('You should not be here!');
   }

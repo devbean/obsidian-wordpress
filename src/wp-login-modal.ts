@@ -88,10 +88,9 @@ export class WpLoginModal extends Modal {
         .setCta()
         .onClick(() => {
           if (!username) {
-            new Notice(t('error_noUsername'));
-          }
-          if (!password) {
-            new Notice(t('error_noPassword'));
+            new Notice(t('error_noUsername'), 0);
+          } else if (!password) {
+            new Notice(t('error_noPassword'), 0);
           }
           if (username && password) {
             this.onSubmit(username, password, this);

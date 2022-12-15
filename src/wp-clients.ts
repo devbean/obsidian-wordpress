@@ -10,7 +10,7 @@ export function getWordPressClient(
   plugin: WordpressPlugin
 ): WordPressClient | null {
   if (!plugin.settings.endpoint || plugin.settings.endpoint.length === 0) {
-    new Notice(plugin.i18n.t('error_noEndpoint'));
+    new Notice(plugin.i18n.t('error_noEndpoint'), 0);
     return null;
   }
   let client: WordPressClient | null;

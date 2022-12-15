@@ -77,7 +77,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       .then(response => {
         if (isFaultResponse(response)) {
           const fault = `${response.faultCode}: ${response.faultString}`;
-          new Notice(fault);
+          new Notice(fault, 0);
           throw new Error(fault);
         }
         return response;
