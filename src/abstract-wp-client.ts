@@ -12,6 +12,7 @@ import {
 import { marked } from 'marked';
 import { WpPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
+import { ERROR_NOTICE_TIMEOUT } from './consts';
 
 
 export abstract class AbstractWordPressClient implements WordPressClient {
@@ -30,78 +31,114 @@ export abstract class AbstractWordPressClient implements WordPressClient {
 
   abstract getCategories(
     wp: {
-      username: string,
-      password: string
+      username: string | null,
+      password: string | null
     }
   ): Promise<Term[]>;
 
-  abstract checkUser(
+  abstract validateUser(
     certificate: WordPressAuthParams
   ): Promise<WordPressClientResult>;
 
+  protected openLoginModal(): boolean {
+    return true;
+  }
+
   newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
-    return new Promise((resolve, reject) => {
+    return new Promise<WordPressClientResult>((resolve, reject) => {
       if (!this.plugin.settings.endpoint || this.plugin.settings.endpoint.length === 0) {
-        new Notice(this.plugin.i18n.t('error_noEndpoint'), 0);
-        reject(new Error('No endpoint set.'));
+        new Notice(this.plugin.i18n.t('error_noEndpoint'), ERROR_NOTICE_TIMEOUT);
+        reject({
+          code: WordPressClientReturnCode.Error,
+          data: new Error('No endpoint set.')
+        });
       }
+
       const { workspace } = this.app;
       const activeView = workspace.getActiveViewOfType(MarkdownView);
-      if ( activeView ) {
-        new WpLoginModal(
-          this.app,
-          this.plugin,
-          async (username, password, loginModal) => {
-            const checkUserResult = await this.checkUser({ username, password });
-            if (checkUserResult.code === WordPressClientReturnCode.OK) {
-              const content = await this.app.vault.read(activeView.file);
-              const title = activeView.file.basename;
-              if (defaultPostParams) {
-                await this.doPublish({
-                  title,
-                  content,
-                  username,
-                  password,
-                  postParams: defaultPostParams
-                }, loginModal);
-              } else {
-                const categories = await this.getCategories({
-                  username,
-                  password
-                });
-                new WpPublishModal(
-                  this.app,
-                  this.plugin,
-                  categories,
-                  async (postParams, publishModal) => {
-                    await this.doPublish({
-                      title,
-                      content,
-                      username,
-                      password,
-                      postParams
-                    }, loginModal, publishModal);
-                  }
-                ).open();
-              }
+      if (activeView) {
+        const title = activeView.file.basename;
+        let content = '';
+        (async () => {
+          content = await this.app.vault.read(activeView.file);
+        })();
+
+        const publishPost = async (
+          username: string | null,
+          password: string | null,
+          loginModal?: Modal
+        ) => {
+          const validateUserResult = await this.validateUser({ username, password });
+          if (validateUserResult.code === WordPressClientReturnCode.OK) {
+            if (defaultPostParams) {
+              const result = await this.doPublish({
+                title,
+                content,
+                username,
+                password,
+                postParams: defaultPostParams
+              }, loginModal);
+              resolve(result);
             } else {
-              const invalidUsernameOrPassword = this.plugin.i18n.t('error_invalidUser');
-              new Notice(invalidUsernameOrPassword, 0);
-              reject(new Error(invalidUsernameOrPassword));
+              const categories = await this.getCategories({
+                username,
+                password
+              });
+              new WpPublishModal(
+                this.app,
+                this.plugin,
+                categories,
+                async (postParams, publishModal) => {
+                  const result = await this.doPublish({
+                    title,
+                    content,
+                    username,
+                    password,
+                    postParams
+                  }, loginModal, publishModal);
+                  resolve(result);
+                }
+              ).open();
             }
+          } else {
+            const invalidUsernameOrPassword = this.plugin.i18n.t('error_invalidUser');
+            new Notice(invalidUsernameOrPassword, ERROR_NOTICE_TIMEOUT);
           }
-        ).open();
+        };
+
+        if (this.openLoginModal()) {
+          new WpLoginModal(
+            this.app,
+            this.plugin,
+            (username, password, loginModal) => {
+              publishPost(username, password, loginModal).then(r => {
+                // make compiler happy
+              });
+            }
+          ).open();
+        } else {
+          publishPost(null, null).then(r => {
+            // make compiler happy
+          });
+        }
       } else {
         const error = 'There is no editor found. Nothing will be published.';
         console.warn(error);
-        reject(new Error(error));
+        reject({
+          code: WordPressClientReturnCode.Error,
+          data: new Error(error)
+        });
       }
-    });
+    })
+      .catch(error => {
+        console.log(error);
+        return error;
+      });
   }
 
   private async doPublish(
     wpParams: WordPressPublishParams,
-    loginModal: Modal,
+    loginModal?: Modal,
     publishModal?: Modal
   ): Promise<WordPressClientResult> {
     const { title, content, username, password, postParams } = wpParams;
@@ -123,16 +160,15 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         }), 0);
       } else {
         new Notice(this.plugin.i18n.t('message_publishSuccessfully'));
-        if (publishModal) {
-          publishModal.close();
-        }
-        loginModal.close();
+        publishModal?.close();
+        loginModal?.close();
       }
       return result;
     } catch (error) {
       console.log('Reading file content for \'newPost\' failed: ', error);
-      new Notice(error.toString(), 0);
+      new Notice(error.toString(), ERROR_NOTICE_TIMEOUT);
     }
     return Promise.reject('You should not be here!');
   }
+
 }

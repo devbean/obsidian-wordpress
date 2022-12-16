@@ -9,6 +9,7 @@ import {
 import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import { Term } from './wp-api';
+import { ERROR_NOTICE_TIMEOUT } from './consts';
 
 interface FaultResponse {
   faultCode: string;
@@ -77,7 +78,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       .then(response => {
         if (isFaultResponse(response)) {
           const fault = `${response.faultCode}: ${response.faultString}`;
-          new Notice(fault, 0);
+          new Notice(fault, ERROR_NOTICE_TIMEOUT);
           throw new Error(fault);
         }
         return response;
@@ -90,7 +91,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       });
   }
 
-  checkUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
+  validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
     return this.client.methodCall('wp.getProfile', [
       0,
       certificate.username,

@@ -1,6 +1,7 @@
 import { App, Modal, Notice, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { TranslateKey } from './i18n';
+import { ERROR_NOTICE_TIMEOUT } from './consts';
 
 /**
  * WordPress login modal with username and password inputs.
@@ -88,9 +89,9 @@ export class WpLoginModal extends Modal {
         .setCta()
         .onClick(() => {
           if (!username) {
-            new Notice(t('error_noUsername'), 0);
+            new Notice(t('error_noUsername'), ERROR_NOTICE_TIMEOUT);
           } else if (!password) {
-            new Notice(t('error_noPassword'), 0);
+            new Notice(t('error_noPassword'), ERROR_NOTICE_TIMEOUT);
           }
           if (username && password) {
             this.onSubmit(username, password, this);

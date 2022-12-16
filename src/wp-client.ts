@@ -17,8 +17,8 @@ export interface WordPressPostParams {
 }
 
 export interface WordPressAuthParams {
-  username: string;
-  password: string;
+  username: string | null;
+  password: string | null;
 }
 
 export interface WordPressPublishParams extends WordPressAuthParams {
@@ -40,6 +40,6 @@ export interface WordPressClient {
    * Checks if the login certificate is OK.
    * @param certificate
    */
-  checkUser(certificate: WordPressAuthParams): Promise<WordPressClientResult>;
+  validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult>;
 
 }

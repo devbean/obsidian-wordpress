@@ -9,6 +9,7 @@ import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
 import { Term } from './wp-api';
 import { RestClient } from './rest-client';
+import { isFunction, isString } from 'lodash-es';
 
 export class WpRestClient extends AbstractWordPressClient {
 
@@ -21,13 +22,20 @@ export class WpRestClient extends AbstractWordPressClient {
   ) {
     super(app, plugin);
     this.client = new RestClient({
-      url: new URL(plugin.settings.endpoint)
+      url: new URL(getUrl(this.context.endpoints?.base, plugin.settings.endpoint))
     });
+  }
+
+  protected openLoginModal(): boolean {
+    if (this.context.openLoginModal !== undefined) {
+      return this.context.openLoginModal;
+    }
+    return  super.openLoginModal();
   }
 
   publish(title: string, content: string, postParams: WordPressPostParams, wp: WordPressAuthParams): Promise<WordPressClientResult> {
     return this.client.httpPost(
-      'wp-json/wp/v2/posts',
+      getUrl(this.context.endpoints?.newPost, 'wp-json/wp/v2/posts'),
       {
         title,
         content,
@@ -48,7 +56,7 @@ export class WpRestClient extends AbstractWordPressClient {
               message: resp.message
             }
           };
-        } else if (resp.id) {
+        } else if (resp.id || resp.ID) {
           return {
             code: WordPressClientReturnCode.OK,
             data: resp
@@ -58,7 +66,7 @@ export class WpRestClient extends AbstractWordPressClient {
             code: WordPressClientReturnCode.Error,
             data: {
               code: 500,
-              message: 'Cannot parse WordPress REST API response.'
+              message: this.plugin.i18n.t('error_cannotParseResponse')
             }
           };
         }
@@ -67,16 +75,16 @@ export class WpRestClient extends AbstractWordPressClient {
 
   getCategories(wp: WordPressAuthParams): Promise<Term[]> {
     return this.client.httpGet(
-      'wp-json/wp/v2/categories',
+      getUrl(this.context.endpoints?.getCategories, 'wp-json/wp/v2/categories'),
       {
         headers: this.context.getHeaders(wp)
       })
       .then(data => data as Term[] ?? []);
   }
 
-  checkUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
+  validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
     return this.client.httpGet(
-      `wp-json/wp/v2/users/?username=${certificate.username}`,
+      getUrl(this.context.endpoints?.validateUser, `wp-json/wp/v2/users?search=username`),
       {
         headers: this.context.getHeaders(certificate)
       })
@@ -87,6 +95,7 @@ export class WpRestClient extends AbstractWordPressClient {
         };
       })
       .catch(error => {
+        console.log(error);
         return {
           code: WordPressClientReturnCode.Error,
           data: this.plugin.i18n.t('error_invalidUser')
@@ -96,10 +105,32 @@ export class WpRestClient extends AbstractWordPressClient {
 
 }
 
+type UrlGetter = () => string;
+
+function getUrl(url: string | UrlGetter | undefined, defaultValue: string): string {
+  if (isString(url)) {
+    return url;
+  } else if (isFunction(url)) {
+    return url();
+  } else {
+    return defaultValue;
+  }
+}
+
 interface WpRestClientContext {
   name: string;
 
+  endpoints?: {
+    base?: string | UrlGetter;
+    newPost?: string | UrlGetter;
+    getCategories?: string | UrlGetter;
+    validateUser?: string | UrlGetter;
+  };
+
+  openLoginModal?: boolean;
+
   getHeaders(wp: WordPressAuthParams): Record<string, string>;
+
 }
 
 export class WpRestClientMiniOrangeContext implements WpRestClientContext {
@@ -108,7 +139,7 @@ export class WpRestClientMiniOrangeContext implements WpRestClientContext {
   getHeaders(wp: WordPressAuthParams): Record<string, string> {
     return {
       'Authorization': `Basic ${Buffer.from(`${wp.username}:${wp.password}`).toString('base64')}`
-    }
+    };
   }
 }
 
@@ -118,6 +149,30 @@ export class WpRestClientAppPasswordContext implements WpRestClientContext {
   getHeaders(wp: WordPressAuthParams): Record<string, string> {
     return {
       'Authorization': `Basic ${Buffer.from(`${wp.username}:${wp.password}`).toString('base64')}`
-    }
+    };
+  }
+}
+
+export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
+  name: 'WpRestClientWpComOAuth2Context';
+
+  openLoginModal = false;
+
+  endpoints = {
+    base: 'https://public-api.wordpress.com',
+    newPost: () => `/rest/v1/sites/${this.site}/posts/new`,
+    getCategories: () => `/rest/v1/sites/${this.site}/categories`,
+    validateUser: () => `/rest/v1/sites/${this.site}/posts?number=1`,
+  };
+
+  constructor(
+    private readonly site: string,
+    private readonly accessToken: string
+  ) { }
+
+  getHeaders(wp: WordPressAuthParams): Record<string, string> {
+    return {
+      'Authorization': `BEARER ${this.accessToken}`
+    };
   }
 }
