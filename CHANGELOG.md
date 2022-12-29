@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.8.0](https://github.com/devbean/obsidian-wordpress/compare/0.7.0...0.8.0) (2022-12-29)
+
+
+### Features
+
+* Error notices will be stay in frame until clicking. ([abae9d7](https://github.com/devbean/obsidian-wordpress/commit/abae9d794370847738a93f720aa3ad220c1a2cd8))
+* Support for wordpress.com. ([12e96eb](https://github.com/devbean/obsidian-wordpress/commit/12e96ebb1d036f2f9f1a5535b517dd552197dc0c))
+
+
+### Bug Fixes
+
+* Update ribbon button may cause plugin failed. ([737f981](https://github.com/devbean/obsidian-wordpress/commit/737f981130a37525d2431d0f847b9afdc73b35c5))
+
 ## [0.7.0](https://github.com/devbean/obsidian-wordpress/compare/0.6.0...0.7.0) (2022-12-13)
 
 
