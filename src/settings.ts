@@ -181,10 +181,12 @@ export class WordpressSettingTab extends PluginSettingTab {
           .addOption(ApiType.RestApi_WpComOAuth2, t('settings_apiTypeRestWpComOAuth2'))
           .setValue(this.plugin.settings.apiType)
           .onChange(async (value: ApiType) => {
+            let hasError = false;
             let newApiType = value;
             if (value === ApiType.RestApi_WpComOAuth2) {
               if (!this.plugin.settings.endpoint.includes('wordpress.com')) {
                 new Notice(t('error_notWpCom'), ERROR_NOTICE_TIMEOUT);
+                hasError = true;
                 newApiType = this.plugin.settings.apiType;
               }
             }
@@ -192,15 +194,17 @@ export class WordpressSettingTab extends PluginSettingTab {
             apiDesc = getApiTypeDesc(this.plugin.settings.apiType);
             await this.plugin.saveSettings();
             this.display();
-            if (value === ApiType.RestApi_WpComOAuth2) {
-              if (this.plugin.settings.wpComOAuth2Token) {
-                const endpointUrl = new URL(this.plugin.settings.endpoint);
-                const blogUrl = new URL(this.plugin.settings.wpComOAuth2Token.blogUrl);
-                if (endpointUrl.host !== blogUrl.host) {
+            if (!hasError) {
+              if (value === ApiType.RestApi_WpComOAuth2) {
+                if (this.plugin.settings.wpComOAuth2Token) {
+                  const endpointUrl = new URL(this.plugin.settings.endpoint);
+                  const blogUrl = new URL(this.plugin.settings.wpComOAuth2Token.blogUrl);
+                  if (endpointUrl.host !== blogUrl.host) {
+                    await this.refreshWpComToken();
+                  }
+                } else {
                   await this.refreshWpComToken();
                 }
-              } else {
-                await this.refreshWpComToken();
               }
             }
           });
