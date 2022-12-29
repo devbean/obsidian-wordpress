@@ -7,14 +7,16 @@ import { I18n } from './i18n';
 
 export default class WordpressPlugin extends Plugin {
 
-	settings: WordpressPluginSettings;
+  settings: WordpressPluginSettings;
 
   i18n: I18n;
 
-	async onload() {
+  private ribbonWpIcon: HTMLElement | null = null;
+
+  async onload() {
     console.log('loading obsidian-wordpress plugin');
 
-		await this.loadSettings();
+    await this.loadSettings();
 
     // lang should be load early, but after settings
     this.i18n = new I18n(this.settings.lang);
@@ -44,33 +46,32 @@ export default class WordpressPlugin extends Plugin {
       }
     });
 
-		this.addSettingTab(new WordpressSettingTab(this.app, this));
-	}
+    this.addSettingTab(new WordpressSettingTab(this.app, this));
+  }
 
-	onunload() {
-	}
+  onunload() {
+  }
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
 
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 
   updateRibbonIcon(): void {
     const ribbonIconTitle = this.i18n.t('ribbon_iconTitle');
     if (this.settings.showRibbonIcon) {
-      this.addRibbonIcon('wp-logo', ribbonIconTitle, () => {
-        this.publishPost();
-      });
+      if (!this.ribbonWpIcon) {
+        this.ribbonWpIcon = this.addRibbonIcon('wp-logo', ribbonIconTitle, () => {
+          this.publishPost();
+        });
+      }
     } else {
-      const leftRibbon: any = this.app.workspace.leftRibbon; // eslint-disable-line
-      const children = leftRibbon.ribbonActionsEl.children;
-      for (let i = 0; i < children.length; i++) {
-        if (children.item(i).getAttribute('aria-label') === ribbonIconTitle) {
-          (children.item(i) as HTMLElement).style.display = 'none';
-        }
+      if (this.ribbonWpIcon) {
+        this.ribbonWpIcon.remove();
+        this.ribbonWpIcon = null;
       }
     }
   }
