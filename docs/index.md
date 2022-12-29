@@ -21,6 +21,7 @@ Let's say a WordPress could be access by https://www.mywp.com.
   * XML-RPC: Enabled by default but some hosts may disable it for safety problems.
   * REST API Authentication by miniOrange: REST API is enabled by default since WordPress 4.7. An extra plugin named miniOrange is needed to be installed and enabled in order to protect core writable APIs.
   * REST API Authentication by application password: REST API is enabled by default since WordPress 4.7 while application password was introduced in WordPress 5.6. If you are OK with WordPress 5.6, this is recommended as no plugin is needed.
+  * REST API for wordpress.com only: REST API is enabled by default on wordpress.com.
 
   **Note** The mentioned plugins miniOrange must be installed and enabled in WordPress server and configured correctly as following steps.
 * **Show icon in sidebar**: Show WordPress logo in sidebar so you could click it
@@ -62,11 +63,12 @@ Then you could use your login username and the application password in Obsidian 
 
 ## How to use with WordPress.com
 
-WordPress.com enables XML-RPC by default so you could select this API type.
+WordPress.com supports OAuth 2.0 to protect REST API. This plugin add OAuth 2.0 for wordpress.com.
 
-When using with WordPress.com, the username may not be the same as your login username.
-You could find the correct one here:
+When using with WordPress.com, a valid wordpress.com site URL should be input first
+(let's say https://yoursitename.wordpress.com). Then select 'REST API for wordpress.com', the browser
+should be raised to open wordpress.com authorize page. After clicking 'Approve' button, obsidian.md
+should be raised again and the plugin should be authorized.
 
-![wordpress.com users](/obsidian-wordpress/assets/images/wp-com-users.png)
-
-And password should be the password of this username (usually the account login password).
+**Note**, the plugin fetched wordpress.com token might be expired in two weeks by default. If publishes
+failed some day, 'Refresh' button should be clicked in order to get a new token.
