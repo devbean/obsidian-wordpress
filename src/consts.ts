@@ -1,0 +1,1 @@
+export const ERROR_NOTICE_TIMEOUT = 15000;
