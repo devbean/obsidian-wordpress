@@ -1,4 +1,4 @@
-import { App, MarkdownView, Modal, Notice } from 'obsidian';
+import { App, Modal, Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpLoginModal } from './wp-login-modal';
 import {
@@ -54,13 +54,12 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         });
       }
 
-      const { workspace } = this.app;
-      const activeView = workspace.getActiveViewOfType(MarkdownView);
-      if (activeView) {
-        const title = activeView.file.basename;
+      const { activeEditor } = this.app.workspace;
+      if (activeEditor && activeEditor.file) {
+        const title = activeEditor.file.basename;
         let content = '';
         (async () => {
-          content = await this.app.vault.read(activeView.file);
+          content = await this.app.vault.read(activeEditor.file!);
         })();
 
         const publishPost = async (
@@ -122,7 +121,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           });
         }
       } else {
-        const error = 'There is no editor found. Nothing will be published.';
+        const error = 'There is no editor or file found. Nothing will be published.';
         console.warn(error);
         reject({
           code: WordPressClientReturnCode.Error,
