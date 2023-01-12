@@ -4,7 +4,13 @@ import { CommentStatus, PostStatus } from './wp-api';
 import { LanguageWithAuto, TranslateKey } from './i18n';
 import { generateCodeVerifier, OAuth2Client, WordPressOAuth2Token } from './oauth2-client';
 import { WordPressClientReturnCode } from './wp-client';
-import { ERROR_NOTICE_TIMEOUT } from './consts';
+import {
+  ERROR_NOTICE_TIMEOUT,
+  WP_OAUTH2_AUTHORIZE_ENDPOINT,
+  WP_OAUTH2_CLIENT_ID,
+  WP_OAUTH2_CLIENT_SECRET,
+  WP_OAUTH2_TOKEN_ENDPOINT, WP_OAUTH2_VALIDATE_TOKEN_ENDPOINT
+} from './consts';
 
 const OAuth2UrlAction = 'wordpress-plugin-oauth';
 const OAuth2RedirectUri = `obsidian://${OAuth2UrlAction}`;
@@ -90,13 +96,7 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
 
 export class WordpressSettingTab extends PluginSettingTab {
 
-  private readonly client = new OAuth2Client({
-    clientId: '79085',
-    clientSecret: 'zg4mKy9O1mc1mmynShJTVxs8r1k3X4e3g1sv5URlkpZqlWdUdAA7C2SSBOo02P7X',
-    tokenEndpoint: 'https://public-api.wordpress.com/oauth2/token',
-    authorizeEndpoint: 'https://public-api.wordpress.com/oauth2/authorize',
-    validateTokenEndpoint: 'https://public-api.wordpress.com/oauth2/token-info'
-  }, this.plugin);
+  private client: OAuth2Client | undefined;
 
   private codeVerifier?: string;
 
@@ -117,7 +117,7 @@ export class WordpressSettingTab extends PluginSettingTab {
             delete this.plugin.settings.wpComOAuth2Token;
             await this.plugin.saveSettings();
           } else if (e.code) {
-            const token = await this.client.getToken({
+            const token = await this.getWpOAuth2Client().getToken({
               code: e.code,
               redirectUri: OAuth2RedirectUri,
               codeVerifier: this.codeVerifier
@@ -232,7 +232,7 @@ export class WordpressSettingTab extends PluginSettingTab {
           .setButtonText(t('settings_wpComOAuth2ValidateTokenButtonText'))
           .onClick(() => {
             if (this.plugin.settings.wpComOAuth2Token) {
-              this.client.validateToken({
+              this.getWpOAuth2Client().validateToken({
                 token: this.plugin.settings.wpComOAuth2Token.accessToken
               })
                 .then(result => {
@@ -297,12 +297,25 @@ export class WordpressSettingTab extends PluginSettingTab {
 
   private async refreshWpComToken(): Promise<void> {
     this.codeVerifier = generateCodeVerifier();
-    await this.client.getAuthorizeCode({
+    await this.getWpOAuth2Client().getAuthorizeCode({
       redirectUri: OAuth2RedirectUri,
       scope: [ 'posts', 'taxonomy', 'media' ],
       blog: this.plugin.settings.endpoint,
       codeVerifier: this.codeVerifier
     });
+  }
+
+  private getWpOAuth2Client(): OAuth2Client {
+    if (!this.client) {
+      this.client = new OAuth2Client({
+        clientId: WP_OAUTH2_CLIENT_ID,
+        clientSecret: WP_OAUTH2_CLIENT_SECRET,
+        tokenEndpoint: WP_OAUTH2_TOKEN_ENDPOINT,
+        authorizeEndpoint: WP_OAUTH2_AUTHORIZE_ENDPOINT,
+        validateTokenEndpoint: WP_OAUTH2_VALIDATE_TOKEN_ENDPOINT
+      }, this.plugin);
+    }
+    return this.client;
   }
 
 }

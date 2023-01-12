@@ -84,7 +84,7 @@ export class WpRestClient extends AbstractWordPressClient {
 
   validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
     return this.client.httpGet(
-      getUrl(this.context.endpoints?.validateUser, `wp-json/wp/v2/users?search=username`),
+      getUrl(this.context.endpoints?.validateUser, `wp-json/wp/v2/users?search=xxx`),
       {
         headers: this.context.getHeaders(certificate)
       })
@@ -136,6 +136,10 @@ interface WpRestClientContext {
 export class WpRestClientMiniOrangeContext implements WpRestClientContext {
   name: 'WpRestClientMiniOrangeContext';
 
+  constructor() {
+    console.log('WpRestClientMiniOrangeContext loaded');
+  }
+
   getHeaders(wp: WordPressAuthParams): Record<string, string> {
     return {
       'Authorization': `Basic ${Buffer.from(`${wp.username}:${wp.password}`).toString('base64')}`
@@ -146,9 +150,13 @@ export class WpRestClientMiniOrangeContext implements WpRestClientContext {
 export class WpRestClientAppPasswordContext implements WpRestClientContext {
   name: 'WpRestClientAppPasswordContext';
 
+  constructor() {
+    console.log('WpRestClientAppPasswordContext loaded');
+  }
+
   getHeaders(wp: WordPressAuthParams): Record<string, string> {
     return {
-      'Authorization': `Basic ${Buffer.from(`${wp.username}:${wp.password}`).toString('base64')}`
+      'Authorization': `Basic ${Buffer.from(`${wp.username}:${wp.password}`, 'utf-8').toString('base64')}`
     };
   }
 }
@@ -168,7 +176,9 @@ export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
   constructor(
     private readonly site: string,
     private readonly accessToken: string
-  ) { }
+  ) {
+    console.log('WpRestClientWpComOAuth2Context loaded');
+  }
 
   getHeaders(wp: WordPressAuthParams): Record<string, string> {
     return {
