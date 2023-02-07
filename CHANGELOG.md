@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.1](https://github.com/devbean/obsidian-wordpress/compare/0.9.0...0.9.1) (2023-02-07)
+
+
+### Bug Fixes
+
+* Compile errors. ([b37ee81](https://github.com/devbean/obsidian-wordpress/commit/b37ee81a53a5322adb67eafb51cf737a5628a45c))
+
 ## [0.9.0](https://github.com/devbean/obsidian-wordpress/compare/0.8.0...0.9.0) (2023-02-07)
 
 
