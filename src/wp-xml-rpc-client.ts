@@ -36,34 +36,50 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
   }
 
   publish(title: string, content: string, postParams: WordPressPostParams, wp: WordPressAuthParams): Promise<WordPressClientResult> {
-    return this.client.methodCall('wp.newPost', [
-      0,
-      wp.username,
-      wp.password,
-      {
-        post_type: 'post',
-        post_status: postParams.status,
-        comment_status: postParams.commentStatus,
-        post_title: title,
-        post_content: content,
-        terms: {
-          'category': postParams.categories
-        }
+    const publishContent = {
+      post_type: 'post',
+      post_status: postParams.status,
+      comment_status: postParams.commentStatus,
+      post_title: title,
+      post_content: content,
+      terms: {
+        'category': postParams.categories
       }
-    ])
-      .then(response => {
+    };
+    let publishPromise;
+    if (postParams.postId) {
+      publishPromise = this.client.methodCall('wp.editPost', [
+        0,
+        wp.username,
+        wp.password,
+        postParams.postId,
+        publishContent
+      ]);
+    } else {
+      publishPromise = this.client.methodCall('wp.newPost', [
+        0,
+        wp.username,
+        wp.password,
+        publishContent
+      ]);
+    }
+    return publishPromise.then(response => {
         if (isFaultResponse(response)) {
           return {
             code: WordPressClientReturnCode.Error,
             data: {
               code: response.faultCode,
               message: response.faultString
-            }
+            },
+            response
           };
         }
         return {
           code: WordPressClientReturnCode.OK,
-          data: response
+          data: {
+            postId: postParams.postId ?? response
+          },
+          response
         };
       });
   }
@@ -84,7 +100,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         return response;
       })
       .then((data: unknown[]) => {
-        return data.map((it: any) => ({
+        return data.map((it: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
           ...it,
           id: it.term_id
         })) ?? [];

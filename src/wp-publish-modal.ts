@@ -14,6 +14,7 @@ export class WpPublishModal extends Modal {
     app: App,
     private readonly plugin: WordpressPlugin,
     private readonly categories: Term[],
+    private readonly selectedCategories: number[],
     private readonly onSubmit: (params: WordPressPostParams, modal: Modal) => void
   ) {
     super(app);
@@ -27,7 +28,7 @@ export class WpPublishModal extends Modal {
     const params: WordPressPostParams = {
       status: this.plugin.settings.defaultPostStatus,
       commentStatus: this.plugin.settings.defaultCommentStatus,
-      categories: [ 1 ]
+      categories: this.selectedCategories
     };
 
     const { contentEl } = this;
@@ -65,7 +66,7 @@ export class WpPublishModal extends Modal {
             dropdown.addOption(it.id, it.name);
           });
           dropdown
-            .setValue("1")
+            .setValue(String(this.selectedCategories[0]))
             .onChange((value) => {
               params.categories = [ toNumber(value) ];
             });

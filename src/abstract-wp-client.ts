@@ -13,6 +13,7 @@ import { marked } from 'marked';
 import { WpPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
+import matter from 'gray-matter';
 
 
 export abstract class AbstractWordPressClient implements WordPressClient {
@@ -44,7 +45,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     return true;
   }
 
-  newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
+  publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
     return new Promise<WordPressClientResult>((resolve, reject) => {
       if (!this.plugin.settings.endpoint || this.plugin.settings.endpoint.length === 0) {
         new Notice(this.plugin.i18n.t('error_noEndpoint'), ERROR_NOTICE_TIMEOUT);
@@ -57,25 +58,29 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       const { activeEditor } = this.app.workspace;
       if (activeEditor && activeEditor.file) {
         const title = activeEditor.file.basename;
-        let content = '';
+        let rawContent = '';
         (async () => {
-          content = await this.app.vault.read(activeEditor.file!);
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          rawContent = await this.app.vault.read(activeEditor.file!);
         })();
 
-        const publishPost = async (
+        const publishToWordPress = async (
           username: string | null,
           password: string | null,
           loginModal?: Modal
         ) => {
+          const { content, data: matterData } = matter(rawContent);
+
           const validateUserResult = await this.validateUser({ username, password });
           if (validateUserResult.code === WordPressClientReturnCode.OK) {
             if (defaultPostParams) {
+              const params = this.readFromFrontMatter(matterData, defaultPostParams);
               const result = await this.doPublish({
                 title,
                 content,
                 username,
                 password,
-                postParams: defaultPostParams
+                postParams: params
               }, loginModal);
               resolve(result);
             } else {
@@ -83,18 +88,32 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                 username,
                 password
               });
+              const selectedCategories = matterData.categories as number[] ?? [ 1 ];
               new WpPublishModal(
                 this.app,
                 this.plugin,
                 categories,
+                selectedCategories,
                 async (postParams, publishModal) => {
+                  const params = this.readFromFrontMatter(matterData, postParams);
                   const result = await this.doPublish({
                     title,
                     content,
                     username,
                     password,
-                    postParams
+                    postParams: params
                   }, loginModal, publishModal);
+                  if (result.code === 0) {
+                    // post id will be returned if creating, true if editing
+                    const postId = (result.data as any).postId; // eslint-disable-line @typescript-eslint/no-explicit-any
+                    if (postId) {
+                      // save post id to front-matter
+                      matterData.postId = postId;
+                      matterData.categories = postParams.categories;
+                      const modified = matter.stringify(content, matterData);
+                      this.updateFrontMatter(modified);
+                    }
+                  }
                   resolve(result);
                 }
               ).open();
@@ -110,13 +129,13 @@ export abstract class AbstractWordPressClient implements WordPressClient {
             this.app,
             this.plugin,
             (username, password, loginModal) => {
-              publishPost(username, password, loginModal).then(r => {
+              publishToWordPress(username, password, loginModal).then(() => {
                 // make compiler happy
               });
             }
           ).open();
         } else {
-          publishPost(null, null).then(r => {
+          publishToWordPress(null, null).then(() => {
             // make compiler happy
           });
         }
@@ -150,7 +169,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           username,
           password
         });
-      console.log('newPost', result);
+      console.log('doPublish', result);
       if (result.code === WordPressClientReturnCode.Error) {
         const data = result.data as any; // eslint-disable-line
         new Notice(this.plugin.i18n.t('error_publishFailed', {
@@ -164,10 +183,39 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       }
       return result;
     } catch (error) {
-      console.log('Reading file content for \'newPost\' failed: ', error);
+      console.log('Reading file content for \'doPublish\' failed: ', error);
       new Notice(error.toString(), ERROR_NOTICE_TIMEOUT);
     }
     return Promise.reject('You should not be here!');
+  }
+
+  private readFromFrontMatter(
+    matterData: { [p: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    params: WordPressPostParams
+  ): WordPressPostParams {
+    const postParams = { ...params };
+    if (matterData.postId) {
+      postParams.postId = matterData.postId;
+    }
+    if (matterData.categories) {
+      postParams.categories = matterData.categories as number[] ?? [ 1 ];
+    }
+    return postParams;
+  }
+
+  private updateFrontMatter(value: string): void {
+    const { activeEditor } = this.app.workspace;
+    if (activeEditor) {
+      const editor = activeEditor.editor;
+      if (editor) {
+        const { left, top } = editor.getScrollInfo();
+        const position = editor.getCursor();
+
+        editor.setValue(value);
+        editor.scrollTo(left, top);
+        editor.setCursor(position);
+      }
+    }
   }
 
 }

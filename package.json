@@ -36,6 +36,7 @@
 		"builtin-modules": "^3.2.0",
 		"date-fns": "^2.28.0",
 		"esbuild": "0.14.47",
+    "gray-matter": "^4.0.3",
 		"lodash-es": "^4.17.21",
 		"marked": "^4.0.6",
 		"obsidian": "latest",

@@ -34,7 +34,7 @@ export default class WordpressPlugin extends Plugin {
           commentStatus: this.settings.defaultCommentStatus,
           categories: []
         };
-        this.publishPost(params);
+        this.clientPublish(params);
       }
     });
 
@@ -42,7 +42,7 @@ export default class WordpressPlugin extends Plugin {
       id: 'publish',
       name: this.i18n.t('command_publish'),
       editorCallback: (editor: Editor, view: MarkdownView) => {
-        this.publishPost();
+        this.clientPublish();
       }
     });
 
@@ -65,7 +65,7 @@ export default class WordpressPlugin extends Plugin {
     if (this.settings.showRibbonIcon) {
       if (!this.ribbonWpIcon) {
         this.ribbonWpIcon = this.addRibbonIcon('wp-logo', ribbonIconTitle, () => {
-          this.publishPost();
+          this.clientPublish();
         });
       }
     } else {
@@ -76,10 +76,10 @@ export default class WordpressPlugin extends Plugin {
     }
   }
 
-  private publishPost(defaultPostParams?: WordPressPostParams): void {
+  private clientPublish(defaultPostParams?: WordPressPostParams): void {
     const client = getWordPressClient(this.app, this);
     if (client) {
-      client.newPost(defaultPostParams).then();
+      client.publishPost(defaultPostParams).then();
     }
   }
 

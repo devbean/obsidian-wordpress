@@ -8,12 +8,24 @@ export enum WordPressClientReturnCode {
 export interface WordPressClientResult {
   code: WordPressClientReturnCode;
   data: unknown;
+
+  /**
+   * Response from WordPress server.
+   */
+  response?: unknown;
 }
 
 export interface WordPressPostParams {
   status: PostStatus;
   commentStatus: CommentStatus;
   categories: number[];
+
+  /**
+   * WordPress post ID.
+   *
+   * If this is assigned, the post will be updated, otherwise created.
+   */
+  postId?: string;
 }
 
 export interface WordPressAuthParams {
@@ -30,11 +42,14 @@ export interface WordPressPublishParams extends WordPressAuthParams {
 export interface WordPressClient {
 
   /**
-   * Creates a new post to WordPress.
+   * Publish a post to WordPress.
+   *
+   * If there is a `postId` in front-matter, the post will be updated,
+   * otherwise, create a new one.
    *
    * @param defaultPostParams Use this parameter instead of popup publish modal if this is not undefined.
    */
-  newPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult>;
+  publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult>;
 
   /**
    * Checks if the login certificate is OK.

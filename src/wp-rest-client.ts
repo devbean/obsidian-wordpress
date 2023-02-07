@@ -9,7 +9,8 @@ import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
 import { Term } from './wp-api';
 import { RestClient } from './rest-client';
-import { isFunction, isString } from 'lodash-es';
+import { isFunction, isString, template } from 'lodash-es';
+
 
 export class WpRestClient extends AbstractWordPressClient {
 
@@ -33,9 +34,22 @@ export class WpRestClient extends AbstractWordPressClient {
     return  super.openLoginModal();
   }
 
-  publish(title: string, content: string, postParams: WordPressPostParams, wp: WordPressAuthParams): Promise<WordPressClientResult> {
+  publish(
+    title: string,
+    content: string,
+    postParams: WordPressPostParams,
+    wp: WordPressAuthParams
+  ): Promise<WordPressClientResult> {
+    let url: string;
+    if (postParams.postId) {
+      url = getUrl(this.context.endpoints?.editPost, 'wp-json/wp/v2/posts/<%= postId %>', {
+        postId: postParams.postId
+      });
+    } else {
+      url = getUrl(this.context.endpoints?.newPost, 'wp-json/wp/v2/posts');
+    }
     return this.client.httpPost(
-      getUrl(this.context.endpoints?.newPost, 'wp-json/wp/v2/posts'),
+      url,
       {
         title,
         content,
@@ -46,7 +60,7 @@ export class WpRestClient extends AbstractWordPressClient {
       {
         headers: this.context.getHeaders(wp)
       })
-      .then((resp: any) => {
+      .then((resp: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.log('WpRestClient response', resp);
         if (resp.code && resp.message) {
           return {
@@ -54,12 +68,16 @@ export class WpRestClient extends AbstractWordPressClient {
             data: {
               code: resp.code,
               message: resp.message
-            }
+            },
+            response: resp
           };
         } else if (resp.id || resp.ID) {
           return {
             code: WordPressClientReturnCode.OK,
-            data: resp
+            data: {
+              postId: postParams.postId ?? (resp.id ?? resp.ID)
+            },
+            response: resp
           };
         } else {
           return {
@@ -67,7 +85,8 @@ export class WpRestClient extends AbstractWordPressClient {
             data: {
               code: 500,
               message: this.plugin.i18n.t('error_cannotParseResponse')
-            }
+            },
+            response: resp
           };
         }
       });
@@ -91,7 +110,8 @@ export class WpRestClient extends AbstractWordPressClient {
       .then(data => {
         return {
           code: WordPressClientReturnCode.OK,
-          data: data
+          data: data,
+          response: data
         };
       })
       .catch(error => {
@@ -107,13 +127,24 @@ export class WpRestClient extends AbstractWordPressClient {
 
 type UrlGetter = () => string;
 
-function getUrl(url: string | UrlGetter | undefined, defaultValue: string): string {
+function getUrl(
+  url: string | UrlGetter | undefined,
+  defaultValue: string,
+  params?: { [p: string]: string }
+): string {
+  let resultUrl: string;
   if (isString(url)) {
-    return url;
+    resultUrl = url;
   } else if (isFunction(url)) {
-    return url();
+    resultUrl = url();
   } else {
-    return defaultValue;
+    resultUrl = defaultValue;
+  }
+  if (params) {
+    const compiled = template(resultUrl);
+    return compiled(params);
+  } else {
+    return resultUrl;
   }
 }
 
@@ -123,6 +154,7 @@ interface WpRestClientContext {
   endpoints?: {
     base?: string | UrlGetter;
     newPost?: string | UrlGetter;
+    editPost?: string | UrlGetter;
     getCategories?: string | UrlGetter;
     validateUser?: string | UrlGetter;
   };
@@ -169,6 +201,7 @@ export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
   endpoints = {
     base: 'https://public-api.wordpress.com',
     newPost: () => `/rest/v1/sites/${this.site}/posts/new`,
+    editPost: () => `/rest/v1/sites/${this.site}/posts/<%= postId %>`,
     getCategories: () => `/rest/v1/sites/${this.site}/categories`,
     validateUser: () => `/rest/v1/sites/${this.site}/posts?number=1`,
   };
