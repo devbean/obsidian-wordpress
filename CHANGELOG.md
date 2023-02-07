@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.0](https://github.com/devbean/obsidian-wordpress/compare/0.8.0...0.9.0) (2023-02-07)
+
+
+### Features
+
+* Supports for editing posts. ([2f153df](https://github.com/devbean/obsidian-wordpress/commit/2f153dfc95cd2bfd97245179e0e981aa276f7d20))
+* Supports for tags. ([72a15fc](https://github.com/devbean/obsidian-wordpress/commit/72a15fcb16e7b6246f2da03305c6db52253d228c))
+
 ## [0.8.0](https://github.com/devbean/obsidian-wordpress/compare/0.7.0...0.8.0) (2022-12-29)
 
 

@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-wordpress",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"description": "A plugin for publishing Obsidian documents to WordPress.",
 	"main": "main.js",
 	"scripts": {
@@ -36,7 +36,7 @@
 		"builtin-modules": "^3.2.0",
 		"date-fns": "^2.28.0",
 		"esbuild": "0.14.47",
-    "gray-matter": "^4.0.3",
+		"gray-matter": "^4.0.3",
 		"lodash-es": "^4.17.21",
 		"marked": "^4.0.6",
 		"obsidian": "latest",
