@@ -14,6 +14,7 @@ import { WpPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import matter from 'gray-matter';
+import { isPromiseFulfilledResult } from './utils';
 
 
 export abstract class AbstractWordPressClient implements WordPressClient {
@@ -27,19 +28,21 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     title: string,
     content: string,
     postParams: WordPressPostParams,
-    wp: WordPressAuthParams
+    certificate: WordPressAuthParams
   ): Promise<WordPressClientResult>;
 
   abstract getCategories(
-    wp: {
-      username: string | null,
-      password: string | null
-    }
+    certificate: WordPressAuthParams
   ): Promise<Term[]>;
 
   abstract validateUser(
     certificate: WordPressAuthParams
   ): Promise<WordPressClientResult>;
+
+  abstract getTag(
+    name: string,
+    certificate: WordPressAuthParams
+  ): Promise<Term>;
 
   protected openLoginModal(): boolean {
     return true;
@@ -161,6 +164,11 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   ): Promise<WordPressClientResult> {
     const { title, content, username, password, postParams } = wpParams;
     try {
+      const tagTerms = await this.getTags(postParams.tags, {
+        username,
+        password
+      });
+      postParams.tags = tagTerms.map(term => term.id);
       const result = await this.publish(
         title ?? 'A post from Obsidian!',
         marked.parse(content) ?? '',
@@ -189,6 +197,20 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     return Promise.reject('You should not be here!');
   }
 
+  private getTags(tags: string[], certificate: WordPressAuthParams): Promise<Term[]> {
+    return Promise.allSettled(tags.map(name => this.getTag(name, certificate)))
+      .then(results => {
+        const terms: Term[] = [];
+        results
+          .forEach(result => {
+            if (isPromiseFulfilledResult<Term>(result)) {
+              terms.push(result.value);
+            }
+          });
+        return terms;
+      });
+  }
+
   private readFromFrontMatter(
     matterData: { [p: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
     params: WordPressPostParams
@@ -199,6 +221,9 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     }
     if (matterData.categories) {
       postParams.categories = matterData.categories as number[] ?? [ 1 ];
+    }
+    if (matterData.tags) {
+      postParams.tags = matterData.tags as string[];
     }
     return postParams;
   }

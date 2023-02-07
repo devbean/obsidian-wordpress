@@ -38,7 +38,7 @@ export class WpRestClient extends AbstractWordPressClient {
     title: string,
     content: string,
     postParams: WordPressPostParams,
-    wp: WordPressAuthParams
+    certificate: WordPressAuthParams
   ): Promise<WordPressClientResult> {
     let url: string;
     if (postParams.postId) {
@@ -55,10 +55,11 @@ export class WpRestClient extends AbstractWordPressClient {
         content,
         status: postParams.status,
         comment_status: postParams.commentStatus,
-        categories: postParams.categories
+        categories: postParams.categories,
+        tags: postParams.tags ?? []
       },
       {
-        headers: this.context.getHeaders(wp)
+        headers: this.context.getHeaders(certificate)
       })
       .then((resp: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.log('WpRestClient response', resp);
@@ -92,11 +93,11 @@ export class WpRestClient extends AbstractWordPressClient {
       });
   }
 
-  getCategories(wp: WordPressAuthParams): Promise<Term[]> {
+  getCategories(certificate: WordPressAuthParams): Promise<Term[]> {
     return this.client.httpGet(
       getUrl(this.context.endpoints?.getCategories, 'wp-json/wp/v2/categories'),
       {
-        headers: this.context.getHeaders(wp)
+        headers: this.context.getHeaders(certificate)
       })
       .then(data => data as Term[] ?? []);
   }
@@ -121,6 +122,34 @@ export class WpRestClient extends AbstractWordPressClient {
           data: this.plugin.i18n.t('error_invalidUser')
         };
       });
+  }
+
+  async getTag(name: string, certificate: WordPressAuthParams): Promise<Term> {
+    const exists: Term[] = await this.client.httpGet(
+      getUrl(this.context.endpoints?.getTag, 'wp-json/wp/v2/tags?number=1&search=<%= name %>', {
+        name
+      }),
+    )
+      .then((resp: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        console.log('WpRestClient getTags response', resp);
+        return resp as Term[] ?? [];
+      });
+    if (exists.length === 0) {
+      return await this.client.httpPost(
+        getUrl(this.context.endpoints?.newTag, 'wp-json/wp/v2/tags'),
+        {
+          name
+        },
+        {
+          headers: this.context.getHeaders(certificate)
+        })
+        .then((resp: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+          console.log('WpRestClient newTag response', resp);
+          return resp;
+        });
+    } else {
+      return exists[0];
+    }
   }
 
 }
@@ -156,6 +185,8 @@ interface WpRestClientContext {
     newPost?: string | UrlGetter;
     editPost?: string | UrlGetter;
     getCategories?: string | UrlGetter;
+    newTag?: string | UrlGetter;
+    getTag?: string | UrlGetter;
     validateUser?: string | UrlGetter;
   };
 
@@ -203,6 +234,8 @@ export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
     newPost: () => `/rest/v1/sites/${this.site}/posts/new`,
     editPost: () => `/rest/v1/sites/${this.site}/posts/<%= postId %>`,
     getCategories: () => `/rest/v1/sites/${this.site}/categories`,
+    newTag: () => `/rest/v1/sites/${this.site}/tags/new`,
+    getTag: () => `/rest/v1/sites/${this.site}/tags?number=1&search=<%= name %>`,
     validateUser: () => `/rest/v1/sites/${this.site}/posts?number=1`,
   };
 

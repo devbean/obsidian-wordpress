@@ -35,7 +35,12 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     });
   }
 
-  publish(title: string, content: string, postParams: WordPressPostParams, wp: WordPressAuthParams): Promise<WordPressClientResult> {
+  publish(
+    title: string,
+    content: string,
+    postParams: WordPressPostParams,
+    certificate: WordPressAuthParams
+  ): Promise<WordPressClientResult> {
     const publishContent = {
       post_type: 'post',
       post_status: postParams.status,
@@ -44,22 +49,25 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       post_content: content,
       terms: {
         'category': postParams.categories
+      },
+      terms_names: {
+        'post_tag': postParams.tags
       }
     };
     let publishPromise;
     if (postParams.postId) {
       publishPromise = this.client.methodCall('wp.editPost', [
         0,
-        wp.username,
-        wp.password,
+        certificate.username,
+        certificate.password,
         postParams.postId,
         publishContent
       ]);
     } else {
       publishPromise = this.client.methodCall('wp.newPost', [
         0,
-        wp.username,
-        wp.password,
+        certificate.username,
+        certificate.password,
         publishContent
       ]);
     }
@@ -84,11 +92,11 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       });
   }
 
-  getCategories(wp: WordPressAuthParams): Promise<Term[]> {
+  getCategories(certificate: WordPressAuthParams): Promise<Term[]> {
     return this.client.methodCall('wp.getTerms', [
       0,
-      wp.username,
-      wp.password,
+      certificate.username,
+      certificate.password,
       'category'
     ])
       .then(response => {
@@ -126,6 +134,17 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
           };
         }
       });
+  }
+
+  async getTag(name: string, certificate: WordPressAuthParams): Promise<Term> {
+    return Promise.resolve({
+      id: name,
+      name,
+      slug: name,
+      taxonomy: 'post_tag',
+      description: name,
+      count: 0
+    });
   }
 
 }

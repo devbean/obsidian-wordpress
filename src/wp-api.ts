@@ -15,6 +15,6 @@ export interface Term {
   slug: string;
   taxonomy: string;
   description: string;
-  parent: string;
+  parent?: string;
   count: number;
 }

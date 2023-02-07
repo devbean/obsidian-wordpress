@@ -19,6 +19,7 @@ export interface WordPressPostParams {
   status: PostStatus;
   commentStatus: CommentStatus;
   categories: number[];
+  tags: string[];
 
   /**
    * WordPress post ID.

@@ -9,3 +9,7 @@ export function generateQueryString(params: Record<string, undefined|number|stri
     ) as Record<string, string>
   ).toString();
 }
+
+export function isPromiseFulfilledResult<T>(obj: any): obj is PromiseFulfilledResult<T> {
+  return !!obj && obj.status === 'fulfilled' && obj.value;
+}
