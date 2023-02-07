@@ -32,7 +32,8 @@ export default class WordpressPlugin extends Plugin {
         const params: WordPressPostParams = {
           status: this.settings.defaultPostStatus,
           commentStatus: this.settings.defaultCommentStatus,
-          categories: []
+          categories: [],
+          tags: []
         };
         this.clientPublish(params);
       }

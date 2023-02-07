@@ -28,7 +28,8 @@ export class WpPublishModal extends Modal {
     const params: WordPressPostParams = {
       status: this.plugin.settings.defaultPostStatus,
       commentStatus: this.plugin.settings.defaultCommentStatus,
-      categories: this.selectedCategories
+      categories: this.selectedCategories,
+      tags: []
     };
 
     const { contentEl } = this;
