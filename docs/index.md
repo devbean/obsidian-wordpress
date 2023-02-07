@@ -29,6 +29,22 @@ Let's say a WordPress could be access by https://www.mywp.com.
 * **Default Post Status**: Default post status when publishing.
 * **Default Post Comment Status**: Default comment status when publishing.
 
+## How to add tags
+
+You can add tags for posts since version 0.9.0.
+
+Tags should be added in the front matter of notes.
+Front matter could be created by YAML section at the front. For example,
+```markdown
+# This is title
+---
+tags:
+  - tag 1
+  - tag 2
+---
+This is content.
+```
+
 ## How to config WordPress plugins
 
 ### WordPress REST API Authentication by miniOrange
