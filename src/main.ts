@@ -42,7 +42,9 @@ export default class WordpressPlugin extends Plugin {
           status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
           commentStatus: this.#settings?.defaultCommentStatus ?? CommentStatus.Open,
           categories: [],
-          tags: []
+          tags: [],
+          title: '',
+          content: ''
         };
         this.clientPublish(params);
       }

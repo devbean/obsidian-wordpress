@@ -60,7 +60,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
 
       const { activeEditor } = this.app.workspace;
       if (activeEditor && activeEditor.file) {
-        const title = activeEditor.file.basename;
+        const noteTitle = activeEditor.file.basename;
         let rawContent = '';
         (async () => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -77,10 +77,8 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           const validateUserResult = await this.validateUser({ username, password });
           if (validateUserResult.code === WordPressClientReturnCode.OK) {
             if (defaultPostParams) {
-              const params = this.readFromFrontMatter(matterData, defaultPostParams);
+              const params = this.readFromFrontMatter(noteTitle, matterData, defaultPostParams);
               const result = await this.doPublish({
-                title,
-                content,
                 username,
                 password,
                 postParams: params
@@ -98,10 +96,8 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                 categories,
                 selectedCategories,
                 async (postParams, publishModal) => {
-                  const params = this.readFromFrontMatter(matterData, postParams);
+                  const params = this.readFromFrontMatter(noteTitle, matterData, postParams);
                   const result = await this.doPublish({
-                    title,
-                    content,
                     username,
                     password,
                     postParams: params
@@ -158,11 +154,11 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private async doPublish(
-    wpParams: WordPressPublishParams,
+    publishParams: WordPressPublishParams,
     loginModal?: Modal,
     publishModal?: Modal
   ): Promise<WordPressClientResult> {
-    const { title, content, username, password, postParams } = wpParams;
+    const { username, password, postParams } = publishParams;
     try {
       const tagTerms = await this.getTags(postParams.tags, {
         username,
@@ -170,8 +166,8 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       });
       postParams.tags = tagTerms.map(term => term.id);
       const result = await this.publish(
-        title ?? 'A post from Obsidian!',
-        marked.parse(content) ?? '',
+        postParams.title ?? 'A post from Obsidian!',
+        marked.parse(postParams.content) ?? '',
         postParams,
         {
           username,
@@ -212,10 +208,15 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private readFromFrontMatter(
+    noteTitle: string,
     matterData: { [p: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
     params: WordPressPostParams
   ): WordPressPostParams {
     const postParams = { ...params };
+    postParams.title = noteTitle;
+    if (matterData.title) {
+      postParams.title = matterData.title;
+    }
     if (matterData.postId) {
       postParams.postId = matterData.postId;
     }

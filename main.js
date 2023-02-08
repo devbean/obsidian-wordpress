@@ -32086,7 +32086,9 @@ var WpPublishModal = class extends import_obsidian6.Modal {
       status: this.plugin.settings.defaultPostStatus,
       commentStatus: this.plugin.settings.defaultCommentStatus,
       categories: this.selectedCategories,
-      tags: []
+      tags: [],
+      title: "",
+      content: ""
     };
     const { contentEl } = this;
     contentEl.createEl("h1", { text: t2("publishModal_title") });
@@ -32141,7 +32143,7 @@ var AbstractWordPressClient = class {
       }
       const { activeEditor } = this.app.workspace;
       if (activeEditor && activeEditor.file) {
-        const title = activeEditor.file.basename;
+        const noteTitle = activeEditor.file.basename;
         let rawContent = "";
         (() => __async(this, null, function* () {
           rawContent = yield this.app.vault.read(activeEditor.file);
@@ -32152,10 +32154,8 @@ var AbstractWordPressClient = class {
           const validateUserResult = yield this.validateUser({ username, password });
           if (validateUserResult.code === 0 /* OK */) {
             if (defaultPostParams) {
-              const params = this.readFromFrontMatter(matterData, defaultPostParams);
+              const params = this.readFromFrontMatter(noteTitle, matterData, defaultPostParams);
               const result = yield this.doPublish({
-                title,
-                content,
                 username,
                 password,
                 postParams: params
@@ -32168,10 +32168,8 @@ var AbstractWordPressClient = class {
               });
               const selectedCategories = (_a = matterData.categories) != null ? _a : [1];
               new WpPublishModal(this.app, this.plugin, categories, selectedCategories, (postParams, publishModal) => __async(this, null, function* () {
-                const params = this.readFromFrontMatter(matterData, postParams);
+                const params = this.readFromFrontMatter(noteTitle, matterData, postParams);
                 const result = yield this.doPublish({
-                  title,
-                  content,
                   username,
                   password,
                   postParams: params
@@ -32215,17 +32213,17 @@ var AbstractWordPressClient = class {
       return error;
     });
   }
-  doPublish(wpParams, loginModal, publishModal) {
+  doPublish(publishParams, loginModal, publishModal) {
     return __async(this, null, function* () {
-      var _a;
-      const { title, content, username, password, postParams } = wpParams;
+      var _a, _b;
+      const { username, password, postParams } = publishParams;
       try {
         const tagTerms = yield this.getTags(postParams.tags, {
           username,
           password
         });
         postParams.tags = tagTerms.map((term) => term.id);
-        const result = yield this.publish(title != null ? title : "A post from Obsidian!", (_a = marked.parse(content)) != null ? _a : "", postParams, {
+        const result = yield this.publish((_a = postParams.title) != null ? _a : "A post from Obsidian!", (_b = marked.parse(postParams.content)) != null ? _b : "", postParams, {
           username,
           password
         });
@@ -32260,9 +32258,13 @@ var AbstractWordPressClient = class {
       return terms;
     });
   }
-  readFromFrontMatter(matterData, params) {
+  readFromFrontMatter(noteTitle, matterData, params) {
     var _a;
     const postParams = __spreadValues({}, params);
+    postParams.title = noteTitle;
+    if (matterData.title) {
+      postParams.title = matterData.title;
+    }
     if (matterData.postId) {
       postParams.postId = matterData.postId;
     }
@@ -33136,7 +33138,9 @@ var WordpressPlugin = class extends import_obsidian12.Plugin {
             status: (_b = (_a2 = __privateGet(this, _settings)) == null ? void 0 : _a2.defaultPostStatus) != null ? _b : "draft" /* Draft */,
             commentStatus: (_d = (_c = __privateGet(this, _settings)) == null ? void 0 : _c.defaultCommentStatus) != null ? _d : "open" /* Open */,
             categories: [],
-            tags: []
+            tags: [],
+            title: "",
+            content: ""
           };
           this.clientPublish(params);
         }

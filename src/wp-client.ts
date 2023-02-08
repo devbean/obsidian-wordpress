@@ -15,11 +15,26 @@ export interface WordPressClientResult {
   response?: unknown;
 }
 
+export interface WordPressAuthParams {
+  username: string | null;
+  password: string | null;
+}
+
 export interface WordPressPostParams {
   status: PostStatus;
   commentStatus: CommentStatus;
   categories: number[];
   tags: string[];
+
+  /**
+   * Post title.
+   */
+  title: string;
+
+  /**
+   * Post content.
+   */
+  content: string;
 
   /**
    * WordPress post ID.
@@ -29,14 +44,7 @@ export interface WordPressPostParams {
   postId?: string;
 }
 
-export interface WordPressAuthParams {
-  username: string | null;
-  password: string | null;
-}
-
 export interface WordPressPublishParams extends WordPressAuthParams {
-  title: string;
-  content: string;
   postParams: WordPressPostParams;
 }
 

@@ -29,7 +29,9 @@ export class WpPublishModal extends Modal {
       status: this.plugin.settings.defaultPostStatus,
       commentStatus: this.plugin.settings.defaultCommentStatus,
       categories: this.selectedCategories,
-      tags: []
+      tags: [],
+      title: '',
+      content: ''
     };
 
     const { contentEl } = this;
