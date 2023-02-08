@@ -192,7 +192,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       return result;
     } catch (error) {
       console.log('Reading file content for \'doPublish\' failed: ', error);
-      new Notice(error.toString(), ERROR_NOTICE_TIMEOUT);
+      new Notice((error as any).toString(), ERROR_NOTICE_TIMEOUT); // eslint-disable-line
     }
     return Promise.reject('You should not be here!');
   }

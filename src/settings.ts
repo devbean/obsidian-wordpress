@@ -180,7 +180,7 @@ export class WordpressSettingTab extends PluginSettingTab {
           .addOption(ApiType.RestApi_ApplicationPasswords, t('settings_apiTypeRestApplicationPasswords'))
           .addOption(ApiType.RestApi_WpComOAuth2, t('settings_apiTypeRestWpComOAuth2'))
           .setValue(this.plugin.settings.apiType)
-          .onChange(async (value: ApiType) => {
+          .onChange(async (value) => {
             let hasError = false;
             let newApiType = value;
             if (value === ApiType.RestApi_WpComOAuth2) {
@@ -190,7 +190,7 @@ export class WordpressSettingTab extends PluginSettingTab {
                 newApiType = this.plugin.settings.apiType;
               }
             }
-            this.plugin.settings.apiType = newApiType;
+            this.plugin.settings.apiType = newApiType as ApiType;
             apiDesc = getApiTypeDesc(this.plugin.settings.apiType);
             await this.plugin.saveSettings();
             this.display();
@@ -273,8 +273,8 @@ export class WordpressSettingTab extends PluginSettingTab {
           .addOption(PostStatus.Publish, t('settings_defaultPostStatusPublish'))
           // .addOption(PostStatus.Future, 'future')
           .setValue(this.plugin.settings.defaultPostStatus)
-          .onChange(async (value: PostStatus) => {
-            this.plugin.settings.defaultPostStatus = value;
+          .onChange(async (value) => {
+            this.plugin.settings.defaultPostStatus = value as PostStatus;
             await this.plugin.saveSettings();
           });
       });
@@ -288,8 +288,8 @@ export class WordpressSettingTab extends PluginSettingTab {
           .addOption(CommentStatus.Closed, t('settings_defaultPostCommentClosed'))
           // .addOption(PostStatus.Future, 'future')
           .setValue(this.plugin.settings.defaultCommentStatus)
-          .onChange(async (value: CommentStatus) => {
-            this.plugin.settings.defaultCommentStatus = value;
+          .onChange(async (value) => {
+            this.plugin.settings.defaultCommentStatus = value as CommentStatus;
             await this.plugin.saveSettings();
           });
       });

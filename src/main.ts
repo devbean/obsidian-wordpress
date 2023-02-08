@@ -1,15 +1,24 @@
-import { Editor, MarkdownView, Plugin } from 'obsidian';
+import { Plugin } from 'obsidian';
 import { DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
 import { I18n } from './i18n';
+import { CommentStatus, PostStatus } from './wp-api';
 
 export default class WordpressPlugin extends Plugin {
 
-  settings: WordpressPluginSettings;
+  #settings: WordpressPluginSettings | undefined;
+  get settings() {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.#settings!;
+  }
 
-  i18n: I18n;
+  #i18n: I18n | undefined;
+  get i18n() {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.#i18n!;
+  }
 
   private ribbonWpIcon: HTMLElement | null = null;
 
@@ -19,7 +28,7 @@ export default class WordpressPlugin extends Plugin {
     await this.loadSettings();
 
     // lang should be load early, but after settings
-    this.i18n = new I18n(this.settings.lang);
+    this.#i18n = new I18n(this.#settings?.lang);
 
     addIcons();
 
@@ -27,12 +36,13 @@ export default class WordpressPlugin extends Plugin {
 
     this.addCommand({
       id: 'defaultPublish',
-      name: this.i18n.t('command_publishWithDefault'),
-      editorCallback: (editor: Editor, view: MarkdownView) => {
+      name: this.#i18n.t('command_publishWithDefault'),
+      editorCallback: () => {
         const params: WordPressPostParams = {
-          status: this.settings.defaultPostStatus,
-          commentStatus: this.settings.defaultCommentStatus,
-          categories: []
+          status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
+          commentStatus: this.#settings?.defaultCommentStatus ?? CommentStatus.Open,
+          categories: [],
+          tags: []
         };
         this.clientPublish(params);
       }
@@ -40,8 +50,8 @@ export default class WordpressPlugin extends Plugin {
 
     this.addCommand({
       id: 'publish',
-      name: this.i18n.t('command_publish'),
-      editorCallback: (editor: Editor, view: MarkdownView) => {
+      name: this.#i18n.t('command_publish'),
+      editorCallback: () => {
         this.clientPublish();
       }
     });
@@ -53,16 +63,16 @@ export default class WordpressPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.#settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
 
   async saveSettings() {
-    await this.saveData(this.settings);
+    await this.saveData(this.#settings);
   }
 
   updateRibbonIcon(): void {
-    const ribbonIconTitle = this.i18n.t('ribbon_iconTitle');
-    if (this.settings.showRibbonIcon) {
+    const ribbonIconTitle = this.#i18n?.t('ribbon_iconTitle') ?? 'WordPress';
+    if (this.#settings?.showRibbonIcon) {
       if (!this.ribbonWpIcon) {
         this.ribbonWpIcon = this.addRibbonIcon('wp-logo', ribbonIconTitle, () => {
           this.clientPublish();

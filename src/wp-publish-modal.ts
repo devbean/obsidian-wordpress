@@ -28,7 +28,8 @@ export class WpPublishModal extends Modal {
     const params: WordPressPostParams = {
       status: this.plugin.settings.defaultPostStatus,
       commentStatus: this.plugin.settings.defaultCommentStatus,
-      categories: this.selectedCategories
+      categories: this.selectedCategories,
+      tags: []
     };
 
     const { contentEl } = this;
@@ -43,8 +44,8 @@ export class WpPublishModal extends Modal {
           .addOption(PostStatus.Publish, t('publishModal_postStatusPublish'))
           // .addOption(PostStatus.Future, 'future')
           .setValue(this.plugin.settings.defaultPostStatus)
-          .onChange((value: PostStatus) => {
-            params.status = value;
+          .onChange((value) => {
+            params.status = value as PostStatus;
           });
       });
     new Setting(contentEl)
@@ -54,8 +55,8 @@ export class WpPublishModal extends Modal {
           .addOption(CommentStatus.Open, t('publishModal_commentStatusOpen'))
           .addOption(CommentStatus.Closed, t('publishModal_commentStatusClosed'))
           .setValue(this.plugin.settings.defaultCommentStatus)
-          .onChange((value: CommentStatus) => {
-            params.commentStatus = value;
+          .onChange((value) => {
+            params.commentStatus = value as CommentStatus;
           });
       });
     if (this.categories.length > 0) {

@@ -107,8 +107,8 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         }
         return response;
       })
-      .then((data: unknown[]) => {
-        return data.map((it: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+      .then((data) => {
+        return (data as any).map((it: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
           ...it,
           id: it.term_id
         })) ?? [];
