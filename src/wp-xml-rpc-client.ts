@@ -10,6 +10,7 @@ import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
+import { SafeAny } from './utils';
 
 interface FaultResponse {
   faultCode: string;
@@ -108,7 +109,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         return response;
       })
       .then((data) => {
-        return (data as any).map((it: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+        return (data as SafeAny).map((it: SafeAny) => ({
           ...it,
           id: it.term_id
         })) ?? [];

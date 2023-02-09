@@ -1,3 +1,5 @@
+export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
 export function openWithBrowser(url: string, queryParams: Record<string, undefined|number|string> = {}): void {
   window.open(`${url}?${generateQueryString(queryParams)}`);
 }
@@ -10,6 +12,6 @@ export function generateQueryString(params: Record<string, undefined|number|stri
   ).toString();
 }
 
-export function isPromiseFulfilledResult<T>(obj: any): obj is PromiseFulfilledResult<T> {
+export function isPromiseFulfilledResult<T>(obj: SafeAny): obj is PromiseFulfilledResult<T> {
   return !!obj && obj.status === 'fulfilled' && obj.value;
 }

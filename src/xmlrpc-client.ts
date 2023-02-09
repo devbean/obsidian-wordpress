@@ -3,6 +3,7 @@ import { create } from 'xmlbuilder2';
 import { XMLBuilder } from 'xmlbuilder2/lib/interfaces';
 import { get, isArray, isBoolean, isDate, isNumber, isObject, isSafeInteger } from 'lodash-es';
 import { format, parse } from 'date-fns';
+import { SafeAny } from './utils';
 
 interface XmlRpcOptions {
   url: URL;
@@ -84,7 +85,7 @@ export class XmlRpcClient {
   private createValue(data: unknown, param: XMLBuilder): void {
     const value = param.ele('value');
     if (isSafeInteger(data)) {
-      value.ele('i4').txt((data as any).toString());
+      value.ele('i4').txt((data as SafeAny).toString());
     } else if (isNumber(data)) {
       value.ele('double').txt(data.toString());
     } else if (isBoolean(data)) {
@@ -106,7 +107,7 @@ export class XmlRpcClient {
         this.createValue(value, member);
       }
     } else {
-      value.ele('string').dat((data as any).toString());
+      value.ele('string').dat((data as SafeAny).toString());
     }
   }
 
@@ -146,7 +147,7 @@ export class XmlRpcClient {
       }
       return array;
     } else if (get(value, 'struct')) {
-      const struct: any = {}; // eslint-disable-line
+      const struct: SafeAny = {};
       const members: unknown = get(value, 'struct.member');
       if (isArray(members)) {
         members.forEach((member: unknown) => {

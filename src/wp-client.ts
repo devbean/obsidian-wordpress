@@ -1,4 +1,5 @@
 import { CommentStatus, PostStatus } from './wp-api';
+import { SafeAny } from './utils';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -46,6 +47,7 @@ export interface WordPressPostParams {
 
 export interface WordPressPublishParams extends WordPressAuthParams {
   postParams: WordPressPostParams;
+  matterData: { [p: string]: SafeAny };
 }
 
 export interface WordPressClient {
