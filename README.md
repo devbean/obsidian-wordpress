@@ -6,7 +6,7 @@ There are some introduction videos you can watch:
 * [YouTube (Chinese) by 简睿学堂-emisjerry](https://youtu.be/7YECfr_W1WM)
 * [Bilibili (Chinese) by 简睿学堂-emisjerry](https://www.bilibili.com/video/BV1FT411A77m/?vd_source=8d3e1ef8cd3aab146af84cfad2f5076f)
 
-## How to use
+## Usages
 
 Set your WordPress URL in settings as well as username if you want.
 
@@ -14,6 +14,23 @@ Put cursor in a MarkDown editor, then use **Publish to WordPress** in
 [Command Palette](https://help.obsidian.md/Plugins/Command+palette)
 or you could show a button in side in settings.
 The document will be published to the WordPress URL that you set.
+
+You could add YAML front matter in front of notes. The plugin will read
+meta-data from front matter such as override title or tags.
+Also, WordPress post ID and categories will be added to this front matter
+if the note published successfully in order to support edit.
+
+For example, you could add as following:
+
+```markdown
+---
+title: Post title which will override note title, not required
+tags:
+  - any tag you want
+  - not required
+---
+Note content here.
+```
 
 ## Limits
 

@@ -38,6 +38,7 @@ Front matter could be created by YAML section at the front. For example,
 ```markdown
 # This is title
 ---
+title: Post title which will override note title, not required
 tags:
   - tag 1
   - tag 2
