@@ -28,6 +28,7 @@ Let's say a WordPress could be access by https://www.mywp.com.
   to publish current note.
 * **Default Post Status**: Default post status when publishing.
 * **Default Post Comment Status**: Default comment status when publishing.
+* **Show WordPress Edit Confirmation**: Whether show opening WordPress edit page confirmation if the post is published. This is useful if you want to edit post metadata in WordPress after publishing.
 
 ## How to add tags
 
