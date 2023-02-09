@@ -14,7 +14,8 @@ import { WpPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import matter from 'gray-matter';
-import { isPromiseFulfilledResult } from './utils';
+import { isPromiseFulfilledResult, openWithBrowser } from './utils';
+import { PostPublishedModal } from './post-published-modal';
 
 
 export abstract class AbstractWordPressClient implements WordPressClient {
@@ -78,6 +79,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           if (validateUserResult.code === WordPressClientReturnCode.OK) {
             if (defaultPostParams) {
               const params = this.readFromFrontMatter(noteTitle, matterData, defaultPostParams);
+              params.content = content;
               const result = await this.doPublish({
                 username,
                 password,
@@ -97,6 +99,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                 selectedCategories,
                 async (postParams, publishModal) => {
                   const params = this.readFromFrontMatter(noteTitle, matterData, postParams);
+                  params.content = content;
                   const result = await this.doPublish({
                     username,
                     password,
@@ -111,6 +114,14 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                       matterData.categories = postParams.categories;
                       const modified = matter.stringify(content, matterData);
                       this.updateFrontMatter(modified);
+
+                      new PostPublishedModal(this.app, this.plugin, (modal: Modal) => {
+                        openWithBrowser(`${this.plugin.settings.endpoint}/wp-admin/post.php`, {
+                          action: 'edit',
+                          post: postId
+                        });
+                        modal.close();
+                      }).open();
                     }
                   }
                   resolve(result);

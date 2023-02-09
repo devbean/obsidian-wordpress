@@ -61,5 +61,9 @@
   "publishModal_commentStatusOpen": "Open",
   "publishModal_commentStatusClosed": "Closed",
   "publishModal_category": "Category",
-  "publishModal_publishButtonText": "Publish"
+  "publishModal_publishButtonText": "Publish",
+  "publishedModal_title": "Post published successfully!",
+  "publishedModal_confirmEditInWP": "Do you want to open WordPress edit page in browser?",
+  "publishedModal_cancel": "Cancel",
+  "publishedModal_open": "Open"
 }
