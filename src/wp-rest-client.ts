@@ -10,6 +10,7 @@ import WordpressPlugin from './main';
 import { Term } from './wp-api';
 import { RestClient } from './rest-client';
 import { isFunction, isString, template } from 'lodash-es';
+import { SafeAny } from './utils';
 
 
 export class WpRestClient extends AbstractWordPressClient {
@@ -61,7 +62,7 @@ export class WpRestClient extends AbstractWordPressClient {
       {
         headers: this.context.getHeaders(certificate)
       })
-      .then((resp: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      .then((resp: SafeAny) => {
         console.log('WpRestClient response', resp);
         if (resp.code && resp.message) {
           return {
@@ -130,7 +131,7 @@ export class WpRestClient extends AbstractWordPressClient {
         name
       }),
     )
-      .then((resp: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      .then((resp: SafeAny) => {
         console.log('WpRestClient getTags response', resp);
         return resp as Term[] ?? [];
       });
@@ -143,7 +144,7 @@ export class WpRestClient extends AbstractWordPressClient {
         {
           headers: this.context.getHeaders(certificate)
         })
-        .then((resp: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        .then((resp: SafeAny) => {
           console.log('WpRestClient newTag response', resp);
           return resp;
         });
@@ -194,13 +195,14 @@ interface WpRestClientContext {
 
   getHeaders(wp: WordPressAuthParams): Record<string, string>;
 
+
 }
 
 export class WpRestClientMiniOrangeContext implements WpRestClientContext {
-  name: 'WpRestClientMiniOrangeContext';
+  name = 'WpRestClientMiniOrangeContext';
 
   constructor() {
-    console.log('WpRestClientMiniOrangeContext loaded');
+    console.log(`${this.name} loaded`);
   }
 
   getHeaders(wp: WordPressAuthParams): Record<string, string> {
@@ -211,10 +213,10 @@ export class WpRestClientMiniOrangeContext implements WpRestClientContext {
 }
 
 export class WpRestClientAppPasswordContext implements WpRestClientContext {
-  name: 'WpRestClientAppPasswordContext';
+  name = 'WpRestClientAppPasswordContext';
 
   constructor() {
-    console.log('WpRestClientAppPasswordContext loaded');
+    console.log(`${this.name} loaded`);
   }
 
   getHeaders(wp: WordPressAuthParams): Record<string, string> {
@@ -225,7 +227,7 @@ export class WpRestClientAppPasswordContext implements WpRestClientContext {
 }
 
 export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
-  name: 'WpRestClientWpComOAuth2Context';
+  name = 'WpRestClientWpComOAuth2Context';
 
   openLoginModal = false;
 
@@ -243,7 +245,7 @@ export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
     private readonly site: string,
     private readonly accessToken: string
   ) {
-    console.log('WpRestClientWpComOAuth2Context loaded');
+    console.log(`${this.name} loaded`);
   }
 
   getHeaders(wp: WordPressAuthParams): Record<string, string> {

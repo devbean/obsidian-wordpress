@@ -61,5 +61,9 @@
   "publishModal_commentStatusOpen": "开启",
   "publishModal_commentStatusClosed": "关闭",
   "publishModal_category": "分类",
-  "publishModal_publishButtonText": "发布"
+  "publishModal_publishButtonText": "发布",
+  "publishedModal_title": "文章发布成功",
+  "publishedModal_confirmEditInWP": "需要使用浏览器打开 WordPress 编辑页面吗？",
+  "publishedModal_cancel": "取消",
+  "publishedModal_open": "打开"
 }

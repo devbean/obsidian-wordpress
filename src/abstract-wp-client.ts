@@ -14,7 +14,8 @@ import { WpPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import matter from 'gray-matter';
-import { isPromiseFulfilledResult } from './utils';
+import { isPromiseFulfilledResult, openWithBrowser, SafeAny } from './utils';
+import { PostPublishedModal } from './post-published-modal';
 
 
 export abstract class AbstractWordPressClient implements WordPressClient {
@@ -60,30 +61,27 @@ export abstract class AbstractWordPressClient implements WordPressClient {
 
       const { activeEditor } = this.app.workspace;
       if (activeEditor && activeEditor.file) {
-        const title = activeEditor.file.basename;
-        let rawContent = '';
-        (async () => {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          rawContent = await this.app.vault.read(activeEditor.file!);
-        })();
-
         const publishToWordPress = async (
           username: string | null,
           password: string | null,
           loginModal?: Modal
         ) => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const noteTitle = activeEditor.file!.basename;
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const rawContent = await this.app.vault.read(activeEditor.file!);
           const { content, data: matterData } = matter(rawContent);
 
           const validateUserResult = await this.validateUser({ username, password });
           if (validateUserResult.code === WordPressClientReturnCode.OK) {
             if (defaultPostParams) {
-              const params = this.readFromFrontMatter(matterData, defaultPostParams);
+              const params = this.readFromFrontMatter(noteTitle, matterData, defaultPostParams);
+              params.content = content;
               const result = await this.doPublish({
-                title,
-                content,
                 username,
                 password,
-                postParams: params
+                postParams: params,
+                matterData
               }, loginModal);
               resolve(result);
             } else {
@@ -98,25 +96,14 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                 categories,
                 selectedCategories,
                 async (postParams, publishModal) => {
-                  const params = this.readFromFrontMatter(matterData, postParams);
+                  const params = this.readFromFrontMatter(noteTitle, matterData, postParams);
+                  params.content = content;
                   const result = await this.doPublish({
-                    title,
-                    content,
                     username,
                     password,
-                    postParams: params
+                    postParams: params,
+                    matterData
                   }, loginModal, publishModal);
-                  if (result.code === 0) {
-                    // post id will be returned if creating, true if editing
-                    const postId = (result.data as any).postId; // eslint-disable-line @typescript-eslint/no-explicit-any
-                    if (postId) {
-                      // save post id to front-matter
-                      matterData.postId = postId;
-                      matterData.categories = postParams.categories;
-                      const modified = matter.stringify(content, matterData);
-                      this.updateFrontMatter(modified);
-                    }
-                  }
                   resolve(result);
                 }
               ).open();
@@ -158,11 +145,11 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private async doPublish(
-    wpParams: WordPressPublishParams,
+    publishParams: WordPressPublishParams,
     loginModal?: Modal,
     publishModal?: Modal
   ): Promise<WordPressClientResult> {
-    const { title, content, username, password, postParams } = wpParams;
+    const { username, password, postParams, matterData } = publishParams;
     try {
       const tagTerms = await this.getTags(postParams.tags, {
         username,
@@ -170,8 +157,8 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       });
       postParams.tags = tagTerms.map(term => term.id);
       const result = await this.publish(
-        title ?? 'A post from Obsidian!',
-        marked.parse(content) ?? '',
+        postParams.title ?? 'A post from Obsidian!',
+        marked.parse(postParams.content) ?? '',
         postParams,
         {
           username,
@@ -179,7 +166,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         });
       console.log('doPublish', result);
       if (result.code === WordPressClientReturnCode.Error) {
-        const data = result.data as any; // eslint-disable-line
+        const data = result.data as SafeAny;
         new Notice(this.plugin.i18n.t('error_publishFailed', {
           code: data.code,
           message: data.message
@@ -188,11 +175,29 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         new Notice(this.plugin.i18n.t('message_publishSuccessfully'));
         publishModal?.close();
         loginModal?.close();
+
+        // post id will be returned if creating, true if editing
+        const postId = (result.data as SafeAny).postId;
+        if (postId) {
+          // save post id to front-matter
+          matterData.postId = postId;
+          matterData.categories = postParams.categories;
+          const modified = matter.stringify(postParams.content, matterData);
+          this.updateFrontMatter(modified);
+
+          new PostPublishedModal(this.app, this.plugin, (modal: Modal) => {
+            openWithBrowser(`${this.plugin.settings.endpoint}/wp-admin/post.php`, {
+              action: 'edit',
+              post: postId
+            });
+            modal.close();
+          }).open();
+        }
       }
       return result;
     } catch (error) {
       console.log('Reading file content for \'doPublish\' failed: ', error);
-      new Notice(error.toString(), ERROR_NOTICE_TIMEOUT);
+      new Notice((error as SafeAny).toString(), ERROR_NOTICE_TIMEOUT);
     }
     return Promise.reject('You should not be here!');
   }
@@ -212,10 +217,15 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private readFromFrontMatter(
-    matterData: { [p: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    noteTitle: string,
+    matterData: { [p: string]: SafeAny },
     params: WordPressPostParams
   ): WordPressPostParams {
     const postParams = { ...params };
+    postParams.title = noteTitle;
+    if (matterData.title) {
+      postParams.title = matterData.title;
+    }
     if (matterData.postId) {
       postParams.postId = matterData.postId;
     }

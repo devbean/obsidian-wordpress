@@ -13,6 +13,7 @@
     "strictNullChecks": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "strict": true,
     "lib": [
       "DOM",
       "ES5",
