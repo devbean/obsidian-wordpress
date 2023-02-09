@@ -41,7 +41,7 @@ export default class WordpressPlugin extends Plugin {
         const params: WordPressPostParams = {
           status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
           commentStatus: this.#settings?.defaultCommentStatus ?? CommentStatus.Open,
-          categories: [],
+          categories: [ 1 ],
           tags: [],
           title: '',
           content: ''

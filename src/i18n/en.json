@@ -33,6 +33,8 @@
   "settings_defaultPostStatusDesc": "Post status which will be published to WordPress.",
   "settings_defaultPostStatusDraft": "Draft",
   "settings_defaultPostStatusPublish": "Publish",
+  "settings_showWordPressEditPageModal": "Show WordPress Edit Confirmation",
+  "settings_showWordPressEditPageModalDesc": "Show open WordPress edit page confirmation when publish successfully",
   "settings_xmlRpcPath": "XML-RPC Path",
   "settings_xmlRpcPathDesc": "XML-RPC Path, default is /xmlrpc.php",
   "settings_wpComOAuth2RefreshToken": "Refresh wordpress.com OAuth2 token",

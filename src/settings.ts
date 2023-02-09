@@ -80,6 +80,11 @@ export interface WordpressPluginSettings {
    * Default comment status.
    */
   defaultCommentStatus: CommentStatus;
+
+  /**
+   * If WordPress edit confirm modal will be shown when published successfully.
+   */
+  showWordPressEditConfirm: boolean;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
@@ -91,7 +96,8 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   savePassword: false,
   showRibbonIcon: false,
   defaultPostStatus: PostStatus.Draft,
-  defaultCommentStatus: CommentStatus.Open
+  defaultCommentStatus: CommentStatus.Open,
+  showWordPressEditConfirm: false
 }
 
 export class WordpressSettingTab extends PluginSettingTab {
@@ -293,6 +299,18 @@ export class WordpressSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
+
+    new Setting(containerEl)
+      .setName(t('settings_showWordPressEditPageModal'))
+      .setDesc(t('settings_showWordPressEditPageModalDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showWordPressEditConfirm)
+          .onChange(async (value) => {
+            this.plugin.settings.showWordPressEditConfirm = value;
+            await this.plugin.saveSettings();
+          }),
+      );
 	}
 
   private async refreshWpComToken(): Promise<void> {

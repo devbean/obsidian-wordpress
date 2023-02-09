@@ -33,6 +33,8 @@
   "settings_defaultPostStatusDesc": "发布到 WordPress 的文章默认状态",
   "settings_defaultPostStatusDraft": "草稿",
   "settings_defaultPostStatusPublish": "正式发布",
+  "settings_showWordPressEditPageModal": "显示 WordPress 编辑确认框",
+  "settings_showWordPressEditPageModalDesc": "发布成功后弹出是否跳转到 WordPress 编辑页面的确认框",
   "settings_xmlRpcPath": "XML-RPC 路径",
   "settings_xmlRpcPathDesc": "XML-RPC 路径，默认值为 /xmlrpc.php",
   "settings_wpComOAuth2RefreshToken": "刷新 wordpress.com OAuth2 令牌",
