@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.10.0](https://github.com/devbean/obsidian-wordpress/compare/0.9.1...0.10.0) (2023-02-09)
+
+
+### Features
+
+* A modal will be opened when published successfully in order to let you edit post in browser. ([5400fc9](https://github.com/devbean/obsidian-wordpress/commit/5400fc974a0a1f125abcf0a972f4efce68f27a6c))
+* You can override note title in front matter using `title` field. ([d905f4b](https://github.com/devbean/obsidian-wordpress/commit/d905f4ba5d47f6009ba728367dcbf11a8c05803d))
+
+
+### Bug Fixes
+
+* Post ID is not written to front matter if publishing with default options. ([90bfea8](https://github.com/devbean/obsidian-wordpress/commit/90bfea828946f214461427470e5684e3f6a38aba))
+
 ### [0.9.1](https://github.com/devbean/obsidian-wordpress/compare/0.9.0...0.9.1) (2023-02-07)
 
 
