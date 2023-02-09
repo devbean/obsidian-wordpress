@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.10.1](https://github.com/devbean/obsidian-wordpress/compare/0.10.0...0.10.1) (2023-02-09)
+
+
+### Features
+
+* Add an option to enable WordPress edit confirm modal. ([716ac1f](https://github.com/devbean/obsidian-wordpress/commit/716ac1f359c87994276639e5c0ad30e498834ad6))
+
+
+### Bug Fixes
+
+* Publish to uncategorized with default options. ([3ee1a9c](https://github.com/devbean/obsidian-wordpress/commit/3ee1a9cc93ea4e43b89c07d010f8b55b43c2ca8f))
+
 ## [0.10.0](https://github.com/devbean/obsidian-wordpress/compare/0.9.1...0.10.0) (2023-02-09)
 
 
