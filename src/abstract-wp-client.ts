@@ -185,13 +185,15 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           const modified = matter.stringify(postParams.content, matterData);
           this.updateFrontMatter(modified);
 
-          new PostPublishedModal(this.app, this.plugin, (modal: Modal) => {
-            openWithBrowser(`${this.plugin.settings.endpoint}/wp-admin/post.php`, {
-              action: 'edit',
-              post: postId
-            });
-            modal.close();
-          }).open();
+          if (this.plugin.settings.showWordPressEditConfirm) {
+            new PostPublishedModal(this.app, this.plugin, (modal: Modal) => {
+              openWithBrowser(`${this.plugin.settings.endpoint}/wp-admin/post.php`, {
+                action: 'edit',
+                post: postId
+              });
+              modal.close();
+            }).open();
+          }
         }
       }
       return result;
