@@ -89,7 +89,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                 username,
                 password
               });
-              const selectedCategories = matterData.categories as number[] ?? [ 1 ];
+              const selectedCategories = matterData.categories as number[] ?? this.plugin.settings.lastSelectedCategories;
               new WpPublishModal(
                 this.app,
                 this.plugin,
@@ -185,6 +185,11 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           const modified = matter.stringify(postParams.content, matterData);
           this.updateFrontMatter(modified);
 
+          if (this.plugin.settings.rememberLastSelectedCategories) {
+            this.plugin.settings.lastSelectedCategories = (result.data as SafeAny).categories;
+            await this.plugin.saveSettings();
+          }
+
           if (this.plugin.settings.showWordPressEditConfirm) {
             new PostPublishedModal(this.app, this.plugin, (modal: Modal) => {
               openWithBrowser(`${this.plugin.settings.endpoint}/wp-admin/post.php`, {
@@ -232,7 +237,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       postParams.postId = matterData.postId;
     }
     if (matterData.categories) {
-      postParams.categories = matterData.categories as number[] ?? [ 1 ];
+      postParams.categories = matterData.categories as number[] ?? this.plugin.settings.lastSelectedCategories;
     }
     if (matterData.tags) {
       postParams.tags = matterData.tags as string[];

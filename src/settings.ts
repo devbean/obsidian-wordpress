@@ -82,6 +82,16 @@ export interface WordpressPluginSettings {
   defaultCommentStatus: CommentStatus;
 
   /**
+   * Last selected post categories.
+   */
+  lastSelectedCategories: number[];
+
+  /**
+   * Remember last selected post categories.
+   */
+  rememberLastSelectedCategories: boolean;
+
+  /**
    * If WordPress edit confirm modal will be shown when published successfully.
    */
   showWordPressEditConfirm: boolean;
@@ -97,6 +107,8 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   showRibbonIcon: false,
   defaultPostStatus: PostStatus.Draft,
   defaultCommentStatus: CommentStatus.Open,
+  lastSelectedCategories: [ 1 ],
+  rememberLastSelectedCategories: true,
   showWordPressEditConfirm: false
 }
 
@@ -299,6 +311,21 @@ export class WordpressSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
+
+    new Setting(containerEl)
+      .setName(t('settings_rememberLastSelectedCategories'))
+      .setDesc(t('settings_rememberLastSelectedCategoriesDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.rememberLastSelectedCategories)
+          .onChange(async (value) => {
+            this.plugin.settings.rememberLastSelectedCategories = value;
+            if (!value) {
+              this.plugin.settings.lastSelectedCategories = [ 1 ];
+            }
+            await this.plugin.saveSettings();
+          }),
+      );
 
     new Setting(containerEl)
       .setName(t('settings_showWordPressEditPageModal'))

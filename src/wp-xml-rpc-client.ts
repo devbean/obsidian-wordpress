@@ -86,7 +86,8 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         return {
           code: WordPressClientReturnCode.OK,
           data: {
-            postId: postParams.postId ?? response
+            postId: postParams.postId ?? response,
+            categories: postParams.categories
           },
           response
         };
