@@ -77,7 +77,8 @@ export class WpRestClient extends AbstractWordPressClient {
           return {
             code: WordPressClientReturnCode.OK,
             data: {
-              postId: postParams.postId ?? (resp.id ?? resp.ID)
+              postId: postParams.postId ?? (resp.id ?? resp.ID),
+              categories: postParams.categories ?? resp.categories
             },
             response: resp
           };
