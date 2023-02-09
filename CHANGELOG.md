@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.10.2](https://github.com/devbean/obsidian-wordpress/compare/0.10.1...0.10.2) (2023-02-09)
+
+
+### Features
+
+* Remember last selected categories of this WordPress site. ([caad134](https://github.com/devbean/obsidian-wordpress/commit/caad13403aace506850a28e05d7f4d37e5ee124c))
+
 ### [0.10.1](https://github.com/devbean/obsidian-wordpress/compare/0.10.0...0.10.1) (2023-02-09)
 
 
