@@ -11,6 +11,7 @@ import {
   WP_OAUTH2_CLIENT_SECRET,
   WP_OAUTH2_TOKEN_ENDPOINT, WP_OAUTH2_VALIDATE_TOKEN_ENDPOINT
 } from './consts';
+import { buildMarked } from './utils';
 
 const OAuth2UrlAction = 'wordpress-plugin-oauth';
 const OAuth2RedirectUri = `obsidian://${OAuth2UrlAction}`;
@@ -20,6 +21,11 @@ export const enum ApiType {
   RestAPI_miniOrange = 'miniOrange',
   RestApi_ApplicationPasswords = 'application-passwords',
   RestApi_WpComOAuth2 = 'WpComOAuth2'
+}
+
+export const enum MathJaxOutputType {
+  TeX = 'tex',
+  SVG = 'svg'
 }
 
 export interface WordpressPluginSettings {
@@ -95,6 +101,8 @@ export interface WordpressPluginSettings {
    * If WordPress edit confirm modal will be shown when published successfully.
    */
   showWordPressEditConfirm: boolean;
+
+  mathJaxOutputType: MathJaxOutputType;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
@@ -109,7 +117,8 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   defaultCommentStatus: CommentStatus.Open,
   lastSelectedCategories: [ 1 ],
   rememberLastSelectedCategories: true,
-  showWordPressEditConfirm: false
+  showWordPressEditConfirm: false,
+  mathJaxOutputType: MathJaxOutputType.SVG
 }
 
 export class WordpressSettingTab extends PluginSettingTab {
@@ -168,6 +177,17 @@ export class WordpressSettingTab extends PluginSettingTab {
       }
     };
 
+    const getMathJaxOutputTypeDesc = (type: MathJaxOutputType): string => {
+      switch (type) {
+        case MathJaxOutputType.TeX:
+          return t('settings_MathJaxOutputTypeTeXDesc');
+        case MathJaxOutputType.SVG:
+          return t('settings_MathJaxOutputTypeSVGDesc');
+        default:
+          return '';
+      }
+    }
+
 		const { containerEl } = this;
 
 		containerEl.empty();
@@ -175,6 +195,7 @@ export class WordpressSettingTab extends PluginSettingTab {
     containerEl.createEl('h1', { text: t('settings_title') });
 
     let apiDesc = getApiTypeDesc(this.plugin.settings.apiType);
+    let mathJaxOutputTypeDesc = getMathJaxOutputTypeDesc(this.plugin.settings.mathJaxOutputType);
 
 		new Setting(containerEl)
 			.setName(t('settings_url'))
@@ -338,6 +359,28 @@ export class WordpressSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+
+    new Setting(containerEl)
+      .setName(t('settings_mathJaxOutputType'))
+      .setDesc(t('settings_mathJaxOutputTypeDesc'))
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOption(MathJaxOutputType.TeX, t('settings_mathJaxOutputTypeTeX'))
+          .addOption(MathJaxOutputType.SVG, t('settings_mathJaxOutputTypeSVG'))
+          .setValue(this.plugin.settings.mathJaxOutputType)
+          .onChange(async (value) => {
+            this.plugin.settings.mathJaxOutputType = value as MathJaxOutputType;
+            mathJaxOutputTypeDesc = getMathJaxOutputTypeDesc(this.plugin.settings.mathJaxOutputType);
+            await this.plugin.saveSettings();
+            this.display();
+
+            buildMarked(this.plugin.settings);
+          });
+      });
+    containerEl.createEl('p', {
+      text: mathJaxOutputTypeDesc,
+      cls: 'setting-item-description'
+    });
 	}
 
   private async refreshWpComToken(): Promise<void> {

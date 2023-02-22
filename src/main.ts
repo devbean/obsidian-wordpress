@@ -1,10 +1,20 @@
 import { Plugin } from 'obsidian';
-import { DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
+import { DEFAULT_SETTINGS, MathJaxOutputType, WordpressPluginSettings, WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
 import { I18n } from './i18n';
 import { CommentStatus, PostStatus } from './wp-api';
+import { buildMarked, SafeAny } from './utils';
+import { marked } from 'marked';
+
+import { mathjax } from 'mathjax-full/js/mathjax';
+import { TeX } from 'mathjax-full/js/input/tex';
+import { AllPackages } from 'mathjax-full/js/input/tex/AllPackages';
+import { SVG } from 'mathjax-full/js/output/svg';
+import { LiteAdaptor, liteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor';
+import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html';
+import { MathDocument } from 'mathjax-full/js/core/MathDocument';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -26,9 +36,10 @@ export default class WordpressPlugin extends Plugin {
     console.log('loading obsidian-wordpress plugin');
 
     await this.loadSettings();
-
     // lang should be load early, but after settings
     this.#i18n = new I18n(this.#settings?.lang);
+
+    buildMarked(this.settings);
 
     addIcons();
 
