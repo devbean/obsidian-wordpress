@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.11.0](https://github.com/devbean/obsidian-wordpress/compare/0.10.2...0.11.0) (2023-02-22)
+
+
+### Features
+
+* Add options about MathJax output format. ([15fb5bc](https://github.com/devbean/obsidian-wordpress/commit/15fb5bcafa5b7a77ff9b43a2a18d52817eff699a))
+* Support MathJax. ([e9d61bf](https://github.com/devbean/obsidian-wordpress/commit/e9d61bfee289eb3bbce9e7aca7d6c17e71becf62))
+
 ### [0.10.2](https://github.com/devbean/obsidian-wordpress/compare/0.10.1...0.10.2) (2023-02-09)
 
 
