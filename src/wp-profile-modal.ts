@@ -2,12 +2,11 @@ import { App, Modal, Notice, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { TranslateKey } from './i18n';
 import { WpProfile } from './wp-profile';
-import { ERROR_NOTICE_TIMEOUT, WP_OAUTH2_REDIRECT_URI } from './consts';
+import { ERROR_NOTICE_TIMEOUT, EventType, WP_OAUTH2_REDIRECT_URI } from './consts';
 import { ApiType } from './settings';
 import { WordPressClientReturnCode } from './wp-client';
 import { generateCodeVerifier, OAuth2Client } from './oauth2-client';
-import { AppData } from './app-data';
-import { createEffect } from 'solid-js';
+import { AppState } from './app-state';
 
 /**
  * WordPress profile modal.
@@ -15,6 +14,8 @@ import { createEffect } from 'solid-js';
 export class WpProfileModal extends Modal {
 
   private readonly profileData: WpProfile;
+
+  private readonly tokenGotRef;
 
   constructor(
     app: App,
@@ -35,12 +36,11 @@ export class WpProfileModal extends Modal {
     super(app);
 
     this.profileData = Object.assign({}, profile);
-    const [ token ] = AppData.getInstance().oauth2Token;
-    createEffect(async () => {
-      this.profileData.wpComOAuth2Token = token();
+    this.tokenGotRef = AppState.getInstance().events.on(EventType.OAUTH2_TOKEN_GOT, async token => {
+      this.profileData.wpComOAuth2Token = token;
       if (atIndex >= 0) {
-        // if token() is undefined, just remove it
-        this.plugin.settings.profiles[atIndex].wpComOAuth2Token = token();
+        // if token is undefined, just remove it
+        this.plugin.settings.profiles[atIndex].wpComOAuth2Token = token;
         await this.plugin.saveSettings();
       }
     });
@@ -249,17 +249,20 @@ export class WpProfileModal extends Modal {
   }
 
   onClose() {
+    if (this.tokenGotRef) {
+      AppState.getInstance().events.offref(this.tokenGotRef);
+    }
     const { contentEl } = this;
     contentEl.empty();
   }
 
   private async refreshWpComToken(): Promise<void> {
-    AppData.getInstance().codeVerifier = generateCodeVerifier();
+    AppState.getInstance().codeVerifier = generateCodeVerifier();
     await OAuth2Client.getWpOAuth2Client(this.plugin).getAuthorizeCode({
       redirectUri: WP_OAUTH2_REDIRECT_URI,
       scope: [ 'posts', 'taxonomy', 'media' ],
       blog: this.profileData.endpoint,
-      codeVerifier: AppData.getInstance().codeVerifier
+      codeVerifier: AppState.getInstance().codeVerifier
     });
   }
 

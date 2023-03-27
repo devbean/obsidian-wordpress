@@ -1,4 +1,4 @@
-import { App, Modal, Setting } from 'obsidian';
+import { App, Modal } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpProfile } from './wp-profile';
 import { TranslateKey } from './i18n';

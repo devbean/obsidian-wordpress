@@ -5,12 +5,12 @@ import { WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
 import { I18n } from './i18n';
 import { buildMarked } from './utils';
-import { ERROR_NOTICE_TIMEOUT, WP_OAUTH2_REDIRECT_URI, WP_OAUTH2_URL_ACTION } from './consts';
+import { ERROR_NOTICE_TIMEOUT, EventType, WP_OAUTH2_REDIRECT_URI, WP_OAUTH2_URL_ACTION } from './consts';
 import { OAuth2Client } from './oauth2-client';
 import { CommentStatus, PostStatus } from './wp-api';
 import { WpProfile } from './wp-profile';
 import { WpProfileChooserModal } from './wp-profile-chooser-modal';
-import { AppData } from './app-data';
+import { AppState } from './app-state';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -124,36 +124,15 @@ export default class WordpressPlugin extends Plugin {
               error: e.error,
               desc: e.error_description.replace(/\+/g,' ')
             }), ERROR_NOTICE_TIMEOUT);
-            // const idx = AppData.getInstance().currentProfileIndex;
-            // if (idx >= 0) {
-            //   delete this.#settings?.profiles[idx].wpComOAuth2Token;
-            // }
-            // await this.saveSettings();
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const [ _$, setToken ] = AppData.getInstance().oauth2Token;
-            setToken(undefined);
+            AppState.getInstance().events.trigger(EventType.OAUTH2_TOKEN_GOT, undefined);
           } else if (e.code) {
             const token = await OAuth2Client.getWpOAuth2Client(this).getToken({
               code: e.code,
               redirectUri: WP_OAUTH2_REDIRECT_URI,
-              codeVerifier: AppData.getInstance().codeVerifier
+              codeVerifier: AppState.getInstance().codeVerifier
             });
             console.log(token);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const [ _$, setToken ] = AppData.getInstance().oauth2Token;
-            setToken(token);
-            // const currentProfile = AppData.getInstance().currentProfile;
-            // if (currentProfile) {
-            //   // if (currentProfile.index >= 0) {
-            //   //   const profile = this.#settings?.profiles[currentProfile.index];
-            //   //   if (profile) {
-            //   //     profile.wpComOAuth2Token = token;
-            //   //   }
-            //   // } else {
-            //     currentProfile.data.wpComOAuth2Token = token;
-            //   // }
-            // }
-            // await this.saveSettings();
+            AppState.getInstance().events.trigger(EventType.OAUTH2_TOKEN_GOT, token);
           }
         }
       }
