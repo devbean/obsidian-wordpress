@@ -11,6 +11,7 @@ import { AbstractWordPressClient } from './abstract-wp-client';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { SafeAny } from './utils';
+import { WpProfile } from './wp-profile';
 
 interface FaultResponse {
   faultCode: string;
@@ -27,12 +28,13 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
 
   constructor(
     readonly app: App,
-    readonly plugin: WordpressPlugin
+    readonly plugin: WordpressPlugin,
+    readonly profile: WpProfile
   ) {
-    super(app, plugin);
+    super(app, plugin, profile);
     this.client = new XmlRpcClient({
-      url: new URL(plugin.settings.endpoint),
-      xmlRpcPath: plugin.settings.xmlRpcPath
+      url: new URL(profile.endpoint),
+      xmlRpcPath: profile.xmlRpcPath
     });
   }
 

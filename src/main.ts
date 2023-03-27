@@ -1,20 +1,16 @@
-import { Plugin } from 'obsidian';
-import { DEFAULT_SETTINGS, MathJaxOutputType, WordpressPluginSettings, WordpressSettingTab } from './settings';
+import { Notice, Plugin } from 'obsidian';
+import { DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
 import { I18n } from './i18n';
+import { buildMarked } from './utils';
+import { ERROR_NOTICE_TIMEOUT, WP_OAUTH2_REDIRECT_URI, WP_OAUTH2_URL_ACTION } from './consts';
+import { OAuth2Client } from './oauth2-client';
 import { CommentStatus, PostStatus } from './wp-api';
-import { buildMarked, SafeAny } from './utils';
-import { marked } from 'marked';
-
-import { mathjax } from 'mathjax-full/js/mathjax';
-import { TeX } from 'mathjax-full/js/input/tex';
-import { AllPackages } from 'mathjax-full/js/input/tex/AllPackages';
-import { SVG } from 'mathjax-full/js/output/svg';
-import { LiteAdaptor, liteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor';
-import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html';
-import { MathDocument } from 'mathjax-full/js/core/MathDocument';
+import { WpProfile } from './wp-profile';
+import { WpProfileChooserModal } from './wp-profile-chooser-modal';
+import { AppData } from './app-data';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -43,21 +39,27 @@ export default class WordpressPlugin extends Plugin {
 
     addIcons();
 
+    this.registerProtocolHandler();
     this.updateRibbonIcon();
 
     this.addCommand({
       id: 'defaultPublish',
       name: this.#i18n.t('command_publishWithDefault'),
       editorCallback: () => {
-        const params: WordPressPostParams = {
-          status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
-          commentStatus: this.#settings?.defaultCommentStatus ?? CommentStatus.Open,
-          categories: this.#settings?.lastSelectedCategories ?? [ 1 ],
-          tags: [],
-          title: '',
-          content: ''
-        };
-        this.clientPublish(params);
+        const defaultProfile = this.#settings?.profiles.find(it => it.isDefault);
+        if (defaultProfile) {
+          const params: WordPressPostParams = {
+            status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
+            commentStatus: this.#settings?.defaultCommentStatus ?? CommentStatus.Open,
+            categories: defaultProfile.lastSelectedCategories ?? [ 1 ],
+            tags: [],
+            title: '',
+            content: ''
+          };
+          this.doClientPublish(defaultProfile, params);
+        } else {
+          new Notice(this.#i18n?.t('error_noDefaultProfile') ?? 'No default profile found.', ERROR_NOTICE_TIMEOUT);
+        }
       }
     });
 
@@ -65,7 +67,7 @@ export default class WordpressPlugin extends Plugin {
       id: 'publish',
       name: this.#i18n.t('command_publish'),
       editorCallback: () => {
-        this.clientPublish();
+        this.openProfileChooser();
       }
     });
 
@@ -88,7 +90,7 @@ export default class WordpressPlugin extends Plugin {
     if (this.#settings?.showRibbonIcon) {
       if (!this.ribbonWpIcon) {
         this.ribbonWpIcon = this.addRibbonIcon('wp-logo', ribbonIconTitle, () => {
-          this.clientPublish();
+          this.openProfileChooser();
         });
       }
     } else {
@@ -99,11 +101,63 @@ export default class WordpressPlugin extends Plugin {
     }
   }
 
-  private clientPublish(defaultPostParams?: WordPressPostParams): void {
-    const client = getWordPressClient(this.app, this);
+  private openProfileChooser(): void {
+    new WpProfileChooserModal(this.app, this, (profile) => {
+      console.log(profile);
+      this.doClientPublish(profile);
+    }).open();
+  }
+
+  private doClientPublish(profile: WpProfile, defaultPostParams?: WordPressPostParams): void {
+    const client = getWordPressClient(this.app, this, profile);
     if (client) {
       client.publishPost(defaultPostParams).then();
     }
+  }
+
+  private registerProtocolHandler(): void {
+    this.registerObsidianProtocolHandler(WP_OAUTH2_URL_ACTION, async (e) => {
+      if (e.action === WP_OAUTH2_URL_ACTION) {
+        if (e.state) {
+          if (e.error) {
+            new Notice(this.i18n.t('error_wpComAuthFailed', {
+              error: e.error,
+              desc: e.error_description.replace(/\+/g,' ')
+            }), ERROR_NOTICE_TIMEOUT);
+            // const idx = AppData.getInstance().currentProfileIndex;
+            // if (idx >= 0) {
+            //   delete this.#settings?.profiles[idx].wpComOAuth2Token;
+            // }
+            // await this.saveSettings();
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const [ _$, setToken ] = AppData.getInstance().oauth2Token;
+            setToken(undefined);
+          } else if (e.code) {
+            const token = await OAuth2Client.getWpOAuth2Client(this).getToken({
+              code: e.code,
+              redirectUri: WP_OAUTH2_REDIRECT_URI,
+              codeVerifier: AppData.getInstance().codeVerifier
+            });
+            console.log(token);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const [ _$, setToken ] = AppData.getInstance().oauth2Token;
+            setToken(token);
+            // const currentProfile = AppData.getInstance().currentProfile;
+            // if (currentProfile) {
+            //   // if (currentProfile.index >= 0) {
+            //   //   const profile = this.#settings?.profiles[currentProfile.index];
+            //   //   if (profile) {
+            //   //     profile.wpComOAuth2Token = token;
+            //   //   }
+            //   // } else {
+            //     currentProfile.data.wpComOAuth2Token = token;
+            //   // }
+            // }
+            // await this.saveSettings();
+          }
+        }
+      }
+    });
   }
 
 }

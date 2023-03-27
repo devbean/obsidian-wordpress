@@ -11,6 +11,7 @@ import { Term } from './wp-api';
 import { RestClient } from './rest-client';
 import { isFunction, isString, template } from 'lodash-es';
 import { SafeAny } from './utils';
+import { WpProfile } from './wp-profile';
 
 
 export class WpRestClient extends AbstractWordPressClient {
@@ -20,11 +21,12 @@ export class WpRestClient extends AbstractWordPressClient {
   constructor(
     readonly app: App,
     readonly plugin: WordpressPlugin,
+    readonly profile: WpProfile,
     private readonly context: WpRestClientContext
   ) {
-    super(app, plugin);
+    super(app, plugin, profile);
     this.client = new RestClient({
-      url: new URL(getUrl(this.context.endpoints?.base, plugin.settings.endpoint))
+      url: new URL(getUrl(this.context.endpoints?.base, profile.endpoint))
     });
   }
 

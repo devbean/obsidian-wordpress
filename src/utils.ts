@@ -7,6 +7,8 @@ import { TeX } from 'mathjax-full/js/input/tex';
 import { AllPackages } from 'mathjax-full/js/input/tex/AllPackages';
 import { SVG } from 'mathjax-full/js/output/svg';
 import { marked } from 'marked';
+import { Setting } from 'obsidian';
+import { WpProfile } from './wp-profile';
 
 export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -90,4 +92,25 @@ export function buildMarked(settings: WordpressPluginSettings): void {
       }
     ]
   });
+}
+
+export function rendererProfile(profile: WpProfile, container: HTMLElement): Setting {
+  let name = profile.name;
+  if (profile.isDefault) {
+    name += ' ✔️';
+  }
+  let desc = profile.endpoint;
+  if (profile.wpComOAuth2Token) {
+    desc += ` / 🆔 / 🔒`;
+  } else {
+    if (profile.saveUsername) {
+      desc += ` / 🆔 ${profile.username}`;
+    }
+    if (profile.savePassword) {
+      desc += ' / 🔒 ******';
+    }
+  }
+  return new Setting(container)
+    .setName(name)
+    .setDesc(desc);
 }

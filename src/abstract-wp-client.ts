@@ -16,13 +16,15 @@ import { ERROR_NOTICE_TIMEOUT } from './consts';
 import matter from 'gray-matter';
 import { isPromiseFulfilledResult, openWithBrowser, SafeAny } from './utils';
 import { PostPublishedModal } from './post-published-modal';
+import { WpProfile } from './wp-profile';
 
 
 export abstract class AbstractWordPressClient implements WordPressClient {
 
   protected constructor(
     protected readonly app: App,
-    protected readonly plugin: WordpressPlugin
+    protected readonly plugin: WordpressPlugin,
+    protected readonly profile: WpProfile
   ) { }
 
   abstract publish(
@@ -51,7 +53,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
 
   publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
     return new Promise<WordPressClientResult>((resolve, reject) => {
-      if (!this.plugin.settings.endpoint || this.plugin.settings.endpoint.length === 0) {
+      if (!this.profile.endpoint || this.profile.endpoint.length === 0) {
         new Notice(this.plugin.i18n.t('error_noEndpoint'), ERROR_NOTICE_TIMEOUT);
         reject({
           code: WordPressClientReturnCode.Error,
@@ -89,7 +91,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                 username,
                 password
               });
-              const selectedCategories = matterData.categories as number[] ?? this.plugin.settings.lastSelectedCategories;
+              const selectedCategories = matterData.categories as number[] ?? this.profile.lastSelectedCategories;
               new WpPublishModal(
                 this.app,
                 this.plugin,
@@ -115,15 +117,23 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         };
 
         if (this.openLoginModal()) {
-          new WpLoginModal(
-            this.app,
-            this.plugin,
-            (username, password, loginModal) => {
-              publishToWordPress(username, password, loginModal).then(() => {
-                // make compiler happy
-              });
-            }
-          ).open();
+          if (this.profile.username && this.profile.password) {
+            // saved username and password found
+            publishToWordPress(this.profile.username, this.profile.password).then(() => {
+              // make compiler happy
+            });
+          } else {
+            new WpLoginModal(
+              this.app,
+              this.plugin,
+              this.profile,
+              (username, password, loginModal) => {
+                publishToWordPress(username, password, loginModal).then(() => {
+                  // make compiler happy
+                });
+              }
+            ).open();
+          }
         } else {
           publishToWordPress(null, null).then(() => {
             // make compiler happy
@@ -170,7 +180,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         new Notice(this.plugin.i18n.t('error_publishFailed', {
           code: data.code,
           message: data.message
-        }), 0);
+        }), ERROR_NOTICE_TIMEOUT);
       } else {
         new Notice(this.plugin.i18n.t('message_publishSuccessfully'));
         publishModal?.close();
@@ -186,13 +196,13 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           this.updateFrontMatter(modified);
 
           if (this.plugin.settings.rememberLastSelectedCategories) {
-            this.plugin.settings.lastSelectedCategories = (result.data as SafeAny).categories;
+            this.profile.lastSelectedCategories = (result.data as SafeAny).categories;
             await this.plugin.saveSettings();
           }
 
           if (this.plugin.settings.showWordPressEditConfirm) {
             new PostPublishedModal(this.app, this.plugin, (modal: Modal) => {
-              openWithBrowser(`${this.plugin.settings.endpoint}/wp-admin/post.php`, {
+              openWithBrowser(`${this.profile.endpoint}/wp-admin/post.php`, {
                 action: 'edit',
                 post: postId
               });
@@ -237,7 +247,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       postParams.postId = matterData.postId;
     }
     if (matterData.categories) {
-      postParams.categories = matterData.categories as number[] ?? this.plugin.settings.lastSelectedCategories;
+      postParams.categories = matterData.categories as number[] ?? this.profile.lastSelectedCategories;
     }
     if (matterData.tags) {
       postParams.tags = matterData.tags as string[];

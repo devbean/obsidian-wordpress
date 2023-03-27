@@ -10,32 +10,36 @@ import {
 } from './wp-rest-client';
 import { WordPressClient } from './wp-client';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
+import { WpProfile } from './wp-profile';
 
 export function getWordPressClient(
   app: App,
-  plugin: WordpressPlugin
+  plugin: WordpressPlugin,
+  profile: WpProfile
 ): WordPressClient | null {
-  if (!plugin.settings.endpoint || plugin.settings.endpoint.length === 0) {
+  if (!profile.endpoint || profile.endpoint.length === 0) {
     new Notice(plugin.i18n.t('error_noEndpoint'), ERROR_NOTICE_TIMEOUT);
     return null;
   }
   let client: WordPressClient | null = null;
-  switch (plugin.settings.apiType) {
+  switch (profile.apiType) {
     case ApiType.XML_RPC:
-      client = new WpXmlRpcClient(app, plugin);
+      client = new WpXmlRpcClient(app, plugin, profile);
       break;
     case ApiType.RestAPI_miniOrange:
-      client = new WpRestClient(app, plugin, new WpRestClientMiniOrangeContext());
+      client = new WpRestClient(app, plugin, profile, new WpRestClientMiniOrangeContext());
       break;
     case ApiType.RestApi_ApplicationPasswords:
-      client = new WpRestClient(app, plugin, new WpRestClientAppPasswordContext());
+      client = new WpRestClient(app, plugin, profile, new WpRestClientAppPasswordContext());
       break;
     case ApiType.RestApi_WpComOAuth2:
-      if (plugin.settings.wpComOAuth2Token) {
-        client = new WpRestClient(app, plugin, new WpRestClientWpComOAuth2Context(
-          plugin.settings.wpComOAuth2Token.blogId,
-          plugin.settings.wpComOAuth2Token.accessToken
+      if (profile.wpComOAuth2Token) {
+        client = new WpRestClient(app, plugin, profile, new WpRestClientWpComOAuth2Context(
+          profile.wpComOAuth2Token.blogId,
+          profile.wpComOAuth2Token.accessToken
         ));
+      } else {
+        new Notice(plugin.i18n.t('error_invalidWpComToken'), ERROR_NOTICE_TIMEOUT);
       }
       break;
     default:
