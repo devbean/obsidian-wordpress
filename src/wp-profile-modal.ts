@@ -7,6 +7,7 @@ import { ApiType } from './settings';
 import { WordPressClientReturnCode } from './wp-client';
 import { generateCodeVerifier, OAuth2Client } from './oauth2-client';
 import { AppState } from './app-state';
+import { isValidUrl } from './utils';
 
 /**
  * WordPress profile modal.
@@ -222,20 +223,18 @@ export class WpProfileModal extends Modal {
           .setButtonText(t('profileModal_Save'))
           .setCta()
           .onClick(() => {
-            // if (!isValidUrl(this.profileData.url)) {
-            //   new Notice(t('error_invalidUrl'), ERROR_NOTICE_TIMEOUT);
-            // } else if (this.profileData.rememberUsername && !this.profileData.username) {
-            //   new Notice(t('error_noUsername'), ERROR_NOTICE_TIMEOUT);
-            // } else if (this.profileData.rememberPassword && !this.profileData.password) {
-            //   new Notice(t('error_noPassword'), ERROR_NOTICE_TIMEOUT);
-            // }
-            // if (this.profileData.name?.length === 0) {
-            //   this.profileData.name = this.profileData.url;
-            // }
-            // if (isValidProfile(this.profile)) {
+            if (!isValidUrl(this.profileData.endpoint)) {
+              new Notice(t('error_invalidUrl'), ERROR_NOTICE_TIMEOUT);
+            } else if (this.profileData.name.length === 0) {
+              new Notice(t('error_noProfileName'), ERROR_NOTICE_TIMEOUT);
+            } else if (this.profileData.saveUsername && !this.profileData.username) {
+              new Notice(t('error_noUsername'), ERROR_NOTICE_TIMEOUT);
+            } else if (this.profileData.savePassword && !this.profileData.password) {
+              new Notice(t('error_noPassword'), ERROR_NOTICE_TIMEOUT);
+            } else {
               this.onSubmit(this.profileData, this.atIndex);
               this.close();
-            // }
+            }
           })
         );
     }

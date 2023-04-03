@@ -3,6 +3,8 @@
   "error_notWpCom": "The URL is not wordpress.com, please check again.",
   "error_noUsername": "No username",
   "error_noPassword": "No password",
+  "error_noProfileName": "No profile name",
+  "error_invalidUrl": "Invalid URL",
   "error_invalidUser": "Invalid username or password",
   "error_publishFailed": "Post published failed!\n<%= code %>: <%= message %>",
   "error_wpComAuthFailed": "WordPress authorize failed!\n<%= error %>: <%= desc %>",

@@ -114,3 +114,11 @@ export function rendererProfile(profile: WpProfile, container: HTMLElement): Set
     .setName(name)
     .setDesc(desc);
 }
+
+export function isValidUrl(url: string): boolean {
+  try {
+    return Boolean(new URL(url));
+  } catch(e) {
+    return false;
+  }
+}

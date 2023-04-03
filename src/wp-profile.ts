@@ -58,15 +58,3 @@ export interface WpProfile {
    */
   lastSelectedCategories: number[];
 }
-
-// export function isValidProfile(profile: WpProfile): boolean {
-//   if (!isValidUrl(profile.url)) {
-//     return false;
-//   } else if (profile.rememberUsername && !profile.username) {
-//     return false;
-//   } else if (profile.rememberPassword && !profile.password) {
-//     return false;
-//   } else {
-//     return true;
-//   }
-// }

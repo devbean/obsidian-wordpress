@@ -3,6 +3,8 @@
   "error_notWpCom": "不是合法的 wordpress.com 地址，请检查",
   "error_noUsername": "没有设置用户名",
   "error_noPassword": "没有设置密码",
+  "error_noProfileName": "没有设置账号名",
+  "error_invalidUrl": "URL 格式错误",
   "error_invalidUser": "用户名或密码错误",
   "error_publishFailed": "文章发布失败\n<%= code %>: <%= message %>",
   "error_wpComAuthFailed": "WordPress 认证失败！\n<%= error %>: <%= desc %>",
