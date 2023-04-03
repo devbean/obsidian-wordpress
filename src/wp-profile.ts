@@ -1,5 +1,5 @@
-import { ApiType } from './settings';
 import { WordPressOAuth2Token } from './oauth2-client';
+import { ApiType } from './plugin-settings';
 
 export interface WpProfile {
 

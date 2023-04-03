@@ -3,11 +3,11 @@ import WordpressPlugin from './main';
 import { TranslateKey } from './i18n';
 import { WpProfile } from './wp-profile';
 import { ERROR_NOTICE_TIMEOUT, EventType, WP_OAUTH2_REDIRECT_URI } from './consts';
-import { ApiType } from './settings';
 import { WordPressClientReturnCode } from './wp-client';
 import { generateCodeVerifier, OAuth2Client } from './oauth2-client';
 import { AppState } from './app-state';
 import { isValidUrl } from './utils';
+import { ApiType } from './plugin-settings';
 
 /**
  * WordPress profile modal.

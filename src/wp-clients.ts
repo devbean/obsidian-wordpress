@@ -1,6 +1,5 @@
 import { App, Notice } from 'obsidian';
 import WordpressPlugin from './main';
-import { ApiType } from './settings';
 import { WpXmlRpcClient } from './wp-xml-rpc-client';
 import {
   WpRestClient,
@@ -11,6 +10,7 @@ import {
 import { WordPressClient } from './wp-client';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { WpProfile } from './wp-profile';
+import { ApiType } from './plugin-settings';
 
 export function getWordPressClient(
   app: App,

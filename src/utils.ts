@@ -1,6 +1,5 @@
 import { liteAdaptor, LiteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor';
 import { MathDocument } from 'mathjax-full/js/core/MathDocument';
-import { MathJaxOutputType, WordpressPluginSettings } from './settings';
 import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html';
 import { mathjax } from 'mathjax-full/js/mathjax';
 import { TeX } from 'mathjax-full/js/input/tex';
@@ -9,6 +8,7 @@ import { SVG } from 'mathjax-full/js/output/svg';
 import { marked } from 'marked';
 import { Setting } from 'obsidian';
 import { WpProfile } from './wp-profile';
+import { MathJaxOutputType, WordpressPluginSettings } from './plugin-settings';
 
 export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 

@@ -1,71 +1,12 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { CommentStatus, PostStatus } from './wp-api';
-import { LanguageWithAuto, TranslateKey } from './i18n';
+import { TranslateKey } from './i18n';
 import { buildMarked } from './utils';
 import { WpProfileManageModal } from './wp-profile-manage-modal';
+import { MathJaxOutputType } from './plugin-settings';
 import { WpProfile } from './wp-profile';
 
-
-export const enum ApiType {
-  XML_RPC = 'xml-rpc',
-  RestAPI_miniOrange = 'miniOrange',
-  RestApi_ApplicationPasswords = 'application-passwords',
-  RestApi_WpComOAuth2 = 'WpComOAuth2'
-}
-
-export const enum MathJaxOutputType {
-  TeX = 'tex',
-  SVG = 'svg'
-}
-
-export interface WordpressPluginSettings {
-
-  /**
-   * Plugin language.
-   */
-  lang: LanguageWithAuto;
-
-  profiles: WpProfile[];
-
-  /**
-   * Show plugin icon in side.
-   */
-  showRibbonIcon: boolean;
-
-  /**
-   * Default post status.
-   */
-  defaultPostStatus: PostStatus;
-
-  /**
-   * Default comment status.
-   */
-  defaultCommentStatus: CommentStatus;
-
-  /**
-   * Remember last selected post categories.
-   */
-  rememberLastSelectedCategories: boolean;
-
-  /**
-   * If WordPress edit confirm modal will be shown when published successfully.
-   */
-  showWordPressEditConfirm: boolean;
-
-  mathJaxOutputType: MathJaxOutputType;
-}
-
-export const DEFAULT_SETTINGS: WordpressPluginSettings = {
-  lang: 'auto',
-  profiles: [],
-  showRibbonIcon: false,
-  defaultPostStatus: PostStatus.Draft,
-  defaultCommentStatus: CommentStatus.Open,
-  rememberLastSelectedCategories: true,
-  showWordPressEditConfirm: false,
-  mathJaxOutputType: MathJaxOutputType.SVG
-}
 
 export class WordpressSettingTab extends PluginSettingTab {
 
@@ -163,7 +104,7 @@ export class WordpressSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.rememberLastSelectedCategories = value;
             if (!value) {
-              this.plugin.settings.profiles.forEach(profile => {
+              this.plugin.settings.profiles.forEach((profile: WpProfile) => {
                 if (!profile.lastSelectedCategories || profile.lastSelectedCategories.length === 0) {
                   profile.lastSelectedCategories = [ 1 ];
                 }

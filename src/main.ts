@@ -1,5 +1,5 @@
 import { Notice, Plugin } from 'obsidian';
-import { DEFAULT_SETTINGS, WordpressPluginSettings, WordpressSettingTab } from './settings';
+import { WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
@@ -11,6 +11,7 @@ import { CommentStatus, PostStatus } from './wp-api';
 import { WpProfile } from './wp-profile';
 import { WpProfileChooserModal } from './wp-profile-chooser-modal';
 import { AppState } from './app-state';
+import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -79,6 +80,8 @@ export default class WordpressPlugin extends Plugin {
 
   async loadSettings() {
     this.#settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.#settings = upgradeSettings(this.#settings, SettingsVersion.V2);
+    await this.saveSettings();
   }
 
   async saveSettings() {

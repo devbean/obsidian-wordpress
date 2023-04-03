@@ -6,9 +6,9 @@ import {
   WP_OAUTH2_AUTHORIZE_ENDPOINT,
   WP_OAUTH2_CLIENT_ID,
   WP_OAUTH2_CLIENT_SECRET,
-  WP_OAUTH2_TOKEN_ENDPOINT, WP_OAUTH2_VALIDATE_TOKEN_ENDPOINT
+  WP_OAUTH2_TOKEN_ENDPOINT,
+  WP_OAUTH2_VALIDATE_TOKEN_ENDPOINT
 } from './consts';
-import { WpProfile } from './wp-profile';
 
 export interface OAuth2Token {
   accessToken: string;
