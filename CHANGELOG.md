@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.12.0](https://github.com/devbean/obsidian-wordpress/compare/0.11.0...0.12.0) (2023-04-04)
+
+
+### Features
+
+* Do not save password in plaintext. ([7d391b0](https://github.com/devbean/obsidian-wordpress/commit/7d391b0e8df28ddaa72abd4c9fe60069af2598df))
+* You can add multiple profiles of WordPress. ([af74d11](https://github.com/devbean/obsidian-wordpress/commit/af74d11bc06e21c2fb6f2c714813b3fb6acd2fb2))
+
+
+### Bug Fixes
+
+* Skip front-matter null values. Close [#34](https://github.com/devbean/obsidian-wordpress/issues/34) ([b55c76d](https://github.com/devbean/obsidian-wordpress/commit/b55c76db4642a701cfc5ab0b3cc1e8f1276e4059))
+
 ## [0.11.0](https://github.com/devbean/obsidian-wordpress/compare/0.10.2...0.11.0) (2023-02-22)
 
 
