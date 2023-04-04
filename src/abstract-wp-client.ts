@@ -14,10 +14,24 @@ import { WpPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import matter from 'gray-matter';
+import yaml from 'js-yaml';
 import { isPromiseFulfilledResult, openWithBrowser, SafeAny } from './utils';
 import { PostPublishedModal } from './post-published-modal';
 import { WpProfile } from './wp-profile';
 
+
+const matterOptions = {
+  engines: {
+    yaml: {
+      parse: (input: string) => yaml.load(input) as object,
+      stringify: (data: object) => {
+        return yaml.dump(data, {
+          styles: { '!!null': 'empty' }
+        });
+      }
+    }
+  }
+};
 
 export abstract class AbstractWordPressClient implements WordPressClient {
 
@@ -72,7 +86,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           const noteTitle = activeEditor.file!.basename;
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const rawContent = await this.app.vault.read(activeEditor.file!);
-          const { content, data: matterData } = matter(rawContent);
+          const { content, data: matterData } = matter(rawContent, matterOptions);
 
           const validateUserResult = await this.validateUser({ username, password });
           if (validateUserResult.code === WordPressClientReturnCode.OK) {
@@ -192,7 +206,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           // save post id to front-matter
           matterData.postId = postId;
           matterData.categories = postParams.categories;
-          const modified = matter.stringify(postParams.content, matterData);
+          const modified = matter.stringify(postParams.content, matterData, matterOptions);
           this.updateFrontMatter(modified);
 
           if (this.plugin.settings.rememberLastSelectedCategories) {
