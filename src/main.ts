@@ -1,20 +1,18 @@
-import { Plugin } from 'obsidian';
-import { DEFAULT_SETTINGS, MathJaxOutputType, WordpressPluginSettings, WordpressSettingTab } from './settings';
+import { Notice, Plugin } from 'obsidian';
+import { WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
 import { I18n } from './i18n';
+import { buildMarked } from './utils';
+import { ERROR_NOTICE_TIMEOUT, EventType, WP_OAUTH2_REDIRECT_URI, WP_OAUTH2_URL_ACTION } from './consts';
+import { OAuth2Client } from './oauth2-client';
 import { CommentStatus, PostStatus } from './wp-api';
-import { buildMarked, SafeAny } from './utils';
-import { marked } from 'marked';
-
-import { mathjax } from 'mathjax-full/js/mathjax';
-import { TeX } from 'mathjax-full/js/input/tex';
-import { AllPackages } from 'mathjax-full/js/input/tex/AllPackages';
-import { SVG } from 'mathjax-full/js/output/svg';
-import { LiteAdaptor, liteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor';
-import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html';
-import { MathDocument } from 'mathjax-full/js/core/MathDocument';
+import { WpProfile } from './wp-profile';
+import { WpProfileChooserModal } from './wp-profile-chooser-modal';
+import { AppState } from './app-state';
+import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
+import { PassCrypto } from './pass-crypto';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -43,21 +41,27 @@ export default class WordpressPlugin extends Plugin {
 
     addIcons();
 
+    this.registerProtocolHandler();
     this.updateRibbonIcon();
 
     this.addCommand({
       id: 'defaultPublish',
       name: this.#i18n.t('command_publishWithDefault'),
       editorCallback: () => {
-        const params: WordPressPostParams = {
-          status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
-          commentStatus: this.#settings?.defaultCommentStatus ?? CommentStatus.Open,
-          categories: this.#settings?.lastSelectedCategories ?? [ 1 ],
-          tags: [],
-          title: '',
-          content: ''
-        };
-        this.clientPublish(params);
+        const defaultProfile = this.#settings?.profiles.find(it => it.isDefault);
+        if (defaultProfile) {
+          const params: WordPressPostParams = {
+            status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
+            commentStatus: this.#settings?.defaultCommentStatus ?? CommentStatus.Open,
+            categories: defaultProfile.lastSelectedCategories ?? [ 1 ],
+            tags: [],
+            title: '',
+            content: ''
+          };
+          this.doClientPublish(defaultProfile, params);
+        } else {
+          new Notice(this.#i18n?.t('error_noDefaultProfile') ?? 'No default profile found.', ERROR_NOTICE_TIMEOUT);
+        }
       }
     });
 
@@ -65,7 +69,7 @@ export default class WordpressPlugin extends Plugin {
       id: 'publish',
       name: this.#i18n.t('command_publish'),
       editorCallback: () => {
-        this.clientPublish();
+        this.openProfileChooser();
       }
     });
 
@@ -77,6 +81,18 @@ export default class WordpressPlugin extends Plugin {
 
   async loadSettings() {
     this.#settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.#settings = await upgradeSettings(this.#settings, SettingsVersion.V2, this);
+    await this.saveSettings();
+
+    const crypto = new PassCrypto();
+    const count = this.#settings?.profiles.length ?? 0;
+    for (let i = 0; i < count; i++) {
+      const profile = this.#settings?.profiles[i];
+      const enPass = profile.encryptedPassword;
+      if (enPass) {
+        profile.password = await crypto.decrypt(enPass.encrypted, enPass.key, enPass.vector);
+      }
+    }
   }
 
   async saveSettings() {
@@ -88,7 +104,7 @@ export default class WordpressPlugin extends Plugin {
     if (this.#settings?.showRibbonIcon) {
       if (!this.ribbonWpIcon) {
         this.ribbonWpIcon = this.addRibbonIcon('wp-logo', ribbonIconTitle, () => {
-          this.clientPublish();
+          this.openProfileChooser();
         });
       }
     } else {
@@ -99,11 +115,42 @@ export default class WordpressPlugin extends Plugin {
     }
   }
 
-  private clientPublish(defaultPostParams?: WordPressPostParams): void {
-    const client = getWordPressClient(this.app, this);
+  private openProfileChooser(): void {
+    new WpProfileChooserModal(this.app, this, (profile) => {
+      console.log(profile);
+      this.doClientPublish(profile);
+    }).open();
+  }
+
+  private doClientPublish(profile: WpProfile, defaultPostParams?: WordPressPostParams): void {
+    const client = getWordPressClient(this.app, this, profile);
     if (client) {
       client.publishPost(defaultPostParams).then();
     }
+  }
+
+  private registerProtocolHandler(): void {
+    this.registerObsidianProtocolHandler(WP_OAUTH2_URL_ACTION, async (e) => {
+      if (e.action === WP_OAUTH2_URL_ACTION) {
+        if (e.state) {
+          if (e.error) {
+            new Notice(this.i18n.t('error_wpComAuthFailed', {
+              error: e.error,
+              desc: e.error_description.replace(/\+/g,' ')
+            }), ERROR_NOTICE_TIMEOUT);
+            AppState.getInstance().events.trigger(EventType.OAUTH2_TOKEN_GOT, undefined);
+          } else if (e.code) {
+            const token = await OAuth2Client.getWpOAuth2Client(this).getToken({
+              code: e.code,
+              redirectUri: WP_OAUTH2_REDIRECT_URI,
+              codeVerifier: AppState.getInstance().codeVerifier
+            });
+            console.log(token);
+            AppState.getInstance().events.trigger(EventType.OAUTH2_TOKEN_GOT, token);
+          }
+        }
+      }
+    });
   }
 
 }

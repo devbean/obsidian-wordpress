@@ -1,8 +1,6 @@
 import { App, Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { TranslateKey } from './i18n';
-import { openWithBrowser } from './utils';
-import { WordPressPostParams } from './wp-client';
 
 /**
  * WordPress post published modal.

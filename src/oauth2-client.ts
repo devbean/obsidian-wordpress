@@ -2,6 +2,13 @@ import { generateQueryString, openWithBrowser } from './utils';
 import { requestUrl } from 'obsidian';
 import { WordPressClientResult, WordPressClientReturnCode } from './wp-client';
 import WordpressPlugin from './main';
+import {
+  WP_OAUTH2_AUTHORIZE_ENDPOINT,
+  WP_OAUTH2_CLIENT_ID,
+  WP_OAUTH2_CLIENT_SECRET,
+  WP_OAUTH2_TOKEN_ENDPOINT,
+  WP_OAUTH2_VALIDATE_TOKEN_ENDPOINT
+} from './consts';
 
 export interface OAuth2Token {
   accessToken: string;
@@ -40,6 +47,16 @@ export interface OAuth2Options {
 }
 
 export class OAuth2Client {
+
+  static getWpOAuth2Client(plugin: WordpressPlugin): OAuth2Client {
+    return new OAuth2Client({
+      clientId: WP_OAUTH2_CLIENT_ID,
+      clientSecret: WP_OAUTH2_CLIENT_SECRET,
+      tokenEndpoint: WP_OAUTH2_TOKEN_ENDPOINT,
+      authorizeEndpoint: WP_OAUTH2_AUTHORIZE_ENDPOINT,
+      validateTokenEndpoint: WP_OAUTH2_VALIDATE_TOKEN_ENDPOINT
+    }, plugin);
+  }
 
   constructor(
     private readonly options: OAuth2Options,
