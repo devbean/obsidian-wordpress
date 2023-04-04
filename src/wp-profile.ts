@@ -34,6 +34,15 @@ export interface WpProfile {
   password?: string;
 
   /**
+   * Encrypted password which will be saved locally.
+   */
+  encryptedPassword?: {
+    encrypted: string;
+    key?: string;
+    vector?: string;
+  };
+
+  /**
    * OAuth2 token for wordpress.com
    */
   wpComOAuth2Token?: WordPressOAuth2Token;

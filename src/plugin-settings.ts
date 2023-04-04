@@ -3,6 +3,8 @@ import { WpProfile } from './wp-profile';
 import { CommentStatus, PostStatus } from './wp-api';
 import { isNil, isUndefined } from 'lodash-es';
 import { SafeAny } from './utils';
+import { PassCrypto } from './pass-crypto';
+import WordpressPlugin from './main';
 
 
 export const enum SettingsVersion {
@@ -71,7 +73,11 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   mathJaxOutputType: MathJaxOutputType.SVG
 }
 
-export function upgradeSettings(existingSettings: SafeAny, to: SettingsVersion): WordpressPluginSettings {
+export async function upgradeSettings(
+  existingSettings: SafeAny,
+  to: SettingsVersion,
+  plugin: WordpressPlugin
+): Promise<WordpressPluginSettings> {
   console.log(existingSettings, to);
   if (isUndefined(existingSettings.version)) {
     // V1
@@ -92,8 +98,10 @@ export function upgradeSettings(existingSettings: SafeAny, to: SettingsVersion):
       const username = existingSettings.username;
       const password = existingSettings.password;
       const lastSelectedCategories = existingSettings.lastSelectedCategories;
+      const crypto = new PassCrypto();
+      const encryptedPassword = await crypto.encrypt(password);
       const profile = {
-        name: endpoint,
+        name: 'Default',
         apiType: apiType,
         endpoint: endpoint,
         xmlRpcPath: xmlRpcPath,
@@ -102,7 +110,7 @@ export function upgradeSettings(existingSettings: SafeAny, to: SettingsVersion):
         isDefault: true,
         lastSelectedCategories: lastSelectedCategories,
         username: username,
-        password: password
+        encryptedPassword: encryptedPassword
       };
       newSettings.profiles = [
         profile

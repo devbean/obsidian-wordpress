@@ -12,6 +12,7 @@ import { WpProfile } from './wp-profile';
 import { WpProfileChooserModal } from './wp-profile-chooser-modal';
 import { AppState } from './app-state';
 import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
+import { PassCrypto } from './pass-crypto';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -80,8 +81,18 @@ export default class WordpressPlugin extends Plugin {
 
   async loadSettings() {
     this.#settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    this.#settings = upgradeSettings(this.#settings, SettingsVersion.V2);
+    this.#settings = await upgradeSettings(this.#settings, SettingsVersion.V2, this);
     await this.saveSettings();
+
+    const crypto = new PassCrypto();
+    const count = this.#settings?.profiles.length ?? 0;
+    for (let i = 0; i < count; i++) {
+      const profile = this.#settings?.profiles[i];
+      const enPass = profile.encryptedPassword;
+      if (enPass) {
+        profile.password = await crypto.decrypt(enPass.encrypted, enPass.key, enPass.vector);
+      }
+    }
   }
 
   async saveSettings() {

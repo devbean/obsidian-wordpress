@@ -95,5 +95,6 @@
   "profileModal_rememberUsername": "Remember Username",
   "profileModal_rememberPassword": "Remember Password",
   "profileModal_setDefault": "Set Default",
-  "profilesChooserModal_choose": "Choose"
+  "profilesChooserModal_choose": "Choose",
+  "profiles_default": "Default Profile"
 }
