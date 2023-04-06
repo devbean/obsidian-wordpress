@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.13.0](https://github.com/devbean/obsidian-wordpress/compare/0.12.0...0.13.0) (2023-04-06)
+
+
+### Features
+
+* Use markdown-it instead of marked to parse markdown notes. ([4df846a](https://github.com/devbean/obsidian-wordpress/commit/4df846ae792582a024d5ec01689468fd7c4cfcf9))
+
 ## [0.12.0](https://github.com/devbean/obsidian-wordpress/compare/0.11.0...0.12.0) (2023-04-04)
 
 
