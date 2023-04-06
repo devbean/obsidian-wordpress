@@ -1,7 +1,10 @@
 import { Events } from 'obsidian';
+import MarkdownIt from 'markdown-it';
 
 export class AppState {
   private static instance: AppState;
+
+  markdownParser = new MarkdownIt();
 
   events = new Events();
 
@@ -10,7 +13,8 @@ export class AppState {
    */
   codeVerifier: string | undefined;
 
-  private constructor() { }
+  private constructor() {
+  }
 
   static getInstance(): AppState {
     if (!AppState.instance) {

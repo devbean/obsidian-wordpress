@@ -2,10 +2,10 @@ import { App, PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { CommentStatus, PostStatus } from './wp-api';
 import { TranslateKey } from './i18n';
-import { buildMarked } from './utils';
 import { WpProfileManageModal } from './wp-profile-manage-modal';
 import { MathJaxOutputType } from './plugin-settings';
 import { WpProfile } from './wp-profile';
+import { setupMarkdownParser } from './utils';
 
 
 export class WordpressSettingTab extends PluginSettingTab {
@@ -140,7 +140,7 @@ export class WordpressSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
             this.display();
 
-            buildMarked(this.plugin.settings);
+            setupMarkdownParser(this.plugin.settings);
           });
       });
     containerEl.createEl('p', {

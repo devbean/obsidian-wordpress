@@ -9,7 +9,6 @@ import {
   WordPressPostParams,
   WordPressPublishParams
 } from './wp-client';
-import { marked } from 'marked';
 import { WpPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
@@ -18,6 +17,7 @@ import yaml from 'js-yaml';
 import { isPromiseFulfilledResult, openWithBrowser, SafeAny } from './utils';
 import { PostPublishedModal } from './post-published-modal';
 import { WpProfile } from './wp-profile';
+import { AppState } from './app-state';
 
 
 const matterOptions = {
@@ -182,7 +182,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       postParams.tags = tagTerms.map(term => term.id);
       const result = await this.publish(
         postParams.title ?? 'A post from Obsidian!',
-        marked.parse(postParams.content) ?? '',
+        AppState.getInstance().markdownParser.render(postParams.content) ?? '',
         postParams,
         {
           username,
