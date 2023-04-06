@@ -4,7 +4,6 @@ import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
 import { I18n } from './i18n';
-import { buildMarked } from './utils';
 import { ERROR_NOTICE_TIMEOUT, EventType, WP_OAUTH2_REDIRECT_URI, WP_OAUTH2_URL_ACTION } from './consts';
 import { OAuth2Client } from './oauth2-client';
 import { CommentStatus, PostStatus } from './wp-api';
@@ -13,6 +12,7 @@ import { WpProfileChooserModal } from './wp-profile-chooser-modal';
 import { AppState } from './app-state';
 import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
 import { PassCrypto } from './pass-crypto';
+import { setupMarkdownParser } from './utils';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -37,7 +37,7 @@ export default class WordpressPlugin extends Plugin {
     // lang should be load early, but after settings
     this.#i18n = new I18n(this.#settings?.lang);
 
-    buildMarked(this.settings);
+    setupMarkdownParser(this.settings);
 
     addIcons();
 
