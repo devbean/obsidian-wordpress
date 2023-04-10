@@ -3,6 +3,7 @@
   "error_notWpCom": "不是合法的 wordpress.com 地址，请检查",
   "error_noUsername": "没有设置用户名",
   "error_noPassword": "没有设置密码",
+  "error_noProfile": "没有账号，请至少添加一个 WordPress 账号",
   "error_noProfileName": "没有设置账号名",
   "error_invalidUrl": "URL 格式错误",
   "error_invalidUser": "用户名或密码错误",

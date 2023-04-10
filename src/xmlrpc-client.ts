@@ -49,9 +49,8 @@ export class XmlRpcClient {
     method: string,
     params: unknown
   ): Promise<unknown> {
-    console.log(`Endpoint: ${this.endpoint}, ${method}`, params);
-
     const xml = this.objectToXml(method, params);
+    console.log(`Endpoint: ${this.endpoint}, ${method}, request: ${xml}`, params);
     return request({
       url: this.endpoint,
       method: 'POST',
@@ -136,27 +135,22 @@ export class XmlRpcClient {
     const doc = parser.parseFromString(xml, 'application/xml');
     const methodResponse = doc.getElementsByTagName('methodResponse')[0];
     const faults = methodResponse.getElementsByTagName('fault');
+    let response: unknown;
     if (faults.length > 0) {
       const faultValue = faults[0]
-        .getElementsByTagName('value')[0]
-        .children;
-      return this.fromValue(faultValue);
+        .children[0] // <value>
+        .children[0];
+      response = this.fromElement(faultValue);
     } else {
       const responseValue = methodResponse
-        .getElementsByTagName('params')[0]
-        .getElementsByTagName('param')[0]
-        .getElementsByTagName('value')[0]
-        .children;
-      return this.fromValue(responseValue);
+        .children[0] // <params>
+        .children[0] // <param>
+        .children[0] // <value>
+        .children[0];
+      response = this.fromElement(responseValue);
     }
-  }
-
-  private fromValue(collection: HTMLCollection): unknown {
-    for (let i = 0; i < collection.length; i++) {
-      const element = collection[i];
-      this.fromElement(element);
-    }
-    return {};
+    console.log(`response: ${xml}`, response);
+    return response;
   }
 
   private fromElement(element: Element): unknown {
@@ -179,21 +173,32 @@ export class XmlRpcClient {
     } else if (tagName === 'array') {
       const array = [];
       const arrayValues = element
-        .getElementsByTagName('data')[0]
-        .getElementsByTagName('value');
+        .children[0] // <data>
+        .children; // <value>s
       for (let i = 0; i < arrayValues.length; i++) {
-        const arrayElement = arrayValues[i].children[0];
-        array.push(this.fromElement(arrayElement));
+        array.push(this.fromElement(arrayValues[i].children[0]));
       }
       return array;
     } else if (tagName === 'struct') {
       const struct: SafeAny = {};
-      const members = element.getElementsByTagName('member');
+      const members = element.children; // <member>s
       for (let i = 0; i < members.length; i++) {
         const member = members[i];
-        const name = member.getElementsByTagName('name')[0];
-        const value = member.getElementsByTagName('value')[0].children[0];
-        struct[name.getText()] = this.fromElement(value);
+        let name;
+        let value;
+        for (let memberIndex = 0; memberIndex < member.children.length; memberIndex++) {
+          const prop = member.children[memberIndex];
+          if (prop.tagName === 'name') {
+            name = prop;
+          } else if (prop.tagName === 'value') {
+            value = prop.children[0];
+          }
+        }
+        // const name = member.getElementsByTagName('name')[0];
+        // const value = member.getElementsByTagName('value')[0].children[0];
+        if (name && value) {
+          struct[name.getText()] = this.fromElement(value);
+        }
       }
       return struct;
     }
