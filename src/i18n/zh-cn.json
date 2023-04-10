@@ -95,6 +95,7 @@
   "profileModal_rememberUsername": "记住用户名",
   "profileModal_rememberPassword": "记住密码",
   "profileModal_setDefault": "设为默认",
-  "profilesChooserModal_choose": "选择",
+  "profilesChooserModal_title": "WordPress 账户",
+  "profilesChooserModal_pickOne": "点击选择一个需要发布到的 WordPress 账户",
   "profiles_default": "默认账户"
 }

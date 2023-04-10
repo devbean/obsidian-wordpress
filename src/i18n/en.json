@@ -95,6 +95,7 @@
   "profileModal_rememberUsername": "Remember Username",
   "profileModal_rememberPassword": "Remember Password",
   "profileModal_setDefault": "Set Default",
-  "profilesChooserModal_choose": "Choose",
+  "profilesChooserModal_title": "Profiles",
+  "profilesChooserModal_pickOne": "Click to pick one profile to publish.",
   "profiles_default": "Default Profile"
 }
