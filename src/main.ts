@@ -116,10 +116,16 @@ export default class WordpressPlugin extends Plugin {
   }
 
   private openProfileChooser(): void {
-    new WpProfileChooserModal(this.app, this, (profile) => {
-      console.log(profile);
-      this.doClientPublish(profile);
-    }).open();
+    if (this.settings.profiles.length === 1) {
+      this.doClientPublish(this.settings.profiles[0]);
+    } else if (this.settings.profiles.length > 1) {
+      new WpProfileChooserModal(this.app, this, (profile) => {
+        console.log(profile);
+        this.doClientPublish(profile);
+      }).open();
+    } else {
+      new Notice(this.i18n.t('error_noProfile'));
+    }
   }
 
   private doClientPublish(profile: WpProfile, defaultPostParams?: WordPressPostParams): void {
