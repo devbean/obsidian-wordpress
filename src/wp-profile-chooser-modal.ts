@@ -1,4 +1,4 @@
-import { App, Modal } from 'obsidian';
+import { App, Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpProfile } from './wp-profile';
 import { TranslateKey } from './i18n';
@@ -44,8 +44,10 @@ export class WpProfileChooserModal extends Modal {
 
     const { contentEl } = this;
 
-    contentEl.createEl('h1', { text: t('profilesManageModal_title') });
+    contentEl.createEl('h1', { text: t('profilesChooserModal_title') });
 
+    new Setting(contentEl)
+      .setName(t('profilesChooserModal_pickOne'));
     const content = contentEl.createEl('div');
     renderProfiles();
   }

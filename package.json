@@ -30,7 +30,6 @@
 		"@types/lodash-es": "^4.17.6",
 		"@types/markdown-it": "^12.2.3",
 		"@types/node": "^16.11.6",
-		"@types/xmlrpc": "^1.3.7",
 		"@typescript-eslint/eslint-plugin": "^5.2.0",
 		"@typescript-eslint/parser": "^5.2.0",
 		"builtin-modules": "^3.2.0",
@@ -45,7 +44,6 @@
 		"obsidian": "latest",
 		"standard-version": "^9.3.2",
 		"tslib": "2.4.0",
-		"typescript": "4.7.4",
-		"xmlbuilder2": "^3.0.2"
+		"typescript": "4.7.4"
 	}
 }
