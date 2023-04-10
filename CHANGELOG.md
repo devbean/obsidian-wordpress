@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.13.2](https://github.com/devbean/obsidian-wordpress/compare/0.13.1...0.13.2) (2023-04-10)
+
+
+### Features
+
+* Ignore chooser modal if there is only one profile. ([bfdfd42](https://github.com/devbean/obsidian-wordpress/commit/bfdfd42925bae5f16f9c1026f1a5cc37c52fd16c))
+
+
+### Bug Fixes
+
+* XML-RPC parse bugs. ([15e2d15](https://github.com/devbean/obsidian-wordpress/commit/15e2d15c2f90c43b8bdba7d1cbacd79130d1dcaa))
+
 ### [0.13.1](https://github.com/devbean/obsidian-wordpress/compare/0.13.0...0.13.1) (2023-04-10)
 
 ## [0.13.0](https://github.com/devbean/obsidian-wordpress/compare/0.12.0...0.13.0) (2023-04-06)
