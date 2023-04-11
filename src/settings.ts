@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { CommentStatus, PostStatus } from './wp-api';
 import { TranslateKey } from './i18n';
@@ -11,7 +11,6 @@ import { setupMarkdownParser } from './utils';
 export class WordpressSettingTab extends PluginSettingTab {
 
 	constructor(
-    app: App,
     private readonly plugin: WordpressPlugin
   ) {
 		super(app, plugin);
@@ -48,7 +47,7 @@ export class WordpressSettingTab extends PluginSettingTab {
       .addButton(button => button
         .setButtonText(t('settings_profilesModal'))
         .onClick(() => {
-          new WpProfileManageModal(this.app, this.plugin).open();
+          new WpProfileManageModal(this.plugin).open();
         }));
 
     new Setting(containerEl)

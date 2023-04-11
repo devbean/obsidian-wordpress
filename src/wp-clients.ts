@@ -1,4 +1,4 @@
-import { App, Notice } from 'obsidian';
+import { Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpXmlRpcClient } from './wp-xml-rpc-client';
 import {
@@ -13,7 +13,6 @@ import { WpProfile } from './wp-profile';
 import { ApiType } from './plugin-settings';
 
 export function getWordPressClient(
-  app: App,
   plugin: WordpressPlugin,
   profile: WpProfile
 ): WordPressClient | null {
@@ -24,17 +23,17 @@ export function getWordPressClient(
   let client: WordPressClient | null = null;
   switch (profile.apiType) {
     case ApiType.XML_RPC:
-      client = new WpXmlRpcClient(app, plugin, profile);
+      client = new WpXmlRpcClient(plugin, profile);
       break;
     case ApiType.RestAPI_miniOrange:
-      client = new WpRestClient(app, plugin, profile, new WpRestClientMiniOrangeContext());
+      client = new WpRestClient(plugin, profile, new WpRestClientMiniOrangeContext());
       break;
     case ApiType.RestApi_ApplicationPasswords:
-      client = new WpRestClient(app, plugin, profile, new WpRestClientAppPasswordContext());
+      client = new WpRestClient(plugin, profile, new WpRestClientAppPasswordContext());
       break;
     case ApiType.RestApi_WpComOAuth2:
       if (profile.wpComOAuth2Token) {
-        client = new WpRestClient(app, plugin, profile, new WpRestClientWpComOAuth2Context(
+        client = new WpRestClient(plugin, profile, new WpRestClientWpComOAuth2Context(
           profile.wpComOAuth2Token.blogId,
           profile.wpComOAuth2Token.accessToken
         ));

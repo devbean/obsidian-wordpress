@@ -8,6 +8,8 @@ export const WP_OAUTH2_VALIDATE_TOKEN_ENDPOINT = 'https://public-api.wordpress.c
 export const WP_OAUTH2_URL_ACTION = 'wordpress-plugin-oauth';
 export const WP_OAUTH2_REDIRECT_URI = `obsidian://${WP_OAUTH2_URL_ACTION}`;
 
+export const WP_DEFAULT_PROFILE_NAME = 'Default';
+
 export const enum EventType {
   OAUTH2_TOKEN_GOT = 'OAUTH2_TOKEN_GOT'
 }

@@ -1,8 +1,13 @@
-import { Setting } from 'obsidian';
+import { Notice, Setting } from 'obsidian';
 import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
 import { WordpressPluginSettings } from './plugin-settings';
 import MarkdownItMathJax3Plugin from './markdown-it-mathjax3-plugin';
+import { WordPressPostParams } from './wp-client';
+import { getWordPressClient } from './wp-clients';
+import WordpressPlugin from './main';
+import { isString } from 'lodash-es';
+import { ERROR_NOTICE_TIMEOUT } from './consts';
 
 export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -55,5 +60,32 @@ export function isValidUrl(url: string): boolean {
     return Boolean(new URL(url));
   } catch(e) {
     return false;
+  }
+}
+
+export function doClientPublish(plugin: WordpressPlugin, profile: WpProfile, defaultPostParams?: WordPressPostParams): void;
+export function doClientPublish(plugin: WordpressPlugin, profileName: string, defaultPostParams?: WordPressPostParams): void;
+export function doClientPublish(
+  plugin: WordpressPlugin,
+  profileOrName: WpProfile | string,
+  defaultPostParams?: WordPressPostParams
+): void {
+  let profile: WpProfile | undefined;
+  if (isString(profileOrName)) {
+    profile = plugin.settings.profiles.find(it => it.name === profileOrName);
+  } else {
+    profile = profileOrName;
+  }
+  if (profile) {
+    const client = getWordPressClient(plugin, profile);
+    if (client) {
+      client.publishPost(defaultPostParams).then();
+    }
+  } else {
+    const noSuchProfileMessage = plugin.i18n.t('error_noSuchProfile', {
+      profileName: String(profileOrName)
+    });
+    new Notice(noSuchProfileMessage, ERROR_NOTICE_TIMEOUT);
+    throw new Error(noSuchProfileMessage);
   }
 }
