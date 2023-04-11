@@ -5,6 +5,7 @@
   "error_noPassword": "No password",
   "error_noProfile": "No profile, please add one at least",
   "error_noProfileName": "No profile name",
+  "error_noSuchProfile": "No profile with name <%= profileName %>",
   "error_invalidUrl": "Invalid URL",
   "error_invalidUser": "Invalid username or password",
   "error_publishFailed": "Post published failed!\n<%= code %>: <%= message %>",
@@ -12,11 +13,15 @@
   "error_invalidWpComToken": "Invalid wordpress.com token",
   "error_cannotParseResponse": "Cannot parse WordPress server response.",
   "error_noDefaultProfile": "No default profile found.",
+  "error_profileNotMatch": "WordPress profile not match. Which one do you want to use?",
   "message_publishSuccessfully": "Post published successfully!",
   "message_wpComTokenValidated": "Wordpress.com token validated successfully!",
   "ribbon_iconTitle": "WordPress Publish",
   "command_publish": "Publish current note",
   "command_publishWithDefault": "Publish current note with default options",
+  "confirmModal_title": "Confirmation",
+  "confirmModal_cancel": "Cancel",
+  "confirmModal_confirm": "Confirm",
   "settings_title": "WordPress Publish",
   "settings_profiles": "Profiles",
   "settings_profilesDesc": "Manage WordPress profiles.",
@@ -98,5 +103,7 @@
   "profileModal_setDefault": "Set Default",
   "profilesChooserModal_title": "Profiles",
   "profilesChooserModal_pickOne": "Click to pick one profile to publish.",
-  "profiles_default": "Default Profile"
+  "profiles_default": "Default Profile",
+  "profileNotMatch_useOld": "Use \"<%= profileName %>\" in the note",
+  "profileNotMatch_useNew": "Create a new post using \"<%= profileName %>\""
 }

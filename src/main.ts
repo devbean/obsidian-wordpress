@@ -2,17 +2,15 @@ import { Notice, Plugin } from 'obsidian';
 import { WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
-import { getWordPressClient } from './wp-clients';
 import { I18n } from './i18n';
 import { ERROR_NOTICE_TIMEOUT, EventType, WP_OAUTH2_REDIRECT_URI, WP_OAUTH2_URL_ACTION } from './consts';
 import { OAuth2Client } from './oauth2-client';
 import { CommentStatus, PostStatus } from './wp-api';
-import { WpProfile } from './wp-profile';
-import { WpProfileChooserModal } from './wp-profile-chooser-modal';
+import { openProfileChooserModal } from './wp-profile-chooser-modal';
 import { AppState } from './app-state';
 import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
 import { PassCrypto } from './pass-crypto';
-import { setupMarkdownParser } from './utils';
+import { doClientPublish, setupMarkdownParser } from './utils';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -58,7 +56,7 @@ export default class WordpressPlugin extends Plugin {
             title: '',
             content: ''
           };
-          this.doClientPublish(defaultProfile, params);
+          doClientPublish(this, defaultProfile, params);
         } else {
           new Notice(this.#i18n?.t('error_noDefaultProfile') ?? 'No default profile found.', ERROR_NOTICE_TIMEOUT);
         }
@@ -73,7 +71,7 @@ export default class WordpressPlugin extends Plugin {
       }
     });
 
-    this.addSettingTab(new WordpressSettingTab(this.app, this));
+    this.addSettingTab(new WordpressSettingTab(this));
   }
 
   onunload() {
@@ -115,23 +113,14 @@ export default class WordpressPlugin extends Plugin {
     }
   }
 
-  private openProfileChooser(): void {
+  private async openProfileChooser() {
     if (this.settings.profiles.length === 1) {
-      this.doClientPublish(this.settings.profiles[0]);
+      doClientPublish(this, this.settings.profiles[0]);
     } else if (this.settings.profiles.length > 1) {
-      new WpProfileChooserModal(this.app, this, (profile) => {
-        console.log(profile);
-        this.doClientPublish(profile);
-      }).open();
+      const profile = await openProfileChooserModal(this);
+      doClientPublish(this, profile);
     } else {
-      new Notice(this.i18n.t('error_noProfile'));
-    }
-  }
-
-  private doClientPublish(profile: WpProfile, defaultPostParams?: WordPressPostParams): void {
-    const client = getWordPressClient(this.app, this, profile);
-    if (client) {
-      client.publishPost(defaultPostParams).then();
+      new Notice(this.i18n.t('error_noProfile'), ERROR_NOTICE_TIMEOUT);
     }
   }
 

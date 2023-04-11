@@ -1,8 +1,8 @@
-import { App, Modal, Setting } from 'obsidian';
+import { Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpProfile } from './wp-profile';
 import { TranslateKey } from './i18n';
-import { WpProfileModal } from './wp-profile-modal';
+import { openProfileModal } from './wp-profile-modal';
 import { isNil } from 'lodash-es';
 import { rendererProfile } from './utils';
 
@@ -15,7 +15,6 @@ export class WpProfileManageModal extends Modal {
   private readonly profiles: WpProfile[];
 
   constructor(
-    app: App,
     private readonly plugin: WordpressPlugin
   ) {
     super(app);
@@ -45,18 +44,21 @@ export class WpProfileManageModal extends Modal {
         }
         setting.addButton(button => button
           .setButtonText(t('profilesManageModal_showDetails'))
-          .onClick(() => {
-            new WpProfileModal(this.app, this.plugin, (profile: WpProfile, atIndex?: number): void => {
-              console.log('updateProfile', profile, atIndex);
-              if (!isNil(atIndex) && atIndex > -1) {
-                if (profile.isDefault) {
-                  this.profiles.forEach(it => it.isDefault = false);
-                }
-                this.profiles[atIndex] = profile;
-                renderProfiles();
-                this.plugin.saveSettings().then();
+          .onClick(async () => {
+            const { profile: newProfile, atIndex } = await openProfileModal(
+              this.plugin,
+              profile,
+              index
+            );
+            console.log('updateProfile', newProfile, atIndex);
+            if (!isNil(atIndex) && atIndex > -1) {
+              if (newProfile.isDefault) {
+                this.profiles.forEach(it => it.isDefault = false);
               }
-            }, profile, index).open();
+              this.profiles[atIndex] = newProfile;
+              renderProfiles();
+              this.plugin.saveSettings().then();
+            }
           }));
         setting.addExtraButton(button => button
           .setIcon('lucide-trash')
@@ -84,20 +86,21 @@ export class WpProfileManageModal extends Modal {
       .addButton(button => button
         .setButtonText(t('profilesManageModal_create'))
         .setCta()
-        .onClick(() => {
-          new WpProfileModal(this.app, this.plugin, (profile: WpProfile): void => {
-            console.log('appendProfile', profile);
-            // if no profile, make the first one default
-            if (this.profiles.length === 0) {
-              profile.isDefault = true;
-            }
-            if (profile.isDefault) {
-              this.profiles.forEach(it => it.isDefault = false);
-            }
-            this.profiles.push(profile);
-            renderProfiles();
-            this.plugin.saveSettings().then();
-          }).open();
+        .onClick(async () => {
+          const { profile } = await openProfileModal(
+            this.plugin
+          );
+          console.log('appendProfile', profile);
+          // if no profile, make the first one default
+          if (this.profiles.length === 0) {
+            profile.isDefault = true;
+          }
+          if (profile.isDefault) {
+            this.profiles.forEach(it => it.isDefault = false);
+          }
+          this.profiles.push(profile);
+          renderProfiles();
+          await this.plugin.saveSettings();
         }));
 
     const content = contentEl.createEl('div');

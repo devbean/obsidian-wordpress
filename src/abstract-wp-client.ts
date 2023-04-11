@@ -1,6 +1,6 @@
-import { App, Modal, Notice } from 'obsidian';
+import { Modal, Notice } from 'obsidian';
 import WordpressPlugin from './main';
-import { WpLoginModal } from './wp-login-modal';
+import { openLoginModal } from './wp-login-modal';
 import {
   WordPressAuthParams,
   WordPressClient,
@@ -9,15 +9,17 @@ import {
   WordPressPostParams,
   WordPressPublishParams
 } from './wp-client';
-import { WpPublishModal } from './wp-publish-modal';
+import { openPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
-import { ERROR_NOTICE_TIMEOUT } from './consts';
+import { ERROR_NOTICE_TIMEOUT, WP_DEFAULT_PROFILE_NAME } from './consts';
 import matter from 'gray-matter';
 import yaml from 'js-yaml';
-import { isPromiseFulfilledResult, openWithBrowser, SafeAny } from './utils';
-import { PostPublishedModal } from './post-published-modal';
+import { doClientPublish, isPromiseFulfilledResult, openWithBrowser, SafeAny } from './utils';
+import { openPostPublishedModal } from './post-published-modal';
 import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
+import { ConfirmCode, openConfirmModal } from './confirm-modal';
+import { isNil } from 'lodash-es';
 
 
 const matterOptions = {
@@ -36,7 +38,6 @@ const matterOptions = {
 export abstract class AbstractWordPressClient implements WordPressClient {
 
   protected constructor(
-    protected readonly app: App,
     protected readonly plugin: WordpressPlugin,
     protected readonly profile: WpProfile
   ) { }
@@ -75,19 +76,52 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         });
       }
 
-      const { activeEditor } = this.app.workspace;
+      const { activeEditor } = app.workspace;
       if (activeEditor && activeEditor.file) {
-        const publishToWordPress = async (
-          username: string | null,
-          password: string | null,
-          loginModal?: Modal
-        ) => {
+        (async () => {
+          let username = null;
+          let password = null;
+          let loginModal;
+          if (this.openLoginModal()) {
+            if (this.profile.username && this.profile.password) {
+              // saved username and password found
+              username = this.profile.username;
+              password = this.profile.password;
+            } else {
+              const loginModalReturns = await openLoginModal(this.plugin, this.profile);
+              username = loginModalReturns.username;
+              password = loginModalReturns.password;
+              loginModal = loginModalReturns.loginModal;
+            }
+          }
+          // start publishing...
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const noteTitle = activeEditor.file!.basename;
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const rawContent = await this.app.vault.read(activeEditor.file!);
+          const rawContent = await app.vault.read(activeEditor.file!);
           const { content, data: matterData } = matter(rawContent, matterOptions);
 
+          if (!isNil(matterData.profileName)
+            && matterData.profileName.length > 0
+            && matterData.profileName !== this.profile.name
+          ) {
+            const confirm = await openConfirmModal({
+              message: this.plugin.i18n.t('error_profileNotMatch'),
+              cancelText: this.plugin.i18n.t('profileNotMatch_useOld', {
+                profileName: matterData.profileName
+              }),
+              confirmText: this.plugin.i18n.t('profileNotMatch_useNew', {
+                profileName: this.profile.name
+              })
+            }, this.plugin);
+            if (confirm.code === ConfirmCode.Cancel) {
+              doClientPublish(this.plugin, matterData.profileName);
+              return Promise.resolve();
+            } else {
+              delete matterData.postId;
+              matterData.categories = this.profile.lastSelectedCategories ?? [ 1 ];
+            }
+          }
           const validateUserResult = await this.validateUser({ username, password });
           if (validateUserResult.code === WordPressClientReturnCode.OK) {
             if (defaultPostParams) {
@@ -106,53 +140,22 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                 password
               });
               const selectedCategories = matterData.categories as number[] ?? this.profile.lastSelectedCategories;
-              new WpPublishModal(
-                this.app,
-                this.plugin,
-                categories,
-                selectedCategories,
-                async (postParams, publishModal) => {
-                  const params = this.readFromFrontMatter(noteTitle, matterData, postParams);
-                  params.content = content;
-                  const result = await this.doPublish({
-                    username,
-                    password,
-                    postParams: params,
-                    matterData
-                  }, loginModal, publishModal);
-                  resolve(result);
-                }
-              ).open();
+              const { postParams, publishModal } = await openPublishModal(this.plugin, categories, selectedCategories);
+              const params = this.readFromFrontMatter(noteTitle, matterData, postParams);
+              params.content = content;
+              const result = await this.doPublish({
+                username,
+                password,
+                postParams: params,
+                matterData
+              }, loginModal, publishModal);
+              resolve(result);
             }
           } else {
             const invalidUsernameOrPassword = this.plugin.i18n.t('error_invalidUser');
             new Notice(invalidUsernameOrPassword, ERROR_NOTICE_TIMEOUT);
           }
-        };
-
-        if (this.openLoginModal()) {
-          if (this.profile.username && this.profile.password) {
-            // saved username and password found
-            publishToWordPress(this.profile.username, this.profile.password).then(() => {
-              // make compiler happy
-            });
-          } else {
-            new WpLoginModal(
-              this.app,
-              this.plugin,
-              this.profile,
-              (username, password, loginModal) => {
-                publishToWordPress(username, password, loginModal).then(() => {
-                  // make compiler happy
-                });
-              }
-            ).open();
-          }
-        } else {
-          publishToWordPress(null, null).then(() => {
-            // make compiler happy
-          });
-        }
+        })();
       } else {
         const error = 'There is no editor or file found. Nothing will be published.';
         console.warn(error);
@@ -204,6 +207,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         const postId = (result.data as SafeAny).postId;
         if (postId) {
           // save post id to front-matter
+          matterData.profileName = this.profile.name;
           matterData.postId = postId;
           matterData.categories = postParams.categories;
           const modified = matter.stringify(postParams.content, matterData, matterOptions);
@@ -215,13 +219,13 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           }
 
           if (this.plugin.settings.showWordPressEditConfirm) {
-            new PostPublishedModal(this.app, this.plugin, (modal: Modal) => {
-              openWithBrowser(`${this.profile.endpoint}/wp-admin/post.php`, {
-                action: 'edit',
-                post: postId
+            openPostPublishedModal(this.plugin)
+              .then(() => {
+                openWithBrowser(`${this.profile.endpoint}/wp-admin/post.php`, {
+                  action: 'edit',
+                  post: postId
+                });
               });
-              modal.close();
-            }).open();
           }
         }
       }
@@ -260,6 +264,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     if (matterData.postId) {
       postParams.postId = matterData.postId;
     }
+    postParams.profileName = matterData.profileName ?? WP_DEFAULT_PROFILE_NAME;
     if (matterData.categories) {
       postParams.categories = matterData.categories as number[] ?? this.profile.lastSelectedCategories;
     }
@@ -270,7 +275,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private updateFrontMatter(value: string): void {
-    const { activeEditor } = this.app.workspace;
+    const { activeEditor } = app.workspace;
     if (activeEditor) {
       const editor = activeEditor.editor;
       if (editor) {

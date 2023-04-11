@@ -5,6 +5,7 @@ import { isNil, isUndefined } from 'lodash-es';
 import { SafeAny } from './utils';
 import { PassCrypto } from './pass-crypto';
 import WordpressPlugin from './main';
+import { WP_DEFAULT_PROFILE_NAME } from './consts';
 
 
 export const enum SettingsVersion {
@@ -101,7 +102,7 @@ export async function upgradeSettings(
       const crypto = new PassCrypto();
       const encryptedPassword = await crypto.encrypt(password);
       const profile = {
-        name: 'Default',
+        name: WP_DEFAULT_PROFILE_NAME,
         apiType: apiType,
         endpoint: endpoint,
         xmlRpcPath: xmlRpcPath,

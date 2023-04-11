@@ -1,9 +1,29 @@
-import { App, Modal, Setting } from 'obsidian';
+import { Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { WordPressPostParams } from './wp-client';
 import { CommentStatus, PostStatus, Term } from './wp-api';
 import { toNumber } from 'lodash-es';
 import { TranslateKey } from './i18n';
+
+
+export function openPublishModal(
+  plugin: WordpressPlugin,
+  categories: Term[],
+  selectedCategories: number[]
+): Promise<{ postParams: WordPressPostParams, publishModal: Modal }> {
+  return new Promise((resolve, reject) => {
+    const modal = new WpPublishModal(
+      plugin,
+      categories, selectedCategories,
+      (postParams, publishModal) => {
+        resolve({
+          postParams,
+          publishModal
+        });
+      });
+    modal.open();
+  });
+}
 
 /**
  * WordPress publish modal.
@@ -11,7 +31,6 @@ import { TranslateKey } from './i18n';
 export class WpPublishModal extends Modal {
 
   constructor(
-    app: App,
     private readonly plugin: WordpressPlugin,
     private readonly categories: Term[],
     private readonly selectedCategories: number[],

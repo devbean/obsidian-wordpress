@@ -5,6 +5,7 @@
   "error_noPassword": "没有设置密码",
   "error_noProfile": "没有账号，请至少添加一个 WordPress 账号",
   "error_noProfileName": "没有设置账号名",
+  "error_noSuchProfile": "账号 <%= profileName %> 不存在",
   "error_invalidUrl": "URL 格式错误",
   "error_invalidUser": "用户名或密码错误",
   "error_publishFailed": "文章发布失败\n<%= code %>: <%= message %>",
@@ -12,11 +13,15 @@
   "error_invalidWpComToken": "非法的 wordpress.com 令牌",
   "error_cannotParseResponse": "无法识别 WordPress 服务器的响应",
   "error_noDefaultProfile": "无法找到默认账号",
+  "error_profileNotMatch": "WordPress 账号不匹配，使用哪一个账号？",
   "message_publishSuccessfully": "文章发布成功",
   "message_wpComTokenValidated": "Wordpress.com 令牌验证通过",
   "ribbon_iconTitle": "发布到 WordPress",
   "command_publish": "发布当前笔记",
   "command_publishWithDefault": "使用默认参数发布当前笔记",
+  "confirmModal_title": "需要确认",
+  "confirmModal_cancel": "取消",
+  "confirmModal_confirm": "确认",
   "settings_title": "WordPress 发布插件",
   "settings_profiles": "WordPress 账户",
   "settings_profilesDesc": "管理 WordPress 账户",
@@ -98,5 +103,7 @@
   "profileModal_setDefault": "设为默认",
   "profilesChooserModal_title": "WordPress 账户",
   "profilesChooserModal_pickOne": "点击选择一个需要发布到的 WordPress 账户",
-  "profiles_default": "默认账户"
+  "profiles_default": "默认账户",
+  "profileNotMatch_useOld": "使用笔记中的 \"<%= profileName %>\"",
+  "profileNotMatch_useNew": "使用 \"<%= profileName %>\" 创建新的文章"
 }

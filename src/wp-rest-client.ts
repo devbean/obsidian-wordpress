@@ -1,4 +1,3 @@
-import { App } from 'obsidian';
 import {
   WordPressAuthParams,
   WordPressClientResult,
@@ -19,12 +18,11 @@ export class WpRestClient extends AbstractWordPressClient {
   private readonly client: RestClient;
 
   constructor(
-    readonly app: App,
     readonly plugin: WordpressPlugin,
     readonly profile: WpProfile,
     private readonly context: WpRestClientContext
   ) {
-    super(app, plugin, profile);
+    super(plugin, profile);
     this.client = new RestClient({
       url: new URL(getUrl(this.context.endpoints?.base, profile.endpoint))
     });

@@ -43,6 +43,11 @@ export interface WordPressPostParams {
    * If this is assigned, the post will be updated, otherwise created.
    */
   postId?: string;
+
+  /**
+   * WordPress profile name.
+   */
+  profileName?: string;
 }
 
 export interface WordPressPublishParams extends WordPressAuthParams {

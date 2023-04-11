@@ -1,4 +1,4 @@
-import { App, Notice } from 'obsidian';
+import { Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import {
   WordPressAuthParams,
@@ -27,11 +27,10 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
   private readonly client: XmlRpcClient;
 
   constructor(
-    readonly app: App,
     readonly plugin: WordpressPlugin,
     readonly profile: WpProfile
   ) {
-    super(app, plugin, profile);
+    super(plugin, profile);
     this.client = new XmlRpcClient({
       url: new URL(profile.endpoint),
       xmlRpcPath: profile.xmlRpcPath

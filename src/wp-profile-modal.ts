@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Setting } from 'obsidian';
+import { Modal, Notice, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { TranslateKey } from './i18n';
 import { WpProfile } from './wp-profile';
@@ -8,6 +8,32 @@ import { generateCodeVerifier, OAuth2Client } from './oauth2-client';
 import { AppState } from './app-state';
 import { isValidUrl } from './utils';
 import { ApiType } from './plugin-settings';
+
+
+export function openProfileModal(
+  plugin: WordpressPlugin,
+  profile: WpProfile = {
+    name: '',
+    apiType: ApiType.XML_RPC,
+    endpoint: '',
+    xmlRpcPath: '/xmlrpc.php',
+    saveUsername: false,
+    savePassword: false,
+    isDefault: false,
+    lastSelectedCategories: [ 1 ],
+  },
+  atIndex = -1
+): Promise<{ profile: WpProfile, atIndex?: number }> {
+  return new Promise((resolve, reject) => {
+    const modal = new WpProfileModal(plugin, (profile, atIndex) => {
+      resolve({
+        profile,
+        atIndex
+      });
+    }, profile, atIndex);
+    modal.open();
+  });
+}
 
 /**
  * WordPress profile modal.
@@ -19,7 +45,6 @@ export class WpProfileModal extends Modal {
   private readonly tokenGotRef;
 
   constructor(
-    app: App,
     private readonly plugin: WordpressPlugin,
     private readonly onSubmit: (profile: WpProfile, atIndex?: number) => void,
     private readonly profile: WpProfile = {

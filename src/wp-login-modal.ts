@@ -1,8 +1,24 @@
-import { App, Modal, Notice, Setting } from 'obsidian';
+import { Modal, Notice, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { TranslateKey } from './i18n';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { WpProfile } from './wp-profile';
+
+export function openLoginModal(
+  plugin: WordpressPlugin,
+  profile: WpProfile
+): Promise<{ username: string, password: string, loginModal: Modal }> {
+  return new Promise((resolve, reject) => {
+    const modal = new WpLoginModal(plugin, profile, (username, password, loginModal) => {
+      resolve({
+        username,
+        password,
+        loginModal
+      });
+    });
+    modal.open();
+  });
+}
 
 /**
  * WordPress login modal with username and password inputs.
@@ -10,7 +26,6 @@ import { WpProfile } from './wp-profile';
 export class WpLoginModal extends Modal {
 
   constructor(
-    app: App,
     private readonly plugin: WordpressPlugin,
     private readonly profile: WpProfile,
     private readonly onSubmit: (username: string, password: string, modal: Modal) => void
