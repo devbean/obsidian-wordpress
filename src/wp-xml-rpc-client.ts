@@ -140,7 +140,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       });
   }
 
-  async getTag(name: string, certificate: WordPressAuthParams): Promise<Term> {
+  getTag(name: string, certificate: WordPressAuthParams): Promise<Term> {
     return Promise.resolve({
       id: name,
       name,

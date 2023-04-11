@@ -9,7 +9,7 @@ import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
 import { Term } from './wp-api';
 import { RestClient } from './rest-client';
-import { isFunction, isString, template } from 'lodash-es';
+import { isArray, isFunction, isString, template } from 'lodash-es';
 import { SafeAny } from './utils';
 import { WpProfile } from './wp-profile';
 
@@ -103,7 +103,22 @@ export class WpRestClient extends AbstractWordPressClient {
       {
         headers: this.context.getHeaders(certificate)
       })
-      .then(data => data as Term[] ?? []);
+      .then(data => {
+        if (isArray(data)) {
+          return data as Term[] ?? [];
+        } else {
+          if ((data as SafeAny).hasOwnProperty('found')) {
+            // returns by wordpress.com
+            return (data as SafeAny)
+              .categories
+              .map((it: Term & { ID: number }) => ({
+                ...it,
+                id: String(it.ID)
+              }));
+          }
+        }
+        return [];
+      });
   }
 
   validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
@@ -134,9 +149,22 @@ export class WpRestClient extends AbstractWordPressClient {
         name
       }),
     )
-      .then((resp: SafeAny) => {
-        console.log('WpRestClient getTags response', resp);
-        return resp as Term[] ?? [];
+      .then((data: SafeAny) => {
+        console.log('WpRestClient getTags response', data);
+        if (isArray(data)) {
+          return data as Term[] ?? [];
+        } else {
+          if ((data as SafeAny).hasOwnProperty('found')) {
+            // returns by wordpress.com
+            return (data as SafeAny)
+              .tags
+              .map((it: Term & { ID: number }) => ({
+                ...it,
+                id: String(it.ID)
+              }));
+          }
+        }
+        return [];
       });
     if (exists.length === 0) {
       return await this.client.httpPost(
@@ -149,7 +177,10 @@ export class WpRestClient extends AbstractWordPressClient {
         })
         .then((resp: SafeAny) => {
           console.log('WpRestClient newTag response', resp);
-          return resp;
+          return {
+            ...resp,
+            id: resp.id ?? resp.ID
+          };
         });
     } else {
       return exists[0];
@@ -197,7 +228,6 @@ interface WpRestClientContext {
   openLoginModal?: boolean;
 
   getHeaders(wp: WordPressAuthParams): Record<string, string>;
-
 
 }
 
