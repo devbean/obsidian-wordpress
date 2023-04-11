@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.13.3](https://github.com/devbean/obsidian-wordpress/compare/0.13.2...0.13.3) (2023-04-11)
+
+
+### Features
+
+* Confirms if posts' profile is not match picked. ([ed4d423](https://github.com/devbean/obsidian-wordpress/commit/ed4d4231f8db1935c516b8b0e254d6e29b8d5af7))
+
+
+### Bug Fixes
+
+* Incorrect response parser of wordpress.com. ([f7c6185](https://github.com/devbean/obsidian-wordpress/commit/f7c61852ea2171e304a29f08e9537b95e3965ee4))
+
 ### [0.13.2](https://github.com/devbean/obsidian-wordpress/compare/0.13.1...0.13.2) (2023-04-10)
 
 
