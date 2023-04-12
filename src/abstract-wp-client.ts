@@ -139,8 +139,12 @@ export abstract class AbstractWordPressClient implements WordPressClient {
                 username,
                 password
               });
-              const selectedCategories = matterData.categories as number[] ?? this.profile.lastSelectedCategories;
-              const { postParams, publishModal } = await openPublishModal(this.plugin, categories, selectedCategories);
+              const selectedCategories = matterData.categories as number[]
+                ?? this.profile.lastSelectedCategories
+                ?? [ 1 ];
+              const { postParams, publishModal } = await openPublishModal(
+                this.plugin, categories, selectedCategories
+              );
               const params = this.readFromFrontMatter(noteTitle, matterData, postParams);
               params.content = content;
               const result = await this.doPublish({

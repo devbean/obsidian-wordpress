@@ -11,6 +11,7 @@ import { AppState } from './app-state';
 import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
 import { PassCrypto } from './pass-crypto';
 import { doClientPublish, setupMarkdownParser } from './utils';
+import { cloneDeep } from 'lodash-es';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -94,7 +95,17 @@ export default class WordpressPlugin extends Plugin {
   }
 
   async saveSettings() {
-    await this.saveData(this.#settings);
+    const settings = cloneDeep(this.settings);
+    for (let i = 0; i < settings.profiles.length; i++) {
+      const profile = settings.profiles[i];
+      const password = profile.password;
+      if (password) {
+        const crypto = new PassCrypto();
+        profile.encryptedPassword = await crypto.encrypt(password);
+        delete profile.password;
+      }
+    }
+    await this.saveData(settings);
   }
 
   updateRibbonIcon(): void {

@@ -93,29 +93,33 @@ export async function upgradeSettings(
         showWordPressEditConfirm: existingSettings.showWordPressEditConfirm,
         mathJaxOutputType: existingSettings.mathJaxOutputType
       });
-      const endpoint = existingSettings.endpoint;
-      const apiType = existingSettings.apiType;
-      const xmlRpcPath = existingSettings.xmlRpcPath;
-      const username = existingSettings.username;
-      const password = existingSettings.password;
-      const lastSelectedCategories = existingSettings.lastSelectedCategories;
-      const crypto = new PassCrypto();
-      const encryptedPassword = await crypto.encrypt(password);
-      const profile = {
-        name: WP_DEFAULT_PROFILE_NAME,
-        apiType: apiType,
-        endpoint: endpoint,
-        xmlRpcPath: xmlRpcPath,
-        saveUsername: !isNil(username),
-        savePassword: !isNil(password),
-        isDefault: true,
-        lastSelectedCategories: lastSelectedCategories,
-        username: username,
-        encryptedPassword: encryptedPassword
-      };
-      newSettings.profiles = [
-        profile
-      ];
+      if (existingSettings.endpoint) {
+        const endpoint = existingSettings.endpoint;
+        const apiType = existingSettings.apiType;
+        const xmlRpcPath = existingSettings.xmlRpcPath;
+        const username = existingSettings.username;
+        const password = existingSettings.password;
+        const lastSelectedCategories = existingSettings.lastSelectedCategories;
+        const crypto = new PassCrypto();
+        const encryptedPassword = await crypto.encrypt(password);
+        const profile = {
+          name: WP_DEFAULT_PROFILE_NAME,
+          apiType: apiType,
+          endpoint: endpoint,
+          xmlRpcPath: xmlRpcPath,
+          saveUsername: !isNil(username),
+          savePassword: !isNil(password),
+          isDefault: true,
+          lastSelectedCategories: lastSelectedCategories,
+          username: username,
+          encryptedPassword: encryptedPassword
+        };
+        newSettings.profiles = [
+          profile
+        ];
+      } else {
+        newSettings.profiles = [];
+      }
       return newSettings;
     }
   }
