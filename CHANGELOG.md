@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.13.4](https://github.com/devbean/obsidian-wordpress/compare/0.13.3...0.13.4) (2023-04-12)
+
+
+### Bug Fixes
+
+* Do not create an empty default profile at startup. ([e59acce](https://github.com/devbean/obsidian-wordpress/commit/e59accef7a45114481d2d009c4b3a20dac534c13))
+* No publish button when newly install. ([409d752](https://github.com/devbean/obsidian-wordpress/commit/409d752bf6a0316cb31f90a1ae9c3da1cd2b394d))
+
 ### [0.13.3](https://github.com/devbean/obsidian-wordpress/compare/0.13.2...0.13.3) (2023-04-11)
 
 
