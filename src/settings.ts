@@ -6,6 +6,7 @@ import { WpProfileManageModal } from './wp-profile-manage-modal';
 import { MathJaxOutputType } from './plugin-settings';
 import { WpProfile } from './wp-profile';
 import { setupMarkdownParser } from './utils';
+import { AppState } from './app-state';
 
 
 export class WordpressSettingTab extends PluginSettingTab {
@@ -38,7 +39,6 @@ export class WordpressSettingTab extends PluginSettingTab {
 
     containerEl.createEl('h1', { text: t('settings_title') });
 
-    // let apiDesc = getApiTypeDesc(this.plugin.settings.apiType);
     let mathJaxOutputTypeDesc = getMathJaxOutputTypeDesc(this.plugin.settings.mathJaxOutputType);
 
     new Setting(containerEl)
@@ -146,6 +146,22 @@ export class WordpressSettingTab extends PluginSettingTab {
       text: mathJaxOutputTypeDesc,
       cls: 'setting-item-description'
     });
+
+    new Setting(containerEl)
+      .setName(t('settings_enableHtml'))
+      .setDesc(t('settings_enableHtmlDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.enableHtml)
+          .onChange(async (value) => {
+            this.plugin.settings.enableHtml = value;
+            await this.plugin.saveSettings();
+
+            AppState.getInstance().markdownParser.set({
+              html: this.plugin.settings.enableHtml
+            });
+          }),
+      );
 	}
 
 }

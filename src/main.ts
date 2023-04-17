@@ -80,8 +80,11 @@ export default class WordpressPlugin extends Plugin {
 
   async loadSettings() {
     this.#settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    this.#settings = await upgradeSettings(this.#settings, SettingsVersion.V2, this);
-    await this.saveSettings();
+    const { needUpgrade, settings } = await upgradeSettings(this.#settings, SettingsVersion.V2);
+    this.#settings = settings;
+    if (needUpgrade) {
+      await this.saveSettings();
+    }
 
     const crypto = new PassCrypto();
     const count = this.#settings?.profiles.length ?? 0;
@@ -92,6 +95,10 @@ export default class WordpressPlugin extends Plugin {
         profile.password = await crypto.decrypt(enPass.encrypted, enPass.key, enPass.vector);
       }
     }
+
+    AppState.getInstance().markdownParser.set({
+      html: this.#settings?.enableHtml ?? false
+    });
   }
 
   async saveSettings() {
