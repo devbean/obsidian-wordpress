@@ -19,7 +19,7 @@ export function openProfileChooserModal(
 /**
  * WordPress profiles chooser modal.
  */
-export class WpProfileChooserModal extends Modal {
+class WpProfileChooserModal extends Modal {
 
   private readonly profiles: WpProfile[];
 

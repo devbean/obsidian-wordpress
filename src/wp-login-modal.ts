@@ -23,7 +23,7 @@ export function openLoginModal(
 /**
  * WordPress login modal with username and password inputs.
  */
-export class WpLoginModal extends Modal {
+class WpLoginModal extends Modal {
 
   constructor(
     private readonly plugin: WordpressPlugin,

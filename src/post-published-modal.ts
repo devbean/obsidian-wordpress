@@ -17,7 +17,7 @@ export function openPostPublishedModal(
 /**
  * WordPress post published modal.
  */
-export class PostPublishedModal extends Modal {
+class PostPublishedModal extends Modal {
 
   constructor(
     private readonly plugin: WordpressPlugin,

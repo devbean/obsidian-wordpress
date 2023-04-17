@@ -1,6 +1,7 @@
 import { Events } from 'obsidian';
 import MarkdownIt from 'markdown-it';
 
+
 export class AppState {
   private static instance: AppState;
 

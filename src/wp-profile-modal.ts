@@ -38,7 +38,7 @@ export function openProfileModal(
 /**
  * WordPress profile modal.
  */
-export class WpProfileModal extends Modal {
+class WpProfileModal extends Modal {
 
   private readonly profileData: WpProfile;
 

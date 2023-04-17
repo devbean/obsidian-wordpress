@@ -133,7 +133,6 @@ export class WpRestClient extends AbstractWordPressClient {
         };
       })
       .catch(error => {
-        console.log(error);
         return {
           code: WordPressClientReturnCode.Error,
           data: this.plugin.i18n.t('error_invalidUser')

@@ -61,6 +61,8 @@ export interface WordpressPluginSettings {
   showWordPressEditConfirm: boolean;
 
   mathJaxOutputType: MathJaxOutputType;
+
+  enableHtml: boolean;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
@@ -71,14 +73,14 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   defaultCommentStatus: CommentStatus.Open,
   rememberLastSelectedCategories: true,
   showWordPressEditConfirm: false,
-  mathJaxOutputType: MathJaxOutputType.SVG
+  mathJaxOutputType: MathJaxOutputType.SVG,
+  enableHtml: false
 }
 
 export async function upgradeSettings(
   existingSettings: SafeAny,
-  to: SettingsVersion,
-  plugin: WordpressPlugin
-): Promise<WordpressPluginSettings> {
+  to: SettingsVersion
+): Promise<{ needUpgrade: boolean, settings: WordpressPluginSettings }> {
   console.log(existingSettings, to);
   if (isUndefined(existingSettings.version)) {
     // V1
@@ -120,8 +122,14 @@ export async function upgradeSettings(
       } else {
         newSettings.profiles = [];
       }
-      return newSettings;
+      return {
+        needUpgrade: true,
+        settings: newSettings
+      };
     }
   }
-  return existingSettings;
+  return {
+    needUpgrade: false,
+    settings: existingSettings
+  };
 }
