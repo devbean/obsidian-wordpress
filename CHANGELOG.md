@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.0](https://github.com/devbean/obsidian-wordpress/compare/0.13.4...0.14.0) (2023-04-17)
+
+
+### Features
+
+* You can parse HTML tags in notes. ([5c23ed4](https://github.com/devbean/obsidian-wordpress/commit/5c23ed47190366ec183a75a6d0d8588bf73765a5))
+
 ### [0.13.4](https://github.com/devbean/obsidian-wordpress/compare/0.13.3...0.13.4) (2023-04-12)
 
 
