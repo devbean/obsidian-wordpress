@@ -35,7 +35,7 @@ export function openConfirmModal(
 /**
  * Confirm modal.
  */
-export class ConfirmModal extends Modal {
+class ConfirmModal extends Modal {
 
   constructor(
     private readonly messages: ConfirmModalMessages,
