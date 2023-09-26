@@ -1,20 +1,20 @@
-import { arrayBufferToBase64, Modal, Notice, TFile } from 'obsidian';
+import { Modal, Notice, TFile } from 'obsidian';
 import WordpressPlugin from './main';
 import { openLoginModal } from './wp-login-modal';
 import {
   WordPressAuthParams,
   WordPressClient,
   WordPressClientResult,
-  WordPressClientReturnCode,
+  WordPressClientReturnCode, WordPressMediaUploadResult,
   WordPressPostParams,
-  WordPressPublishParams
+  WordPressPublishParams, WordPressPublishResult
 } from './wp-client';
 import { openPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT, WP_DEFAULT_PROFILE_NAME } from './consts';
 import matter from 'gray-matter';
 import yaml from 'js-yaml';
-import { doClientPublish, isPromiseFulfilledResult, openWithBrowser, SafeAny } from './utils';
+import { doClientPublish, isPromiseFulfilledResult, isValidUrl, openWithBrowser, SafeAny } from './utils';
 import { openPostPublishedModal } from './post-published-modal';
 import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
@@ -54,7 +54,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     content: string,
     postParams: WordPressPostParams,
     certificate: WordPressAuthParams
-  ): Promise<WordPressClientResult>;
+  ): Promise<WordPressClientResult<WordPressPublishResult>>;
 
   abstract getCategories(
     certificate: WordPressAuthParams
@@ -62,21 +62,24 @@ export abstract class AbstractWordPressClient implements WordPressClient {
 
   abstract validateUser(
     certificate: WordPressAuthParams
-  ): Promise<WordPressClientResult>;
+  ): Promise<WordPressClientResult<boolean>>;
 
   abstract getTag(
     name: string,
     certificate: WordPressAuthParams
   ): Promise<Term>;
 
-  abstract uploadMedia(media: Media, certificate: WordPressAuthParams): Promise<WordPressClientResult>;
+  abstract uploadMedia(
+    media: Media,
+    certificate: WordPressAuthParams
+  ): Promise<WordPressClientResult<WordPressMediaUploadResult>>;
 
   protected openLoginModal(): boolean {
     return true;
   }
 
-  publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
-    return new Promise<WordPressClientResult>((resolve, reject) => {
+  publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult<WordPressPublishResult>> {
+    return new Promise<WordPressClientResult<WordPressPublishResult>>((resolve, reject) => {
       if (!this.profile.endpoint || this.profile.endpoint.length === 0) {
         new Notice(this.plugin.i18n.t('error_noEndpoint'), ERROR_NOTICE_TIMEOUT);
         reject({
@@ -188,7 +191,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     publishParams: WordPressPublishParams,
     loginModal?: Modal,
     publishModal?: Modal
-  ): Promise<WordPressClientResult> {
+  ): Promise<WordPressClientResult<WordPressPublishResult>> {
     const { username, password, postParams, matterData } = publishParams;
     try {
       const tagTerms = await this.getTags(postParams.tags, {
@@ -201,37 +204,43 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       if (activeFile === null) {
         new Notice(this.plugin.i18n.t('error_noActiveFile'), ERROR_NOTICE_TIMEOUT);
       }
-      const images = getImages(postParams.content);
-      for (const img of images) {
-        const splitFile = img.src.split('.');
-        const ext = splitFile.pop();
-        const fileName = splitFile.join('.');
-        // @ts-expect-error
-        let filePath = (await this.plugin.app.vault.getAvailablePathForAttachments(
-          fileName,
-          ext,
-          activeFile
-        )) as string;
-        const pathRegex = /(.*) \d+\.(.*)/;
-        filePath = filePath.replace(pathRegex, '$1.$2');
-        const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
-        if (imgFile instanceof TFile) {
-          const content = await this.plugin.app.vault.readBinary(imgFile);
-          const fileType = fileTypeChecker.detectFile(content);
-          const result = await this.uploadMedia({
-            mimeType: fileType?.mimeType ?? 'application/octet-stream',
-            fileName: imgFile.name,
-            content: content
-          }, {
-            username,
-            password
-          });
-          console.log(result);
-          throw new Error('yyy');
-        }
-      }
-      console.log(AppState.getInstance().markdownParser.render(postParams.content));
-      throw new Error('xxx');
+      console.log(postParams.content);
+      // const images = getImages(postParams.content);
+      // for (const img of images) {
+      //   if (!img.srcIsUrl) {
+      //     const splitFile = img.src.split('.');
+      //     const ext = splitFile.pop();
+      //     const fileName = splitFile.join('.');
+      //     // @ts-expect-error
+      //     let filePath = (await this.plugin.app.vault.getAvailablePathForAttachments(
+      //       fileName,
+      //       ext,
+      //       activeFile
+      //     )) as string;
+      //     const pathRegex = /(.*) \d+\.(.*)/;
+      //     filePath = filePath.replace(pathRegex, '$1.$2');
+      //     const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+      //     if (imgFile instanceof TFile) {
+      //       const content = await this.plugin.app.vault.readBinary(imgFile);
+      //       const fileType = fileTypeChecker.detectFile(content);
+      //       const result = await this.uploadMedia({
+      //         mimeType: fileType?.mimeType ?? 'application/octet-stream',
+      //         fileName: imgFile.name,
+      //         content: content
+      //       }, {
+      //         username,
+      //         password
+      //       });
+      //       console.log(result);
+      //       throw new Error('yyy');
+      //     }
+      //   } else {
+      //     // src is a url, skip upload
+      //   }
+      // }
+      // console.log(postParams.content);
+      // console.log(AppState.getInstance().markdownParser.render(postParams.content));
+      // throw new Error('xxx');
       const result = await this.publish(
         postParams.title ?? 'A post from Obsidian!',
         AppState.getInstance().markdownParser.render(postParams.content) ?? '',
@@ -242,10 +251,9 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         });
       console.log('doPublish', result);
       if (result.code === WordPressClientReturnCode.Error) {
-        const data = result.data as SafeAny;
         new Notice(this.plugin.i18n.t('error_publishFailed', {
-          code: data.code,
-          message: data.message
+          code: result.error.code as string,
+          message: result.error.message
         }), ERROR_NOTICE_TIMEOUT);
       } else {
         new Notice(this.plugin.i18n.t('message_publishSuccessfully'));
@@ -253,7 +261,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         loginModal?.close();
 
         // post id will be returned if creating, true if editing
-        const postId = (result.data as SafeAny).postId;
+        const postId = result.data.postId;
         if (postId) {
           // save post id to front-matter
           matterData.profileName = this.profile.name;
@@ -286,18 +294,16 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     return Promise.reject('You should not be here!');
   }
 
-  private getTags(tags: string[], certificate: WordPressAuthParams): Promise<Term[]> {
-    return Promise.allSettled(tags.map(name => this.getTag(name, certificate)))
-      .then(results => {
-        const terms: Term[] = [];
-        results
-          .forEach(result => {
-            if (isPromiseFulfilledResult<Term>(result)) {
-              terms.push(result.value);
-            }
-          });
-        return terms;
+  private async getTags(tags: string[], certificate: WordPressAuthParams): Promise<Term[]> {
+    const results = await Promise.allSettled(tags.map(name => this.getTag(name, certificate)));
+    const terms: Term[] = [];
+    results
+      .forEach(result => {
+        if (isPromiseFulfilledResult<Term>(result)) {
+          terms.push(result.value);
+        }
       });
+    return terms;
   }
 
   private readFromFrontMatter(
@@ -344,6 +350,9 @@ interface Image {
   src: string;
   width?: string;
   height?: string;
+  srcIsUrl: boolean;
+  startIndex: number;
+  endIndex: number;
 }
 
 function getImages(content: string): Image[] {
@@ -356,7 +365,10 @@ function getImages(content: string): Image[] {
     paths.push({
       src: match[3],
       width: match[1],
-      height: match[2]
+      height: match[2],
+      startIndex: match.index,
+      endIndex: match.index + match.length,
+      srcIsUrl: isValidUrl(match[3]),
     });
   }
 
@@ -366,7 +378,10 @@ function getImages(content: string): Image[] {
     paths.push({
       src: match[1],
       width: match[2],
-      height: match[3]
+      height: match[3],
+      startIndex: match.index,
+      endIndex: match.index + match.length,
+      srcIsUrl: isValidUrl(match[1]),
     });
   }
 

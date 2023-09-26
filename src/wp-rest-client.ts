@@ -2,7 +2,8 @@ import {
   WordPressAuthParams,
   WordPressClientResult,
   WordPressClientReturnCode,
-  WordPressPostParams
+  WordPressMediaUploadResult,
+  WordPressPostParams, WordPressPublishResult
 } from './wp-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
@@ -37,12 +38,12 @@ export class WpRestClient extends AbstractWordPressClient {
     return  super.openLoginModal();
   }
 
-  publish(
+  async publish(
     title: string,
     content: string,
     postParams: WordPressPostParams,
     certificate: WordPressAuthParams
-  ): Promise<WordPressClientResult> {
+  ): Promise<WordPressClientResult<WordPressPublishResult>> {
     let url: string;
     if (postParams.postId) {
       url = getUrl(this.context.endpoints?.editPost, 'wp-json/wp/v2/posts/<%= postId %>', {
@@ -51,7 +52,7 @@ export class WpRestClient extends AbstractWordPressClient {
     } else {
       url = getUrl(this.context.endpoints?.newPost, 'wp-json/wp/v2/posts');
     }
-    return this.client.httpPost(
+    const resp = await this.client.httpPost(
       url,
       {
         title,
@@ -63,83 +64,82 @@ export class WpRestClient extends AbstractWordPressClient {
       },
       {
         headers: this.context.getHeaders(certificate)
-      })
-      .then((resp: SafeAny) => {
-        console.log('WpRestClient response', resp);
-        if (resp.code && resp.message) {
-          return {
-            code: WordPressClientReturnCode.Error,
-            data: {
-              code: resp.code,
-              message: resp.message
-            },
-            response: resp
-          };
-        } else if (resp.id || resp.ID) {
-          return {
-            code: WordPressClientReturnCode.OK,
-            data: {
-              postId: postParams.postId ?? (resp.id ?? resp.ID),
-              categories: postParams.categories ?? resp.categories
-            },
-            response: resp
-          };
-        } else {
-          return {
-            code: WordPressClientReturnCode.Error,
-            data: {
-              code: 500,
-              message: this.plugin.i18n.t('error_cannotParseResponse')
-            },
-            response: resp
-          };
-        }
-      });
+      }) as SafeAny;
+    console.log('WpRestClient response', resp);
+    if (resp.code && resp.message) {
+      return {
+        code: WordPressClientReturnCode.Error,
+        error: {
+          code: resp.code,
+          message: resp.message
+        },
+        response: resp
+      };
+    } else if (resp.id || resp.ID) {
+      return {
+        code: WordPressClientReturnCode.OK,
+        data: {
+          postId: postParams.postId ?? (resp.id ?? resp.ID),
+          categories: postParams.categories ?? resp.categories
+        },
+        response: resp
+      };
+    } else {
+      return {
+        code: WordPressClientReturnCode.Error,
+        error: {
+          code: 500,
+          message: this.plugin.i18n.t('error_cannotParseResponse')
+        },
+        response: resp
+      };
+    }
   }
 
-  getCategories(certificate: WordPressAuthParams): Promise<Term[]> {
-    return this.client.httpGet(
+  async getCategories(certificate: WordPressAuthParams): Promise<Term[]> {
+    const data = await this.client.httpGet(
       getUrl(this.context.endpoints?.getCategories, 'wp-json/wp/v2/categories'),
       {
         headers: this.context.getHeaders(certificate)
-      })
-      .then(data => {
-        if (isArray(data)) {
-          return data as Term[] ?? [];
-        } else {
-          if ((data as SafeAny).hasOwnProperty('found')) {
-            // returns by wordpress.com
-            return (data as SafeAny)
-              .categories
-              .map((it: Term & { ID: number }) => ({
-                ...it,
-                id: String(it.ID)
-              }));
-          }
-        }
-        return [];
       });
+    if (isArray(data)) {
+      return data as Term[] ?? [];
+    } else {
+      if ((data as SafeAny).hasOwnProperty('found')) {
+        // returns by wordpress.com
+        return (data as SafeAny)
+          .categories
+          .map((it: Term & { ID: number; }) => ({
+            ...it,
+            id: String(it.ID)
+          }));
+      }
+    }
+    return [];
   }
 
-  validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
-    return this.client.httpGet(
-      getUrl(this.context.endpoints?.validateUser, `wp-json/wp/v2/users?search=xxx`),
-      {
-        headers: this.context.getHeaders(certificate)
-      })
-      .then(data => {
-        return {
-          code: WordPressClientReturnCode.OK,
-          data: data,
-          response: data
-        };
-      })
-      .catch(error => {
-        return {
+  async validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult<boolean>> {
+    try {
+      const data = await this.client.httpGet(
+        getUrl(this.context.endpoints?.validateUser, `wp-json/wp/v2/users?search=xxx`),
+        {
+          headers: this.context.getHeaders(certificate)
+        });
+      return {
+        code: WordPressClientReturnCode.OK,
+        data: !!data,
+        response: data
+      };
+    } catch(error) {
+      return {
+        code: WordPressClientReturnCode.Error,
+        error: {
           code: WordPressClientReturnCode.Error,
-          data: this.plugin.i18n.t('error_invalidUser')
-        };
-      });
+          message: this.plugin.i18n.t('error_invalidUser'),
+        },
+        response: error
+      };
+    }
   }
 
   async getTag(name: string, certificate: WordPressAuthParams): Promise<Term> {
@@ -186,10 +186,14 @@ export class WpRestClient extends AbstractWordPressClient {
     }
   }
 
-  uploadMedia(media: Media, certificate: WordPressAuthParams): Promise<WordPressClientResult> {
+  uploadMedia(media: Media, certificate: WordPressAuthParams): Promise<WordPressClientResult<WordPressMediaUploadResult>> {
     return Promise.resolve({
       code: WordPressClientReturnCode.Error,
-      data: "",
+      error: {
+        code: WordPressClientReturnCode.Error,
+        message: '',
+      },
+      response: ''
     });
   }
 

@@ -99,16 +99,3 @@ export function doClientPublish(
 export function arrayBufferToBlob(buffer: ArrayBuffer): Blob {
   return new Blob([buffer]);
 }
-
-// export function isBase64(str: string): boolean {
-//   // const base64Regex = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-//   // return base64Regex.test(str);
-//   const base64Regex = /^[A-Za-z0-9+/]+={0,2}$/;
-//   return base64Regex.test(str);
-//   // try {
-//   //   console.log(str, atob(str), btoa(atob(str)), btoa(atob(str)) === str);
-//   //   return btoa(atob(str)) === str;
-//   // } catch (e) {
-//   //   return false;
-//   // }
-// }

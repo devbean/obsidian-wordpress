@@ -162,6 +162,18 @@ export class WordpressSettingTab extends PluginSettingTab {
             });
           }),
       );
+
+    new Setting(containerEl)
+      .setName(t('settings_replaceMediaLinks'))
+      .setDesc(t('settings_replaceMediaLinksDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.replaceMediaLinks)
+          .onChange(async (value) => {
+            this.plugin.settings.replaceMediaLinks = value;
+            await this.plugin.saveSettings();
+          }),
+      );
 	}
 
 }

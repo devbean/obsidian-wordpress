@@ -126,31 +126,35 @@ export class OAuth2Client {
       });
   }
 
-  validateToken(params: ValidateTokenParams): Promise<WordPressClientResult> {
+  async validateToken(params: ValidateTokenParams): Promise<WordPressClientResult<string>> {
     if (!this.options.validateTokenEndpoint) {
       throw new Error('No validate token endpoint set.');
     }
-    return requestUrl({
-      url: `${this.options.validateTokenEndpoint}?client_id=${this.options.clientId}&token=${params.token}`,
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'obsidian.md'
-      }
-    })
-      .then(response => {
-        console.log('validateToken response', response);
-        return {
-          code: WordPressClientReturnCode.OK,
-          data: 'done'
-        };
-      })
-      .catch(error => {
-        return {
-          code: WordPressClientReturnCode.Error,
-          data: this.plugin.i18n.t('error_invalidWpComToken')
-        };
+    try {
+      const response = await requestUrl({
+        url: `${this.options.validateTokenEndpoint}?client_id=${this.options.clientId}&token=${params.token}`,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'obsidian.md'
+        }
       });
+      console.log('validateToken response', response);
+      return {
+        code: WordPressClientReturnCode.OK,
+        data: 'done',
+        response
+      };
+    } catch (error) {
+      return {
+        code: WordPressClientReturnCode.Error,
+        error: {
+          code: WordPressClientReturnCode.Error,
+          message: this.plugin.i18n.t('error_invalidWpComToken'),
+        },
+        response: error
+      };
+    }
   }
 }
 

@@ -182,7 +182,7 @@ class WpProfileModal extends Modal {
                 })
                   .then(result => {
                     if (result.code === WordPressClientReturnCode.Error) {
-                      new Notice(result.data + '', ERROR_NOTICE_TIMEOUT);
+                      new Notice(result.error?.message + '', ERROR_NOTICE_TIMEOUT);
                     } else {
                       new Notice(t('message_wpComTokenValidated'));
                     }
