@@ -21,7 +21,7 @@ export interface WpProfile {
   /**
    * XML-RPC path.
    */
-  xmlRpcPath: string;
+  xmlRpcPath?: string;
 
   /**
    * WordPress username.

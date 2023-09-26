@@ -165,7 +165,7 @@ class WpProfileModal extends Modal {
           .setDesc(t('settings_xmlRpcPathDesc'))
           .addText(text => text
             .setPlaceholder('/xmlrpc.php')
-            .setValue(this.profileData.xmlRpcPath)
+            .setValue(this.profileData.xmlRpcPath ?? '')
             .onChange((value) => {
               this.profileData.xmlRpcPath = value;
             }));
