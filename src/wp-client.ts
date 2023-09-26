@@ -55,6 +55,12 @@ export interface WordPressPublishParams extends WordPressAuthParams {
   matterData: { [p: string]: SafeAny };
 }
 
+export interface WordPressMediaParams {
+  name: string;
+  type: string;
+  bits: string;
+}
+
 export interface WordPressClient {
 
   /**

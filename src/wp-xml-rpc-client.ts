@@ -12,6 +12,7 @@ import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { SafeAny } from './utils';
 import { WpProfile } from './wp-profile';
+import { Media } from './types';
 
 interface FaultResponse {
   faultCode: string;
@@ -31,9 +32,10 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     readonly profile: WpProfile
   ) {
     super(plugin, profile);
+    this.name = 'WpXmlRpcClient';
     this.client = new XmlRpcClient({
       url: new URL(profile.endpoint),
-      xmlRpcPath: profile.xmlRpcPath
+      xmlRpcPath: profile.xmlRpcPath ?? ''
     });
   }
 
@@ -148,6 +150,33 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       description: name,
       count: 0
     });
+  }
+
+  uploadMedia(media: Media, certificate: WordPressAuthParams): Promise<WordPressClientResult> {
+    const wpMedia = {
+      name: media.fileName,
+      type: media.mimeType,
+      bits: media.content,
+    };
+    return this.client.methodCall('wp.uploadFile', [
+      0,
+      certificate.username,
+      certificate.password,
+      wpMedia,
+    ])
+      .then(response => {
+        if (isFaultResponse(response)) {
+          return {
+            code: WordPressClientReturnCode.Error,
+            data: `${response.faultCode}: ${response.faultString}`
+          };
+        } else {
+          return {
+            code: WordPressClientReturnCode.OK,
+            data: response
+          };
+        }
+      });
   }
 
 }

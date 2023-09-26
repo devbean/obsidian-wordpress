@@ -4,7 +4,6 @@ import { CommentStatus, PostStatus } from './wp-api';
 import { isNil, isUndefined } from 'lodash-es';
 import { SafeAny } from './utils';
 import { PassCrypto } from './pass-crypto';
-import WordpressPlugin from './main';
 import { WP_DEFAULT_PROFILE_NAME } from './consts';
 
 
@@ -63,6 +62,11 @@ export interface WordpressPluginSettings {
   mathJaxOutputType: MathJaxOutputType;
 
   enableHtml: boolean;
+
+  /**
+   * Whether media links should be replaced after uploading to WordPress.
+   */
+  replaceMediaLinks: boolean;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
@@ -74,7 +78,8 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   rememberLastSelectedCategories: true,
   showWordPressEditConfirm: false,
   mathJaxOutputType: MathJaxOutputType.SVG,
-  enableHtml: false
+  enableHtml: false,
+  replaceMediaLinks: true,
 }
 
 export async function upgradeSettings(

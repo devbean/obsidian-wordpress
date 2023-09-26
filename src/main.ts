@@ -72,7 +72,7 @@ export default class WordpressPlugin extends Plugin {
       }
     });
 
-    this.addSettingTab(new WordpressSettingTab(this));
+    this.addSettingTab(new WordpressSettingTab(this.app, this));
   }
 
   onunload() {

@@ -11,6 +11,7 @@ import { RestClient } from './rest-client';
 import { isArray, isFunction, isString, template } from 'lodash-es';
 import { SafeAny } from './utils';
 import { WpProfile } from './wp-profile';
+import { Media } from './types';
 
 
 export class WpRestClient extends AbstractWordPressClient {
@@ -23,6 +24,7 @@ export class WpRestClient extends AbstractWordPressClient {
     private readonly context: WpRestClientContext
   ) {
     super(plugin, profile);
+    this.name = 'WpRestClient';
     this.client = new RestClient({
       url: new URL(getUrl(this.context.endpoints?.base, profile.endpoint))
     });
@@ -182,6 +184,13 @@ export class WpRestClient extends AbstractWordPressClient {
     } else {
       return exists[0];
     }
+  }
+
+  uploadMedia(media: Media, certificate: WordPressAuthParams): Promise<WordPressClientResult> {
+    return Promise.resolve({
+      code: WordPressClientReturnCode.Error,
+      data: "",
+    });
   }
 
 }

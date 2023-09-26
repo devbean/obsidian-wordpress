@@ -1,5 +1,5 @@
-import { request } from 'obsidian';
-import { isArray, isBoolean, isDate, isNumber, isObject, isSafeInteger } from 'lodash-es';
+import { arrayBufferToBase64, request } from 'obsidian';
+import { isArray, isArrayBuffer, isBoolean, isDate, isNumber, isObject, isSafeInteger } from 'lodash-es';
 import { format, parse } from 'date-fns';
 import { SafeAny } from './utils';
 
@@ -34,7 +34,7 @@ export class XmlRpcClient {
       this.href = this.href.substring(0, this.href.length - 1);
     }
 
-    this.xmlRpcPath = this.options.xmlRpcPath;
+    this.xmlRpcPath = this.options.xmlRpcPath ?? '';
     if (this.xmlRpcPath.startsWith('/')) {
       this.xmlRpcPath = this.xmlRpcPath.substring(1);
     }
@@ -111,6 +111,10 @@ export class XmlRpcClient {
       array.appendChild(arrayData);
       (data as unknown[]).forEach(it => this.createValue(it, arrayData, doc));
       value.appendChild(array);
+    } else if (isArrayBuffer(data)) {
+      const base64 = doc.createElement('base64');
+      base64.setText(arrayBufferToBase64(data));
+      value.appendChild(base64);
     } else if (isObject(data)) {
       const struct = doc.createElement('struct');
       for (const [ propName, propValue] of Object.entries(data)) {

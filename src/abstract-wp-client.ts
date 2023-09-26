@@ -1,4 +1,4 @@
-import { Modal, Notice } from 'obsidian';
+import { arrayBufferToBase64, Modal, Notice, TFile } from 'obsidian';
 import WordpressPlugin from './main';
 import { openLoginModal } from './wp-login-modal';
 import {
@@ -20,6 +20,8 @@ import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
 import { ConfirmCode, openConfirmModal } from './confirm-modal';
 import { isNil } from 'lodash-es';
+import fileTypeChecker from 'file-type-checker';
+import { Media } from './types';
 
 
 const matterOptions = {
@@ -36,6 +38,11 @@ const matterOptions = {
 };
 
 export abstract class AbstractWordPressClient implements WordPressClient {
+
+  /**
+   * Client name.
+   */
+  name = 'AbstractWordPressClient';
 
   protected constructor(
     protected readonly plugin: WordpressPlugin,
@@ -61,6 +68,8 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     name: string,
     certificate: WordPressAuthParams
   ): Promise<Term>;
+
+  abstract uploadMedia(media: Media, certificate: WordPressAuthParams): Promise<WordPressClientResult>;
 
   protected openLoginModal(): boolean {
     return true;
@@ -187,6 +196,42 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         password
       });
       postParams.tags = tagTerms.map(term => term.id);
+
+      const activeFile = this.plugin.app.workspace.getActiveFile()
+      if (activeFile === null) {
+        new Notice(this.plugin.i18n.t('error_noActiveFile'), ERROR_NOTICE_TIMEOUT);
+      }
+      const images = getImages(postParams.content);
+      for (const img of images) {
+        const splitFile = img.src.split('.');
+        const ext = splitFile.pop();
+        const fileName = splitFile.join('.');
+        // @ts-expect-error
+        let filePath = (await this.plugin.app.vault.getAvailablePathForAttachments(
+          fileName,
+          ext,
+          activeFile
+        )) as string;
+        const pathRegex = /(.*) \d+\.(.*)/;
+        filePath = filePath.replace(pathRegex, '$1.$2');
+        const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+        if (imgFile instanceof TFile) {
+          const content = await this.plugin.app.vault.readBinary(imgFile);
+          const fileType = fileTypeChecker.detectFile(content);
+          const result = await this.uploadMedia({
+            mimeType: fileType?.mimeType ?? 'application/octet-stream',
+            fileName: imgFile.name,
+            content: content
+          }, {
+            username,
+            password
+          });
+          console.log(result);
+          throw new Error('yyy');
+        }
+      }
+      console.log(AppState.getInstance().markdownParser.render(postParams.content));
+      throw new Error('xxx');
       const result = await this.publish(
         postParams.title ?? 'A post from Obsidian!',
         AppState.getInstance().markdownParser.render(postParams.content) ?? '',
@@ -293,4 +338,37 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     }
   }
 
+}
+
+interface Image {
+  src: string;
+  width?: string;
+  height?: string;
+}
+
+function getImages(content: string): Image[] {
+  const paths: Image[] = [];
+
+  // for ![Alt Text](image-url)
+  let regex = /!\[.*?(?:\|(\d+)(?:x(\d+))?)?]\((.*?)\)/g;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    paths.push({
+      src: match[3],
+      width: match[1],
+      height: match[2]
+    });
+  }
+
+  // for ![[image-name]]
+  regex = /!\[\[(.*?)(?:\|(\d+)(?:x(\d+))?)?]]/g;
+  while ((match = regex.exec(content)) !== null) {
+    paths.push({
+      src: match[1],
+      width: match[2],
+      height: match[3]
+    });
+  }
+
+  return paths;
 }
