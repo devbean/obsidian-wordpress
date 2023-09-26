@@ -23,7 +23,7 @@ class PostPublishedModal extends Modal {
     private readonly plugin: WordpressPlugin,
     private readonly onOpenClicked: (modal: Modal) => void
   ) {
-    super(app);
+    super(plugin.app);
   }
 
   onOpen() {

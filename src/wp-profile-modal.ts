@@ -59,7 +59,7 @@ class WpProfileModal extends Modal {
     },
     private readonly atIndex: number = -1
   ) {
-    super(app);
+    super(plugin.app);
 
     this.profileData = Object.assign({}, profile);
     this.tokenGotRef = AppState.getInstance().events.on(EventType.OAUTH2_TOKEN_GOT, async token => {

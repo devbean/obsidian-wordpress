@@ -80487,7 +80487,7 @@ function openLoginModal(plugin, profile) {
 }
 var WpLoginModal = class extends import_obsidian3.Modal {
   constructor(plugin, profile, onSubmit) {
-    super(app);
+    super(plugin.app);
     this.plugin = plugin;
     this.profile = profile;
     this.onSubmit = onSubmit;
@@ -80569,7 +80569,7 @@ function openPublishModal(plugin, categories, selectedCategories) {
 }
 var WpPublishModal = class extends import_obsidian4.Modal {
   constructor(plugin, categories, selectedCategories, onSubmit) {
-    super(app);
+    super(plugin.app);
     this.plugin = plugin;
     this.categories = categories;
     this.selectedCategories = selectedCategories;
@@ -83332,7 +83332,7 @@ function openPostPublishedModal(plugin) {
 }
 var PostPublishedModal = class extends import_obsidian5.Modal {
   constructor(plugin, onOpenClicked) {
-    super(app);
+    super(plugin.app);
     this.plugin = plugin;
     this.onOpenClicked = onOpenClicked;
   }
@@ -83378,7 +83378,7 @@ function openConfirmModal(messages, plugin) {
 }
 var ConfirmModal = class extends import_obsidian6.Modal {
   constructor(messages, plugin, onAction) {
-    super(app);
+    super(plugin.app);
     this.messages = messages;
     this.plugin = plugin;
     this.onAction = onAction;
@@ -83447,7 +83447,7 @@ var AbstractWordPressClient = class {
           data: new Error("No endpoint set.")
         });
       }
-      const { activeEditor } = app.workspace;
+      const { activeEditor } = this.plugin.app.workspace;
       if (activeEditor && activeEditor.file) {
         (async () => {
           var _a, _b, _c;
@@ -83466,7 +83466,7 @@ var AbstractWordPressClient = class {
             }
           }
           const noteTitle = activeEditor.file.basename;
-          const rawContent = await app.vault.read(activeEditor.file);
+          const rawContent = await this.plugin.app.vault.read(activeEditor.file);
           const { content, data: matterData } = (0, import_gray_matter.default)(rawContent, matterOptions);
           if (!isNil_default(matterData.profileName) && matterData.profileName.length > 0 && matterData.profileName !== this.profile.name) {
             const confirm = await openConfirmModal({
@@ -83659,7 +83659,7 @@ var AbstractWordPressClient = class {
     return postParams;
   }
   updateFrontMatter(value) {
-    const { activeEditor } = app.workspace;
+    const { activeEditor } = this.plugin.app.workspace;
     if (activeEditor) {
       const editor = activeEditor.editor;
       if (editor) {
@@ -84365,7 +84365,7 @@ var WpProfileModal = class extends import_obsidian13.Modal {
     isDefault: false,
     lastSelectedCategories: [1]
   }, atIndex = -1) {
-    super(app);
+    super(plugin.app);
     this.plugin = plugin;
     this.onSubmit = onSubmit;
     this.profile = profile;
@@ -84554,7 +84554,7 @@ var WpProfileModal = class extends import_obsidian13.Modal {
 // src/wp-profile-manage-modal.ts
 var WpProfileManageModal = class extends import_obsidian14.Modal {
   constructor(plugin) {
-    super(app);
+    super(plugin.app);
     this.plugin = plugin;
     this.profiles = plugin.settings.profiles;
   }
@@ -84630,9 +84630,8 @@ var WpProfileManageModal = class extends import_obsidian14.Modal {
 
 // src/settings.ts
 var WordpressSettingTab = class extends import_obsidian15.PluginSettingTab {
-  constructor(app2, plugin) {
-    super(app2, plugin);
-    this.app = app2;
+  constructor(plugin) {
+    super(plugin.app, plugin);
     this.plugin = plugin;
   }
   display() {
@@ -85463,7 +85462,7 @@ function openProfileChooserModal(plugin) {
 }
 var WpProfileChooserModal = class extends import_obsidian18.Modal {
   constructor(plugin, onChoose) {
-    super(app);
+    super(plugin.app);
     this.plugin = plugin;
     this.onChoose = onChoose;
     this.profiles = plugin.settings.profiles;
@@ -85549,7 +85548,7 @@ var WordpressPlugin = class extends import_obsidian19.Plugin {
         this.openProfileChooser();
       }
     });
-    this.addSettingTab(new WordpressSettingTab(this.app, this));
+    this.addSettingTab(new WordpressSettingTab(this));
   }
   onunload() {
   }

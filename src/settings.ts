@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { CommentStatus, PostStatus } from './wp-api';
 import { TranslateKey } from './i18n';
@@ -12,10 +12,9 @@ import { AppState } from './app-state';
 export class WordpressSettingTab extends PluginSettingTab {
 
 	constructor(
-    readonly app: App,
     private readonly plugin: WordpressPlugin
   ) {
-		super(app, plugin);
+		super(plugin.app, plugin);
 	}
 
 	display(): void {

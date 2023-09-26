@@ -85,7 +85,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         });
       }
 
-      const { activeEditor } = app.workspace;
+      const { activeEditor } = this.plugin.app.workspace;
       if (activeEditor && activeEditor.file) {
         (async () => {
           let username = null;
@@ -107,7 +107,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const noteTitle = activeEditor.file!.basename;
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const rawContent = await app.vault.read(activeEditor.file!);
+          const rawContent = await this.plugin.app.vault.read(activeEditor.file!);
           const { content, data: matterData } = matter(rawContent, matterOptions);
 
           if (!isNil(matterData.profileName)
@@ -324,7 +324,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private updateFrontMatter(value: string): void {
-    const { activeEditor } = app.workspace;
+    const { activeEditor } = this.plugin.app.workspace;
     if (activeEditor) {
       const editor = activeEditor.editor;
       if (editor) {
