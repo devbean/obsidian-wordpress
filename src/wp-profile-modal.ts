@@ -59,7 +59,7 @@ class WpProfileModal extends Modal {
     },
     private readonly atIndex: number = -1
   ) {
-    super(app);
+    super(plugin.app);
 
     this.profileData = Object.assign({}, profile);
     this.tokenGotRef = AppState.getInstance().events.on(EventType.OAUTH2_TOKEN_GOT, async token => {
@@ -165,7 +165,7 @@ class WpProfileModal extends Modal {
           .setDesc(t('settings_xmlRpcPathDesc'))
           .addText(text => text
             .setPlaceholder('/xmlrpc.php')
-            .setValue(this.profileData.xmlRpcPath)
+            .setValue(this.profileData.xmlRpcPath ?? '')
             .onChange((value) => {
               this.profileData.xmlRpcPath = value;
             }));
@@ -182,7 +182,7 @@ class WpProfileModal extends Modal {
                 })
                   .then(result => {
                     if (result.code === WordPressClientReturnCode.Error) {
-                      new Notice(result.data + '', ERROR_NOTICE_TIMEOUT);
+                      new Notice(result.error?.message + '', ERROR_NOTICE_TIMEOUT);
                     } else {
                       new Notice(t('message_wpComTokenValidated'));
                     }

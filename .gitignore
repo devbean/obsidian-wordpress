@@ -109,5 +109,8 @@ dist
 # Compiled files
 dist/
 
-# User data file
+# They should be uploaded to GitHub releases instead.
+main.js
+
+# obsidian
 data.json

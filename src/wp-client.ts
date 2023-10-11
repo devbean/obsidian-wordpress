@@ -3,18 +3,38 @@ import { SafeAny } from './utils';
 
 export enum WordPressClientReturnCode {
   OK,
-  Error
+  Error,
+  ServerInternalError,
 }
 
-export interface WordPressClientResult {
-  code: WordPressClientReturnCode;
-  data: unknown;
-
+interface _wpClientResult {
   /**
    * Response from WordPress server.
    */
-  response?: unknown;
+  response: SafeAny;
+
+  code: WordPressClientReturnCode;
 }
+
+interface WpClientOkResult<T> extends _wpClientResult {
+  code: WordPressClientReturnCode.OK;
+  data: T;
+}
+
+interface WpClientErrorResult extends _wpClientResult {
+  code: WordPressClientReturnCode.Error;
+  error: {
+    /**
+     * This code could be returned from remote server
+     */
+    code: WordPressClientReturnCode | string;
+    message: string;
+  }
+}
+
+export type WordPressClientResult<T> =
+  | WpClientOkResult<T>
+  | WpClientErrorResult;
 
 export interface WordPressAuthParams {
   username: string | null;
@@ -55,6 +75,15 @@ export interface WordPressPublishParams extends WordPressAuthParams {
   matterData: { [p: string]: SafeAny };
 }
 
+export interface WordPressPublishResult {
+  postId: string;
+  categories: number[];
+}
+
+export interface WordPressMediaUploadResult {
+  url: string;
+}
+
 export interface WordPressClient {
 
   /**
@@ -65,12 +94,12 @@ export interface WordPressClient {
    *
    * @param defaultPostParams Use this parameter instead of popup publish modal if this is not undefined.
    */
-  publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult>;
+  publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult<WordPressPublishResult>>;
 
   /**
    * Checks if the login certificate is OK.
    * @param certificate
    */
-  validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult>;
+  validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult<boolean>>;
 
 }

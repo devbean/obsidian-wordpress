@@ -27,7 +27,7 @@ class WpProfileChooserModal extends Modal {
     private readonly plugin: WordpressPlugin,
     private readonly onChoose: (profile: WpProfile) => void
   ) {
-    super(app);
+    super(plugin.app);
 
     this.profiles = plugin.settings.profiles;
   }

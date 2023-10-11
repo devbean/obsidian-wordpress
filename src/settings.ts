@@ -14,7 +14,7 @@ export class WordpressSettingTab extends PluginSettingTab {
 	constructor(
     private readonly plugin: WordpressPlugin
   ) {
-		super(app, plugin);
+		super(plugin.app, plugin);
 	}
 
 	display(): void {
@@ -160,6 +160,18 @@ export class WordpressSettingTab extends PluginSettingTab {
             AppState.getInstance().markdownParser.set({
               html: this.plugin.settings.enableHtml
             });
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName(t('settings_replaceMediaLinks'))
+      .setDesc(t('settings_replaceMediaLinksDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.replaceMediaLinks)
+          .onChange(async (value) => {
+            this.plugin.settings.replaceMediaLinks = value;
+            await this.plugin.saveSettings();
           }),
       );
 	}

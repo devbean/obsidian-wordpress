@@ -1,4 +1,4 @@
-import { Modal, Notice } from 'obsidian';
+import { Modal, Notice, TFile } from 'obsidian';
 import WordpressPlugin from './main';
 import { openLoginModal } from './wp-login-modal';
 import {
@@ -6,20 +6,24 @@ import {
   WordPressClient,
   WordPressClientResult,
   WordPressClientReturnCode,
+  WordPressMediaUploadResult,
   WordPressPostParams,
-  WordPressPublishParams
+  WordPressPublishParams,
+  WordPressPublishResult
 } from './wp-client';
 import { openPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT, WP_DEFAULT_PROFILE_NAME } from './consts';
 import matter from 'gray-matter';
 import yaml from 'js-yaml';
-import { doClientPublish, isPromiseFulfilledResult, openWithBrowser, SafeAny } from './utils';
-import { openPostPublishedModal } from './post-published-modal';
+import { doClientPublish, isPromiseFulfilledResult, isValidUrl, openWithBrowser, SafeAny } from './utils';
 import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
 import { ConfirmCode, openConfirmModal } from './confirm-modal';
 import { isNil } from 'lodash-es';
+import fileTypeChecker from 'file-type-checker';
+import { Media } from './types';
+import { openPostPublishedModal } from './post-published-modal';
 
 
 const matterOptions = {
@@ -37,6 +41,11 @@ const matterOptions = {
 
 export abstract class AbstractWordPressClient implements WordPressClient {
 
+  /**
+   * Client name.
+   */
+  name = 'AbstractWordPressClient';
+
   protected constructor(
     protected readonly plugin: WordpressPlugin,
     protected readonly profile: WpProfile
@@ -47,7 +56,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     content: string,
     postParams: WordPressPostParams,
     certificate: WordPressAuthParams
-  ): Promise<WordPressClientResult>;
+  ): Promise<WordPressClientResult<WordPressPublishResult>>;
 
   abstract getCategories(
     certificate: WordPressAuthParams
@@ -55,19 +64,24 @@ export abstract class AbstractWordPressClient implements WordPressClient {
 
   abstract validateUser(
     certificate: WordPressAuthParams
-  ): Promise<WordPressClientResult>;
+  ): Promise<WordPressClientResult<boolean>>;
 
   abstract getTag(
     name: string,
     certificate: WordPressAuthParams
   ): Promise<Term>;
 
+  abstract uploadMedia(
+    media: Media,
+    certificate: WordPressAuthParams
+  ): Promise<WordPressClientResult<WordPressMediaUploadResult>>;
+
   protected openLoginModal(): boolean {
     return true;
   }
 
-  publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult> {
-    return new Promise<WordPressClientResult>((resolve, reject) => {
+  publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult<WordPressPublishResult>> {
+    return new Promise<WordPressClientResult<WordPressPublishResult>>((resolve, reject) => {
       if (!this.profile.endpoint || this.profile.endpoint.length === 0) {
         new Notice(this.plugin.i18n.t('error_noEndpoint'), ERROR_NOTICE_TIMEOUT);
         reject({
@@ -76,7 +90,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         });
       }
 
-      const { activeEditor } = app.workspace;
+      const { activeEditor } = this.plugin.app.workspace;
       if (activeEditor && activeEditor.file) {
         (async () => {
           let username = null;
@@ -98,7 +112,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const noteTitle = activeEditor.file!.basename;
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const rawContent = await app.vault.read(activeEditor.file!);
+          const rawContent = await this.plugin.app.vault.read(activeEditor.file!);
           const { content, data: matterData } = matter(rawContent, matterOptions);
 
           if (!isNil(matterData.profileName)
@@ -179,7 +193,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     publishParams: WordPressPublishParams,
     loginModal?: Modal,
     publishModal?: Modal
-  ): Promise<WordPressClientResult> {
+  ): Promise<WordPressClientResult<WordPressPublishResult>> {
     const { username, password, postParams, matterData } = publishParams;
     try {
       const tagTerms = await this.getTags(postParams.tags, {
@@ -187,6 +201,63 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         password
       });
       postParams.tags = tagTerms.map(term => term.id);
+
+      const activeFile = this.plugin.app.workspace.getActiveFile()
+      if (activeFile === null) {
+        new Notice(this.plugin.i18n.t('error_noActiveFile'), ERROR_NOTICE_TIMEOUT);
+      }
+      // console.log(postParams.content);
+      const { activeEditor } = this.plugin.app.workspace;
+      if (activeEditor && activeEditor.editor) {
+        const images = getImages(postParams.content);
+        for (const img of images) {
+          // console.log(img);
+          if (!img.srcIsUrl) {
+            const splitFile = img.src.split('.');
+            const ext = splitFile.pop();
+            const fileName = splitFile.join('.');
+            // @ts-expect-error
+            let filePath = (await this.plugin.app.vault.getAvailablePathForAttachments(
+              fileName,
+              ext,
+              activeFile
+            )) as string;
+            const pathRegex = /(.*) \d+\.(.*)/;
+            filePath = filePath.replace(pathRegex, '$1.$2');
+            const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+            if (imgFile instanceof TFile) {
+              const content = await this.plugin.app.vault.readBinary(imgFile);
+              const fileType = fileTypeChecker.detectFile(content);
+              const result = await this.uploadMedia({
+                mimeType: fileType?.mimeType ?? 'application/octet-stream',
+                fileName: imgFile.name,
+                content: content
+              }, {
+                username,
+                password
+              });
+              if (result.code === WordPressClientReturnCode.OK) {
+                if (this.plugin.settings.replaceMediaLinks) {
+                  postParams.content = postParams.content.replace(img.original, `![${imgFile.name}](${result.data.url})`);
+                }
+              } else {
+                if (result.error.code === WordPressClientReturnCode.ServerInternalError) {
+                  new Notice(result.error.message, ERROR_NOTICE_TIMEOUT);
+                } else {
+                  new Notice(this.plugin.i18n.t('error_mediaUploadFailed', {
+                    name: imgFile.name,
+                  }), ERROR_NOTICE_TIMEOUT);
+                }
+              }
+            }
+            activeEditor.editor.setValue(postParams.content);
+          } else {
+            // src is a url, skip uploading
+          }
+        }
+      }
+      // console.log(postParams.content);
+      // console.log(AppState.getInstance().markdownParser.render(postParams.content));
       const result = await this.publish(
         postParams.title ?? 'A post from Obsidian!',
         AppState.getInstance().markdownParser.render(postParams.content) ?? '',
@@ -197,10 +268,9 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         });
       console.log('doPublish', result);
       if (result.code === WordPressClientReturnCode.Error) {
-        const data = result.data as SafeAny;
         new Notice(this.plugin.i18n.t('error_publishFailed', {
-          code: data.code,
-          message: data.message
+          code: result.error.code as string,
+          message: result.error.message
         }), ERROR_NOTICE_TIMEOUT);
       } else {
         new Notice(this.plugin.i18n.t('message_publishSuccessfully'));
@@ -208,7 +278,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         loginModal?.close();
 
         // post id will be returned if creating, true if editing
-        const postId = (result.data as SafeAny).postId;
+        const postId = result.data.postId;
         if (postId) {
           // save post id to front-matter
           matterData.profileName = this.profile.name;
@@ -241,18 +311,16 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     return Promise.reject('You should not be here!');
   }
 
-  private getTags(tags: string[], certificate: WordPressAuthParams): Promise<Term[]> {
-    return Promise.allSettled(tags.map(name => this.getTag(name, certificate)))
-      .then(results => {
-        const terms: Term[] = [];
-        results
-          .forEach(result => {
-            if (isPromiseFulfilledResult<Term>(result)) {
-              terms.push(result.value);
-            }
-          });
-        return terms;
+  private async getTags(tags: string[], certificate: WordPressAuthParams): Promise<Term[]> {
+    const results = await Promise.allSettled(tags.map(name => this.getTag(name, certificate)));
+    const terms: Term[] = [];
+    results
+      .forEach(result => {
+        if (isPromiseFulfilledResult<Term>(result)) {
+          terms.push(result.value);
+        }
       });
+    return terms;
   }
 
   private readFromFrontMatter(
@@ -279,7 +347,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private updateFrontMatter(value: string): void {
-    const { activeEditor } = app.workspace;
+    const { activeEditor } = this.plugin.app.workspace;
     if (activeEditor) {
       const editor = activeEditor.editor;
       if (editor) {
@@ -293,4 +361,51 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     }
   }
 
+}
+
+interface Image {
+  original: string;
+  src: string;
+  altText?: string;
+  width?: string;
+  height?: string;
+  srcIsUrl: boolean;
+  startIndex: number;
+  endIndex: number;
+}
+
+function getImages(content: string): Image[] {
+  const paths: Image[] = [];
+
+  // for ![Alt Text](image-url)
+  let regex = /(!\[(.*?)(?:\|(\d+)(?:x(\d+))?)?]\((.*?)\))/g;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    paths.push({
+      src: match[5],
+      altText: match[2],
+      width: match[3],
+      height: match[4],
+      original: match[1],
+      startIndex: match.index,
+      endIndex: match.index + match.length,
+      srcIsUrl: isValidUrl(match[5]),
+    });
+  }
+
+  // for ![[image-name]]
+  regex = /(!\[\[(.*?)(?:\|(\d+)(?:x(\d+))?)?]])/g;
+  while ((match = regex.exec(content)) !== null) {
+    paths.push({
+      src: match[2],
+      original: match[1],
+      width: match[3],
+      height: match[4],
+      startIndex: match.index,
+      endIndex: match.index + match.length,
+      srcIsUrl: isValidUrl(match[2]),
+    });
+  }
+
+  return paths;
 }

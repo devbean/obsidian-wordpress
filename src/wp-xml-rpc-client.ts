@@ -4,7 +4,9 @@ import {
   WordPressAuthParams,
   WordPressClientResult,
   WordPressClientReturnCode,
-  WordPressPostParams
+  WordPressMediaUploadResult,
+  WordPressPostParams,
+  WordPressPublishResult
 } from './wp-client';
 import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
@@ -12,6 +14,7 @@ import { Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { SafeAny } from './utils';
 import { WpProfile } from './wp-profile';
+import { Media } from './types';
 
 interface FaultResponse {
   faultCode: string;
@@ -31,18 +34,19 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     readonly profile: WpProfile
   ) {
     super(plugin, profile);
+    this.name = 'WpXmlRpcClient';
     this.client = new XmlRpcClient({
       url: new URL(profile.endpoint),
-      xmlRpcPath: profile.xmlRpcPath
+      xmlRpcPath: profile.xmlRpcPath ?? ''
     });
   }
 
-  publish(
+  async publish(
     title: string,
     content: string,
     postParams: WordPressPostParams,
     certificate: WordPressAuthParams
-  ): Promise<WordPressClientResult> {
+  ): Promise<WordPressClientResult<WordPressPublishResult>> {
     const publishContent = {
       post_type: 'post',
       post_status: postParams.status,
@@ -73,70 +77,67 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         publishContent
       ]);
     }
-    return publishPromise.then(response => {
-        if (isFaultResponse(response)) {
-          return {
-            code: WordPressClientReturnCode.Error,
-            data: {
-              code: response.faultCode,
-              message: response.faultString
-            },
-            response
-          };
-        }
-        return {
-          code: WordPressClientReturnCode.OK,
-          data: {
-            postId: postParams.postId ?? response,
-            categories: postParams.categories
-          },
-          response
-        };
-      });
+    const response = await publishPromise;
+    if (isFaultResponse(response)) {
+      return {
+        code: WordPressClientReturnCode.Error,
+        error: {
+          code: response.faultCode,
+          message: response.faultString
+        },
+        response
+      };
+    }
+    return {
+      code: WordPressClientReturnCode.OK,
+      data: {
+        postId: postParams.postId ?? (response as string),
+        categories: postParams.categories
+      },
+      response
+    };
   }
 
-  getCategories(certificate: WordPressAuthParams): Promise<Term[]> {
-    return this.client.methodCall('wp.getTerms', [
+  async getCategories(certificate: WordPressAuthParams): Promise<Term[]> {
+    const response = await this.client.methodCall('wp.getTerms', [
       0,
       certificate.username,
       certificate.password,
       'category'
-    ])
-      .then(response => {
-        if (isFaultResponse(response)) {
-          const fault = `${response.faultCode}: ${response.faultString}`;
-          new Notice(fault, ERROR_NOTICE_TIMEOUT);
-          throw new Error(fault);
-        }
-        return response;
-      })
-      .then((data) => {
-        return (data as SafeAny).map((it: SafeAny) => ({
-          ...it,
-          id: it.term_id
-        })) ?? [];
-      });
+    ]);
+    if (isFaultResponse(response)) {
+      const fault = `${response.faultCode}: ${response.faultString}`;
+      new Notice(fault, ERROR_NOTICE_TIMEOUT);
+      throw new Error(fault);
+    }
+    return (response as SafeAny).map((it: SafeAny) => ({
+      ...it,
+      id: it.term_id
+    })) ?? [];
   }
 
-  validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult> {
-    return this.client.methodCall('wp.getProfile', [
+  async validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult<boolean>> {
+    const response = await this.client.methodCall('wp.getProfile', [
       0,
       certificate.username,
       certificate.password
-    ])
-      .then(response => {
-        if (isFaultResponse(response)) {
-          return {
-            code: WordPressClientReturnCode.Error,
-            data: `${response.faultCode}: ${response.faultString}`
-          };
-        } else {
-          return {
-            code: WordPressClientReturnCode.OK,
-            data: response
-          };
-        }
-      });
+    ]);
+    if (isFaultResponse(response)) {
+      return {
+        code: WordPressClientReturnCode.Error,
+        error: {
+          code: response.faultCode,
+          message: `${response.faultCode}: ${response.faultString}`
+        },
+        response
+      };
+    } else {
+      return {
+        code: WordPressClientReturnCode.OK,
+        data: !!response,
+        response
+      };
+    }
   }
 
   getTag(name: string, certificate: WordPressAuthParams): Promise<Term> {
@@ -148,6 +149,38 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
       description: name,
       count: 0
     });
+  }
+
+  async uploadMedia(media: Media, certificate: WordPressAuthParams): Promise<WordPressClientResult<WordPressMediaUploadResult>> {
+    const wpMedia = {
+      name: media.fileName,
+      type: media.mimeType,
+      bits: media.content,
+    };
+    const response = await this.client.methodCall('wp.uploadFile', [
+      0,
+      certificate.username,
+      certificate.password,
+      wpMedia,
+    ]);
+    if (isFaultResponse(response)) {
+      return {
+        code: WordPressClientReturnCode.Error,
+        error: {
+          code: response.faultCode,
+          message: `${response.faultCode}: ${response.faultString}`
+        },
+        response
+      };
+    } else {
+      return {
+        code: WordPressClientReturnCode.OK,
+        data: {
+          url: (response as SafeAny).url
+        },
+        response
+      };
+    }
   }
 
 }

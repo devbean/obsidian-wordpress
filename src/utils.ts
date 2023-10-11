@@ -8,6 +8,7 @@ import { getWordPressClient } from './wp-clients';
 import WordpressPlugin from './main';
 import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
+import { format } from 'date-fns';
 
 export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -88,4 +89,8 @@ export function doClientPublish(
     new Notice(noSuchProfileMessage, ERROR_NOTICE_TIMEOUT);
     throw new Error(noSuchProfileMessage);
   }
+}
+
+export function getBoundary(): string {
+  return `----obsidianBoundary${format(new Date(), 'yyyyMMddHHmmss')}`;
 }

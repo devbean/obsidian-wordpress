@@ -42,7 +42,7 @@ class ConfirmModal extends Modal {
     private readonly plugin: WordpressPlugin,
     private readonly onAction: (code: ConfirmCode, modal: Modal) => void
   ) {
-    super(app);
+    super(plugin.app);
   }
 
   onOpen() {

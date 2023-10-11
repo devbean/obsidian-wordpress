@@ -36,7 +36,7 @@ class WpPublishModal extends Modal {
     private readonly selectedCategories: number[],
     private readonly onSubmit: (params: WordPressPostParams, modal: Modal) => void
   ) {
-    super(app);
+    super(plugin.app);
   }
 
   onOpen() {

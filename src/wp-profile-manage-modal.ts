@@ -17,7 +17,7 @@ export class WpProfileManageModal extends Modal {
   constructor(
     private readonly plugin: WordpressPlugin
   ) {
-    super(app);
+    super(plugin.app);
 
     this.profiles = plugin.settings.profiles;
   }

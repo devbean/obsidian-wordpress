@@ -1,8 +1,9 @@
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
+  "env": { "node": true },
   "plugins": [
-    "@typescript-eslint"
+    "@typescript-eslint", "node"
   ],
   "extends": [
     "eslint:recommended",
@@ -17,6 +18,9 @@
     "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
     "@typescript-eslint/ban-ts-comment": "off",
     "no-prototype-builtins": "off",
-    "@typescript-eslint/no-empty-function": "off"
+    "@typescript-eslint/no-empty-function": "off",
+    "node/no-unsupported-features/es-builtins": ["error", { "version": ">=16.0.0", "ignores": [] }],
+//    "node/no-unsupported-features/es-syntax": ["error", { "version": ">=16.0.0", "ignores": [] }],
+    "node/no-unsupported-features/node-builtins": ["error", { "version": ">=16.0.0", "ignores": [] }]
   }
 }

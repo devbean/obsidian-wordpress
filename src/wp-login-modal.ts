@@ -30,7 +30,7 @@ class WpLoginModal extends Modal {
     private readonly profile: WpProfile,
     private readonly onSubmit: (username: string, password: string, modal: Modal) => void
   ) {
-    super(app);
+    super(plugin.app);
   }
 
   onOpen() {
