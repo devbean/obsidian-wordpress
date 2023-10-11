@@ -8,6 +8,7 @@ import { getWordPressClient } from './wp-clients';
 import WordpressPlugin from './main';
 import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
+import { format } from 'date-fns';
 
 export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -90,12 +91,6 @@ export function doClientPublish(
   }
 }
 
-// export function _arrayBufferToBase64(buffer: ArrayBuffer): string {
-//   return btoa(new Uint8Array(buffer).reduce((data, byte)=> {
-//     return data + String.fromCharCode(byte);
-//   }, ''));
-// }
-
-export function arrayBufferToBlob(buffer: ArrayBuffer): Blob {
-  return new Blob([buffer]);
+export function getBoundary(): string {
+  return `----obsidianBoundary${format(new Date(), 'yyyyMMddHHmmss')}`;
 }

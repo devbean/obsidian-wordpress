@@ -15,6 +15,7 @@
   "error_noDefaultProfile": "无法找到默认账号",
   "error_profileNotMatch": "WordPress 账号不匹配，使用哪一个账号？",
   "error_noActiveFile": "没有打开的文档",
+  "error_mediaUploadFailed": "媒体文件 <%= name %> 上传失败",
   "message_publishSuccessfully": "文章发布成功",
   "message_wpComTokenValidated": "Wordpress.com 令牌验证通过",
   "ribbon_iconTitle": "发布到 WordPress",

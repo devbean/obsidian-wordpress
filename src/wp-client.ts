@@ -3,7 +3,8 @@ import { SafeAny } from './utils';
 
 export enum WordPressClientReturnCode {
   OK,
-  Error
+  Error,
+  ServerInternalError,
 }
 
 interface _wpClientResult {

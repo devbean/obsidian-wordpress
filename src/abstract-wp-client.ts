@@ -5,9 +5,11 @@ import {
   WordPressAuthParams,
   WordPressClient,
   WordPressClientResult,
-  WordPressClientReturnCode, WordPressMediaUploadResult,
+  WordPressClientReturnCode,
+  WordPressMediaUploadResult,
   WordPressPostParams,
-  WordPressPublishParams, WordPressPublishResult
+  WordPressPublishParams,
+  WordPressPublishResult
 } from './wp-client';
 import { openPublishModal } from './wp-publish-modal';
 import { Term } from './wp-api';
@@ -15,13 +17,13 @@ import { ERROR_NOTICE_TIMEOUT, WP_DEFAULT_PROFILE_NAME } from './consts';
 import matter from 'gray-matter';
 import yaml from 'js-yaml';
 import { doClientPublish, isPromiseFulfilledResult, isValidUrl, openWithBrowser, SafeAny } from './utils';
-import { openPostPublishedModal } from './post-published-modal';
 import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
 import { ConfirmCode, openConfirmModal } from './confirm-modal';
 import { isNil } from 'lodash-es';
 import fileTypeChecker from 'file-type-checker';
 import { Media } from './types';
+import { openPostPublishedModal } from './post-published-modal';
 
 
 const matterOptions = {
@@ -204,43 +206,58 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       if (activeFile === null) {
         new Notice(this.plugin.i18n.t('error_noActiveFile'), ERROR_NOTICE_TIMEOUT);
       }
-      console.log(postParams.content);
-      // const images = getImages(postParams.content);
-      // for (const img of images) {
-      //   if (!img.srcIsUrl) {
-      //     const splitFile = img.src.split('.');
-      //     const ext = splitFile.pop();
-      //     const fileName = splitFile.join('.');
-      //     // @ts-expect-error
-      //     let filePath = (await this.plugin.app.vault.getAvailablePathForAttachments(
-      //       fileName,
-      //       ext,
-      //       activeFile
-      //     )) as string;
-      //     const pathRegex = /(.*) \d+\.(.*)/;
-      //     filePath = filePath.replace(pathRegex, '$1.$2');
-      //     const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      //     if (imgFile instanceof TFile) {
-      //       const content = await this.plugin.app.vault.readBinary(imgFile);
-      //       const fileType = fileTypeChecker.detectFile(content);
-      //       const result = await this.uploadMedia({
-      //         mimeType: fileType?.mimeType ?? 'application/octet-stream',
-      //         fileName: imgFile.name,
-      //         content: content
-      //       }, {
-      //         username,
-      //         password
-      //       });
-      //       console.log(result);
-      //       throw new Error('yyy');
-      //     }
-      //   } else {
-      //     // src is a url, skip upload
-      //   }
-      // }
+      // console.log(postParams.content);
+      const { activeEditor } = this.plugin.app.workspace;
+      if (activeEditor && activeEditor.editor) {
+        const images = getImages(postParams.content);
+        for (const img of images) {
+          // console.log(img);
+          if (!img.srcIsUrl) {
+            const splitFile = img.src.split('.');
+            const ext = splitFile.pop();
+            const fileName = splitFile.join('.');
+            // @ts-expect-error
+            let filePath = (await this.plugin.app.vault.getAvailablePathForAttachments(
+              fileName,
+              ext,
+              activeFile
+            )) as string;
+            const pathRegex = /(.*) \d+\.(.*)/;
+            filePath = filePath.replace(pathRegex, '$1.$2');
+            const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+            if (imgFile instanceof TFile) {
+              const content = await this.plugin.app.vault.readBinary(imgFile);
+              const fileType = fileTypeChecker.detectFile(content);
+              const result = await this.uploadMedia({
+                mimeType: fileType?.mimeType ?? 'application/octet-stream',
+                fileName: imgFile.name,
+                content: content
+              }, {
+                username,
+                password
+              });
+              if (result.code === WordPressClientReturnCode.OK) {
+                if (this.plugin.settings.replaceMediaLinks) {
+                  postParams.content = postParams.content.replace(img.original, `![${imgFile.name}](${result.data.url})`);
+                }
+              } else {
+                if (result.error.code === WordPressClientReturnCode.ServerInternalError) {
+                  new Notice(result.error.message, ERROR_NOTICE_TIMEOUT);
+                } else {
+                  new Notice(this.plugin.i18n.t('error_mediaUploadFailed', {
+                    name: imgFile.name,
+                  }), ERROR_NOTICE_TIMEOUT);
+                }
+              }
+            }
+            activeEditor.editor.setValue(postParams.content);
+          } else {
+            // src is a url, skip uploading
+          }
+        }
+      }
       // console.log(postParams.content);
       // console.log(AppState.getInstance().markdownParser.render(postParams.content));
-      // throw new Error('xxx');
       const result = await this.publish(
         postParams.title ?? 'A post from Obsidian!',
         AppState.getInstance().markdownParser.render(postParams.content) ?? '',
@@ -347,7 +364,9 @@ export abstract class AbstractWordPressClient implements WordPressClient {
 }
 
 interface Image {
+  original: string;
   src: string;
+  altText?: string;
   width?: string;
   height?: string;
   srcIsUrl: boolean;
@@ -359,29 +378,32 @@ function getImages(content: string): Image[] {
   const paths: Image[] = [];
 
   // for ![Alt Text](image-url)
-  let regex = /!\[.*?(?:\|(\d+)(?:x(\d+))?)?]\((.*?)\)/g;
+  let regex = /(!\[(.*?)(?:\|(\d+)(?:x(\d+))?)?]\((.*?)\))/g;
   let match;
   while ((match = regex.exec(content)) !== null) {
     paths.push({
-      src: match[3],
-      width: match[1],
-      height: match[2],
+      src: match[5],
+      altText: match[2],
+      width: match[3],
+      height: match[4],
+      original: match[1],
       startIndex: match.index,
       endIndex: match.index + match.length,
-      srcIsUrl: isValidUrl(match[3]),
+      srcIsUrl: isValidUrl(match[5]),
     });
   }
 
   // for ![[image-name]]
-  regex = /!\[\[(.*?)(?:\|(\d+)(?:x(\d+))?)?]]/g;
+  regex = /(!\[\[(.*?)(?:\|(\d+)(?:x(\d+))?)?]])/g;
   while ((match = regex.exec(content)) !== null) {
     paths.push({
-      src: match[1],
-      width: match[2],
-      height: match[3],
+      src: match[2],
+      original: match[1],
+      width: match[3],
+      height: match[4],
       startIndex: match.index,
       endIndex: match.index + match.length,
-      srcIsUrl: isValidUrl(match[1]),
+      srcIsUrl: isValidUrl(match[2]),
     });
   }
 

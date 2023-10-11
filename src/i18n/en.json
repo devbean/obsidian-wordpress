@@ -15,6 +15,7 @@
   "error_noDefaultProfile": "No default profile found.",
   "error_profileNotMatch": "WordPress profile not match. Which one do you want to use?",
   "error_noActiveFile": "No active document opened.",
+  "error_mediaUploadFailed": "Media file <%= name %> upload failed.",
   "message_publishSuccessfully": "Post published successfully!",
   "message_wpComTokenValidated": "Wordpress.com token validated successfully!",
   "ribbon_iconTitle": "WordPress Publish",
