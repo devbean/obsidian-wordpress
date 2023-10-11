@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.15.0](https://github.com/devbean/obsidian-wordpress/compare/0.14.0...0.15.0) (2023-10-11)
+
+
+### Features
+
+* Images in notes will be uploaded to WordPress. ([32e2a7c](https://github.com/devbean/obsidian-wordpress/commit/32e2a7ce4968a12d8e8c237c9d666cdc62043142))
+
+
+### Bug Fixes
+
+* XML-RPC path maybe undefined sometime. ([6699eef](https://github.com/devbean/obsidian-wordpress/commit/6699eefe9134910f324654141a2aa3a256a02800))
+
 ## [0.14.0](https://github.com/devbean/obsidian-wordpress/compare/0.13.4...0.14.0) (2023-04-17)
 
 
