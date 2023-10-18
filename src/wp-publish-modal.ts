@@ -63,6 +63,7 @@ class WpPublishModal extends Modal {
         dropdown
           .addOption(PostStatus.Draft, t('publishModal_postStatusDraft'))
           .addOption(PostStatus.Publish, t('publishModal_postStatusPublish'))
+          .addOption(PostStatus.Private, t('publishModal_postStatusPrivate'))
           // .addOption(PostStatus.Future, 'future')
           .setValue(this.plugin.settings.defaultPostStatus)
           .onChange((value) => {
