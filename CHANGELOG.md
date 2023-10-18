@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.16.0](https://github.com/devbean/obsidian-wordpress/compare/0.15.0...0.16.0) (2023-10-18)
+
 ## [0.15.0](https://github.com/devbean/obsidian-wordpress/compare/0.14.0...0.15.0) (2023-10-11)
 
 
