@@ -1,4 +1,3 @@
-import { Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpXmlRpcClient } from './wp-xml-rpc-client';
 import {
@@ -8,16 +7,16 @@ import {
   WpRestClientWpComOAuth2Context
 } from './wp-rest-client';
 import { WordPressClient } from './wp-client';
-import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { WpProfile } from './wp-profile';
 import { ApiType } from './plugin-settings';
+import { showError } from './utils';
 
 export function getWordPressClient(
   plugin: WordpressPlugin,
   profile: WpProfile
 ): WordPressClient | null {
   if (!profile.endpoint || profile.endpoint.length === 0) {
-    new Notice(plugin.i18n.t('error_noEndpoint'), ERROR_NOTICE_TIMEOUT);
+    showError(plugin.i18n.t('error_noEndpoint'));
     return null;
   }
   let client: WordPressClient | null = null;
@@ -38,7 +37,7 @@ export function getWordPressClient(
           profile.wpComOAuth2Token.accessToken
         ));
       } else {
-        new Notice(plugin.i18n.t('error_invalidWpComToken'), ERROR_NOTICE_TIMEOUT);
+        showError(plugin.i18n.t('error_invalidWpComToken'));
       }
       break;
     default:

@@ -2,11 +2,11 @@ import { Modal, Notice, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { TranslateKey } from './i18n';
 import { WpProfile } from './wp-profile';
-import { ERROR_NOTICE_TIMEOUT, EventType, WP_OAUTH2_REDIRECT_URI } from './consts';
+import { EventType, WP_OAUTH2_REDIRECT_URI } from './consts';
 import { WordPressClientReturnCode } from './wp-client';
 import { generateCodeVerifier, OAuth2Client } from './oauth2-client';
 import { AppState } from './app-state';
-import { isValidUrl } from './utils';
+import { isValidUrl, showError } from './utils';
 import { ApiType } from './plugin-settings';
 
 
@@ -132,7 +132,7 @@ class WpProfileModal extends Modal {
               let newApiType = value;
               if (value === ApiType.RestApi_WpComOAuth2) {
                 if (!this.profileData.endpoint.includes('wordpress.com')) {
-                  new Notice(t('error_notWpCom'), ERROR_NOTICE_TIMEOUT);
+                  showError(t('error_notWpCom'));
                   hasError = true;
                   newApiType = this.profileData.apiType;
                 }
@@ -182,7 +182,7 @@ class WpProfileModal extends Modal {
                 })
                   .then(result => {
                     if (result.code === WordPressClientReturnCode.Error) {
-                      new Notice(result.error?.message + '', ERROR_NOTICE_TIMEOUT);
+                      showError(result.error?.message + '');
                     } else {
                       new Notice(t('message_wpComTokenValidated'));
                     }
@@ -249,13 +249,13 @@ class WpProfileModal extends Modal {
           .setCta()
           .onClick(() => {
             if (!isValidUrl(this.profileData.endpoint)) {
-              new Notice(t('error_invalidUrl'), ERROR_NOTICE_TIMEOUT);
+              showError(t('error_invalidUrl'));
             } else if (this.profileData.name.length === 0) {
-              new Notice(t('error_noProfileName'), ERROR_NOTICE_TIMEOUT);
+              showError(t('error_noProfileName'));
             } else if (this.profileData.saveUsername && !this.profileData.username) {
-              new Notice(t('error_noUsername'), ERROR_NOTICE_TIMEOUT);
+              showError(t('error_noUsername'));
             } else if (this.profileData.savePassword && !this.profileData.password) {
-              new Notice(t('error_noPassword'), ERROR_NOTICE_TIMEOUT);
+              showError(t('error_noPassword'));
             } else {
               this.onSubmit(this.profileData, this.atIndex);
               this.close();

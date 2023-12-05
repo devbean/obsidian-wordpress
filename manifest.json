@@ -5,5 +5,6 @@
 	"minAppVersion": "0.12.0",
 	"description": "A plugin for publishing Obsidian documents to WordPress.",
 	"author": "devbean",
-	"isDesktopOnly": false
+	"isDesktopOnly": false,
+  "fundingUrl": "https://www.buymeacoffee.com/devbean"
 }

@@ -1,20 +1,27 @@
-import { Modal, Notice, Setting } from 'obsidian';
+import { Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { TranslateKey } from './i18n';
-import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { WpProfile } from './wp-profile';
+import { WordPressAuthParams } from './wp-client';
+import { showError } from './utils';
 
 export function openLoginModal(
   plugin: WordpressPlugin,
-  profile: WpProfile
-): Promise<{ username: string, password: string, loginModal: Modal }> {
+  profile: WpProfile,
+  validateUser: (auth: WordPressAuthParams) => Promise<boolean>,
+): Promise<{ auth: WordPressAuthParams, loginModal: Modal }> {
   return new Promise((resolve, reject) => {
-    const modal = new WpLoginModal(plugin, profile, (username, password, loginModal) => {
-      resolve({
-        username,
-        password,
-        loginModal
-      });
+    const modal = new WpLoginModal(plugin, profile, async (auth, loginModal) => {
+      const validate = await validateUser(auth);
+      if (validate) {
+        resolve({
+          auth,
+          loginModal
+        });
+        modal.close();
+      } else {
+        showError(plugin.i18n.t('error_invalidUser'));
+      }
     });
     modal.open();
   });
@@ -23,12 +30,12 @@ export function openLoginModal(
 /**
  * WordPress login modal with username and password inputs.
  */
-class WpLoginModal extends Modal {
+export class WpLoginModal extends Modal {
 
   constructor(
     private readonly plugin: WordpressPlugin,
     private readonly profile: WpProfile,
-    private readonly onSubmit: (username: string, password: string, modal: Modal) => void
+    private readonly onSubmit: (auth: WordPressAuthParams, modal: Modal) => void
   ) {
     super(plugin.app);
   }
@@ -120,12 +127,12 @@ class WpLoginModal extends Modal {
         .setCta()
         .onClick(() => {
           if (!username) {
-            new Notice(t('error_noUsername'), ERROR_NOTICE_TIMEOUT);
+            showError(t('error_noUsername'));
           } else if (!password) {
-            new Notice(t('error_noPassword'), ERROR_NOTICE_TIMEOUT);
+            showError(t('error_noPassword'));
           }
           if (username && password) {
-            this.onSubmit(username, password, this);
+            this.onSubmit({ username, password }, this);
           }
         })
       );

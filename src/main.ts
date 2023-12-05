@@ -1,16 +1,16 @@
-import { Notice, Plugin } from 'obsidian';
+import { Plugin } from 'obsidian';
 import { WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
 import { I18n } from './i18n';
-import { ERROR_NOTICE_TIMEOUT, EventType, WP_OAUTH2_REDIRECT_URI, WP_OAUTH2_URL_ACTION } from './consts';
+import { EventType, WP_OAUTH2_REDIRECT_URI, WP_OAUTH2_URL_ACTION } from './consts';
 import { OAuth2Client } from './oauth2-client';
-import { CommentStatus, PostStatus } from './wp-api';
+import { CommentStatus, PostStatus, PostType } from './wp-api';
 import { openProfileChooserModal } from './wp-profile-chooser-modal';
 import { AppState } from './app-state';
 import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
 import { PassCrypto } from './pass-crypto';
-import { doClientPublish, setupMarkdownParser } from './utils';
+import { doClientPublish, setupMarkdownParser, showError } from './utils';
 import { cloneDeep } from 'lodash-es';
 
 export default class WordpressPlugin extends Plugin {
@@ -53,13 +53,14 @@ export default class WordpressPlugin extends Plugin {
             status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
             commentStatus: this.#settings?.defaultCommentStatus ?? CommentStatus.Open,
             categories: defaultProfile.lastSelectedCategories ?? [ 1 ],
+            postType: PostType.Post,
             tags: [],
             title: '',
             content: ''
           };
           doClientPublish(this, defaultProfile, params);
         } else {
-          new Notice(this.#i18n?.t('error_noDefaultProfile') ?? 'No default profile found.', ERROR_NOTICE_TIMEOUT);
+          showError(this.#i18n?.t('error_noDefaultProfile') ?? 'No default profile found.');
         }
       }
     });
@@ -138,7 +139,7 @@ export default class WordpressPlugin extends Plugin {
       const profile = await openProfileChooserModal(this);
       doClientPublish(this, profile);
     } else {
-      new Notice(this.i18n.t('error_noProfile'), ERROR_NOTICE_TIMEOUT);
+      showError(this.i18n.t('error_noProfile'));
     }
   }
 
@@ -147,10 +148,10 @@ export default class WordpressPlugin extends Plugin {
       if (e.action === WP_OAUTH2_URL_ACTION) {
         if (e.state) {
           if (e.error) {
-            new Notice(this.i18n.t('error_wpComAuthFailed', {
+            showError(this.i18n.t('error_wpComAuthFailed', {
               error: e.error,
               desc: e.error_description.replace(/\+/g,' ')
-            }), ERROR_NOTICE_TIMEOUT);
+            }));
             AppState.getInstance().events.trigger(EventType.OAUTH2_TOKEN_GOT, undefined);
           } else if (e.code) {
             const token = await OAuth2Client.getWpOAuth2Client(this).getToken({

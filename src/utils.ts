@@ -3,7 +3,7 @@ import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
 import { WordpressPluginSettings } from './plugin-settings';
 import MarkdownItMathJax3Plugin from './markdown-it-mathjax3-plugin';
-import { WordPressPostParams } from './wp-client';
+import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
 import WordpressPlugin from './main';
 import { isString } from 'lodash-es';
@@ -86,11 +86,30 @@ export function doClientPublish(
     const noSuchProfileMessage = plugin.i18n.t('error_noSuchProfile', {
       profileName: String(profileOrName)
     });
-    new Notice(noSuchProfileMessage, ERROR_NOTICE_TIMEOUT);
+    showError(noSuchProfileMessage);
     throw new Error(noSuchProfileMessage);
   }
 }
 
 export function getBoundary(): string {
   return `----obsidianBoundary${format(new Date(), 'yyyyMMddHHmmss')}`;
+}
+
+export function showError<T>(error: unknown): WordPressClientResult<T> {
+  let errorMessage: string;
+  if (isString(error)) {
+    errorMessage = error;
+  } else if (error instanceof Error) {
+    errorMessage = error.message;
+  } else {
+    errorMessage = (error as SafeAny).toString();
+  }
+  new Notice(errorMessage, ERROR_NOTICE_TIMEOUT);
+  return {
+    code: WordPressClientReturnCode.Error as const,
+    error: {
+      code: WordPressClientReturnCode.Error,
+      message: errorMessage,
+    }
+  };
 }

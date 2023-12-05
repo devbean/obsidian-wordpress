@@ -8,7 +8,7 @@ import {
 } from './wp-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
-import { Term } from './wp-api';
+import { PostType, Term } from './wp-api';
 import { RestClient } from './rest-client';
 import { isArray, isFunction, isNumber, isString, template } from 'lodash-es';
 import { SafeAny } from './utils';
@@ -32,11 +32,11 @@ export class WpRestClient extends AbstractWordPressClient {
     });
   }
 
-  protected openLoginModal(): boolean {
-    if (this.context.openLoginModal !== undefined) {
-      return this.context.openLoginModal;
+  protected needLogin(): boolean {
+    if (this.context.needLoginModal !== undefined) {
+      return this.context.needLoginModal;
     }
-    return  super.openLoginModal();
+    return  super.needLogin();
   }
 
   async publish(
@@ -84,25 +84,6 @@ export class WpRestClient extends AbstractWordPressClient {
         response: resp
       };
     }
-    if (resp.id || resp.ID) {
-      return {
-        code: WordPressClientReturnCode.OK,
-        data: {
-          postId: postParams.postId ?? (resp.id ?? resp.ID),
-          categories: postParams.categories ?? resp.categories
-        },
-        response: resp
-      };
-    } else {
-      return {
-        code: WordPressClientReturnCode.Error,
-        error: {
-          code: WordPressClientReturnCode.ServerInternalError,
-          message: this.plugin.i18n.t('error_cannotParseResponse')
-        },
-        response: resp
-      };
-    }
   }
 
   async getCategories(certificate: WordPressAuthParams): Promise<Term[]> {
@@ -112,6 +93,13 @@ export class WpRestClient extends AbstractWordPressClient {
         headers: this.context.getHeaders(certificate)
       });
     return this.context.responseParser.toTerms(data);
+  }
+
+  async getPostTypes(certificate: WordPressAuthParams): Promise<PostType[]> {
+    return [
+      PostType.Post,
+      PostType.Page,
+    ];
   }
 
   async validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult<boolean>> {
@@ -246,7 +234,7 @@ interface WpRestClientContext {
     uploadFile: string | UrlGetter;
   }>;
 
-  openLoginModal?: boolean;
+  needLoginModal?: boolean;
 
   formItemNameMapper?: FormItemNameMapper;
 
@@ -312,7 +300,7 @@ export class WpRestClientAppPasswordContext extends WpRestClientCommonContext {
 export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
   name = 'WpRestClientWpComOAuth2Context';
 
-  openLoginModal = false;
+  needLoginModal = false;
 
   endpoints = {
     base: 'https://public-api.wordpress.com',

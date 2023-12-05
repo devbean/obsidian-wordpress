@@ -1,6 +1,5 @@
-import { Modal, Notice, TFile } from 'obsidian';
+import { MarkdownFileInfo, Notice, TFile } from 'obsidian';
 import WordpressPlugin from './main';
-import { openLoginModal } from './wp-login-modal';
 import {
   WordPressAuthParams,
   WordPressClient,
@@ -8,22 +7,21 @@ import {
   WordPressClientReturnCode,
   WordPressMediaUploadResult,
   WordPressPostParams,
-  WordPressPublishParams,
   WordPressPublishResult
 } from './wp-client';
-import { openPublishModal } from './wp-publish-modal';
-import { Term } from './wp-api';
+import { WpPublishModal } from './wp-publish-modal';
+import { PostType, Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT, WP_DEFAULT_PROFILE_NAME } from './consts';
 import matter from 'gray-matter';
 import yaml from 'js-yaml';
-import { doClientPublish, isPromiseFulfilledResult, isValidUrl, openWithBrowser, SafeAny } from './utils';
+import { isPromiseFulfilledResult, isValidUrl, openWithBrowser, SafeAny, showError } from './utils';
 import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
 import { ConfirmCode, openConfirmModal } from './confirm-modal';
-import { isNil } from 'lodash-es';
 import fileTypeChecker from 'file-type-checker';
-import { Media } from './types';
+import { MatterData, Media } from './types';
 import { openPostPublishedModal } from './post-published-modal';
+import { openLoginModal } from './wp-login-modal';
 
 
 const matterOptions = {
@@ -62,6 +60,10 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     certificate: WordPressAuthParams
   ): Promise<Term[]>;
 
+  abstract getPostTypes(
+    certificate: WordPressAuthParams
+  ): Promise<PostType[]>;
+
   abstract validateUser(
     certificate: WordPressAuthParams
   ): Promise<WordPressClientResult<boolean>>;
@@ -76,239 +78,271 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     certificate: WordPressAuthParams
   ): Promise<WordPressClientResult<WordPressMediaUploadResult>>;
 
-  protected openLoginModal(): boolean {
+  protected needLogin(): boolean {
     return true;
   }
 
-  publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult<WordPressPublishResult>> {
-    return new Promise<WordPressClientResult<WordPressPublishResult>>((resolve, reject) => {
-      if (!this.profile.endpoint || this.profile.endpoint.length === 0) {
-        new Notice(this.plugin.i18n.t('error_noEndpoint'), ERROR_NOTICE_TIMEOUT);
-        reject({
-          code: WordPressClientReturnCode.Error,
-          data: new Error('No endpoint set.')
-        });
+  private async getAuth(): Promise<WordPressAuthParams> {
+    let auth: WordPressAuthParams = {
+      username: null,
+      password: null
+    };
+    try {
+      if (this.needLogin()) {
+        // Check if there's saved username and password
+        if (this.profile.username && this.profile.password) {
+          auth = {
+            username: this.profile.username,
+            password: this.profile.password
+          };
+          const authResult = await this.validateUser(auth);
+          if (authResult.code !== WordPressClientReturnCode.OK) {
+            throw new Error(this.plugin.i18n.t('error_invalidUser'));
+          }
+        }
       }
-
-      const { activeEditor } = this.plugin.app.workspace;
-      if (activeEditor && activeEditor.file) {
-        (async () => {
-          let username = null;
-          let password = null;
-          let loginModal;
-          if (this.openLoginModal()) {
-            if (this.profile.username && this.profile.password) {
-              // saved username and password found
-              username = this.profile.username;
-              password = this.profile.password;
-            } else {
-              const loginModalReturns = await openLoginModal(this.plugin, this.profile);
-              username = loginModalReturns.username;
-              password = loginModalReturns.password;
-              loginModal = loginModalReturns.loginModal;
-            }
-          }
-          // start publishing...
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const noteTitle = activeEditor.file!.basename;
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const rawContent = await this.plugin.app.vault.read(activeEditor.file!);
-          const { content, data: matterData } = matter(rawContent, matterOptions);
-
-          if (!isNil(matterData.profileName)
-            && matterData.profileName.length > 0
-            && matterData.profileName !== this.profile.name
-          ) {
-            const confirm = await openConfirmModal({
-              message: this.plugin.i18n.t('error_profileNotMatch'),
-              cancelText: this.plugin.i18n.t('profileNotMatch_useOld', {
-                profileName: matterData.profileName
-              }),
-              confirmText: this.plugin.i18n.t('profileNotMatch_useNew', {
-                profileName: this.profile.name
-              })
-            }, this.plugin);
-            if (confirm.code === ConfirmCode.Cancel) {
-              doClientPublish(this.plugin, matterData.profileName);
-              return Promise.resolve();
-            } else {
-              delete matterData.postId;
-              matterData.categories = this.profile.lastSelectedCategories ?? [ 1 ];
-            }
-          }
-          const validateUserResult = await this.validateUser({ username, password });
-          if (validateUserResult.code === WordPressClientReturnCode.OK) {
-            if (defaultPostParams) {
-              const params = this.readFromFrontMatter(noteTitle, matterData, defaultPostParams);
-              params.content = content;
-              const result = await this.doPublish({
-                username,
-                password,
-                postParams: params,
-                matterData
-              }, loginModal);
-              resolve(result);
-            } else {
-              const categories = await this.getCategories({
-                username,
-                password
-              });
-              const selectedCategories = matterData.categories as number[]
-                ?? this.profile.lastSelectedCategories
-                ?? [ 1 ];
-              const { postParams, publishModal } = await openPublishModal(
-                this.plugin, categories, selectedCategories
-              );
-              const params = this.readFromFrontMatter(noteTitle, matterData, postParams);
-              params.content = content;
-              const result = await this.doPublish({
-                username,
-                password,
-                postParams: params,
-                matterData
-              }, loginModal, publishModal);
-              resolve(result);
-            }
-          } else {
-            const invalidUsernameOrPassword = this.plugin.i18n.t('error_invalidUser');
-            new Notice(invalidUsernameOrPassword, ERROR_NOTICE_TIMEOUT);
-          }
-        })();
-      } else {
-        const error = 'There is no editor or file found. Nothing will be published.';
-        console.warn(error);
-        reject({
-          code: WordPressClientReturnCode.Error,
-          data: new Error(error)
-        });
-      }
-    })
-      .catch(error => {
-        console.log(error);
-        return error;
+    } catch (error) {
+      showError(error);
+      const result = await openLoginModal(this.plugin, this.profile, async (auth) => {
+        const authResult = await this.validateUser(auth);
+        return authResult.code === WordPressClientReturnCode.OK;
       });
+      auth = result.auth;
+    }
+    return auth;
   }
 
-  private async doPublish(
-    publishParams: WordPressPublishParams,
-    loginModal?: Modal,
-    publishModal?: Modal
-  ): Promise<WordPressClientResult<WordPressPublishResult>> {
-    const { username, password, postParams, matterData } = publishParams;
-    try {
-      const tagTerms = await this.getTags(postParams.tags, {
-        username,
-        password
-      });
-      postParams.tags = tagTerms.map(term => term.id);
-
-      const activeFile = this.plugin.app.workspace.getActiveFile()
-      if (activeFile === null) {
-        new Notice(this.plugin.i18n.t('error_noActiveFile'), ERROR_NOTICE_TIMEOUT);
+  private async checkExistingProfile(matterData: MatterData) {
+    const { profileName } = matterData;
+    const isProfileNameMismatch = profileName && profileName !== this.profile.name;
+    if (isProfileNameMismatch) {
+      const confirm = await openConfirmModal({
+        message: this.plugin.i18n.t('error_profileNotMatch'),
+        cancelText: this.plugin.i18n.t('profileNotMatch_useOld', {
+          profileName: matterData.profileName
+        }),
+        confirmText: this.plugin.i18n.t('profileNotMatch_useNew', {
+          profileName: this.profile.name
+        })
+      }, this.plugin);
+      if (confirm.code !== ConfirmCode.Cancel) {
+        delete matterData.postId;
+        matterData.categories = this.profile.lastSelectedCategories ?? [ 1 ];
       }
-      // console.log(postParams.content);
-      const { activeEditor } = this.plugin.app.workspace;
-      if (activeEditor && activeEditor.editor) {
-        const images = getImages(postParams.content);
-        for (const img of images) {
-          // console.log(img);
-          if (!img.srcIsUrl) {
-            const splitFile = img.src.split('.');
-            const ext = splitFile.pop();
-            const fileName = splitFile.join('.');
-            // @ts-expect-error
-            let filePath = (await this.plugin.app.vault.getAvailablePathForAttachments(
-              fileName,
-              ext,
-              activeFile
-            )) as string;
-            const pathRegex = /(.*) \d+\.(.*)/;
-            filePath = filePath.replace(pathRegex, '$1.$2');
-            const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
-            if (imgFile instanceof TFile) {
-              const content = await this.plugin.app.vault.readBinary(imgFile);
-              const fileType = fileTypeChecker.detectFile(content);
-              const result = await this.uploadMedia({
-                mimeType: fileType?.mimeType ?? 'application/octet-stream',
-                fileName: imgFile.name,
-                content: content
-              }, {
-                username,
-                password
+    }
+  }
+
+  private async tryToPublish(params: {
+    activeEditor: MarkdownFileInfo | null,
+    postParams: WordPressPostParams,
+    auth: WordPressAuthParams,
+    matterData: MatterData,
+  }): Promise<WordPressClientResult<WordPressPublishResult>> {
+    const { activeEditor, postParams, auth, matterData } = params;
+    const tagTerms = await this.getTags(postParams.tags, auth);
+    postParams.tags = tagTerms.map(term => term.id);
+    await this.updatePostImages({
+      activeEditor,
+      auth,
+      postParams
+    });
+    const result = await this.publish(
+      postParams.title ?? 'A post from Obsidian!',
+      AppState.getInstance().markdownParser.render(postParams.content) ?? '',
+      postParams,
+      auth);
+    if (result.code === WordPressClientReturnCode.Error) {
+      throw new Error(this.plugin.i18n.t('error_publishFailed', {
+        code: result.error.code as string,
+        message: result.error.message
+      }));
+    } else {
+      new Notice(this.plugin.i18n.t('message_publishSuccessfully'));
+      // post id will be returned if creating, true if editing
+      const postId = result.data.postId;
+      if (postId) {
+        // save post id to front-matter
+        matterData.profileName = this.profile.name;
+        matterData.postId = postId;
+        matterData.postType = postParams.postType;
+        if (postParams.postType !== PostType.Page) {
+          matterData.categories = postParams.categories;
+        } else {
+          delete matterData.categories;
+          delete matterData.tags;
+        }
+        const modified = matter.stringify(postParams.content, matterData, matterOptions);
+        this.updateFrontMatter(modified);
+
+        if (this.plugin.settings.rememberLastSelectedCategories) {
+          this.profile.lastSelectedCategories = (result.data as SafeAny).categories;
+          await this.plugin.saveSettings();
+        }
+
+        if (this.plugin.settings.showWordPressEditConfirm) {
+          openPostPublishedModal(this.plugin)
+            .then(() => {
+              openWithBrowser(`${this.profile.endpoint}/wp-admin/post.php`, {
+                action: 'edit',
+                post: postId
               });
-              if (result.code === WordPressClientReturnCode.OK) {
-                if (this.plugin.settings.replaceMediaLinks) {
-                  postParams.content = postParams.content.replace(img.original, `![${imgFile.name}](${result.data.url})`);
-                }
+            });
+        }
+      }
+    }
+    return result;
+  }
+
+  private async updatePostImages(params: {
+    activeEditor: MarkdownFileInfo | null,
+    postParams: WordPressPostParams,
+    auth: WordPressAuthParams,
+  }): Promise<void> {
+    const { activeEditor, postParams, auth } = params;
+
+    const activeFile = this.plugin.app.workspace.getActiveFile();
+    if (activeFile === null) {
+      throw new Error(this.plugin.i18n.t('error_noActiveFile'));
+    }
+    if (activeEditor && activeEditor.editor) {
+      // process images
+      const images = getImages(postParams.content);
+      for (const img of images) {
+        if (!img.srcIsUrl) {
+          const splitFile = img.src.split('.');
+          const ext = splitFile.pop();
+          const fileName = splitFile.join('.');
+          // @ts-expect-error
+          let filePath = (await this.plugin.app.vault.getAvailablePathForAttachments(
+            fileName,
+            ext,
+            activeFile
+          )) as string;
+          const pathRegex = /(.*) \d+\.(.*)/;
+          filePath = filePath.replace(pathRegex, '$1.$2');
+          const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+          if (imgFile instanceof TFile) {
+            const content = await this.plugin.app.vault.readBinary(imgFile);
+            const fileType = fileTypeChecker.detectFile(content);
+            const result = await this.uploadMedia({
+              mimeType: fileType?.mimeType ?? 'application/octet-stream',
+              fileName: imgFile.name,
+              content: content
+            }, auth);
+            if (result.code === WordPressClientReturnCode.OK) {
+              if (this.plugin.settings.replaceMediaLinks) {
+                postParams.content = postParams.content.replace(img.original, `![${imgFile.name}](${result.data.url})`);
+              }
+            } else {
+              if (result.error.code === WordPressClientReturnCode.ServerInternalError) {
+                new Notice(result.error.message, ERROR_NOTICE_TIMEOUT);
               } else {
-                if (result.error.code === WordPressClientReturnCode.ServerInternalError) {
-                  new Notice(result.error.message, ERROR_NOTICE_TIMEOUT);
-                } else {
-                  new Notice(this.plugin.i18n.t('error_mediaUploadFailed', {
-                    name: imgFile.name,
-                  }), ERROR_NOTICE_TIMEOUT);
-                }
+                new Notice(this.plugin.i18n.t('error_mediaUploadFailed', {
+                  name: imgFile.name,
+                }), ERROR_NOTICE_TIMEOUT);
               }
             }
-            activeEditor.editor.setValue(postParams.content);
-          } else {
-            // src is a url, skip uploading
           }
+          activeEditor.editor.setValue(postParams.content);
+        } else {
+          // src is a url, skip uploading
         }
       }
-      // console.log(postParams.content);
-      // console.log(AppState.getInstance().markdownParser.render(postParams.content));
-      const result = await this.publish(
-        postParams.title ?? 'A post from Obsidian!',
-        AppState.getInstance().markdownParser.render(postParams.content) ?? '',
-        postParams,
-        {
-          username,
-          password
-        });
-      console.log('doPublish', result);
-      if (result.code === WordPressClientReturnCode.Error) {
-        new Notice(this.plugin.i18n.t('error_publishFailed', {
-          code: result.error.code as string,
-          message: result.error.message
-        }), ERROR_NOTICE_TIMEOUT);
-      } else {
-        new Notice(this.plugin.i18n.t('message_publishSuccessfully'));
-        publishModal?.close();
-        loginModal?.close();
-
-        // post id will be returned if creating, true if editing
-        const postId = result.data.postId;
-        if (postId) {
-          // save post id to front-matter
-          matterData.profileName = this.profile.name;
-          matterData.postId = postId;
-          matterData.categories = postParams.categories;
-          const modified = matter.stringify(postParams.content, matterData, matterOptions);
-          this.updateFrontMatter(modified);
-
-          if (this.plugin.settings.rememberLastSelectedCategories) {
-            this.profile.lastSelectedCategories = (result.data as SafeAny).categories;
-            await this.plugin.saveSettings();
-          }
-
-          if (this.plugin.settings.showWordPressEditConfirm) {
-            openPostPublishedModal(this.plugin)
-              .then(() => {
-                openWithBrowser(`${this.profile.endpoint}/wp-admin/post.php`, {
-                  action: 'edit',
-                  post: postId
-                });
-              });
-          }
-        }
-      }
-      return result;
-    } catch (error) {
-      console.log('Reading file content for \'doPublish\' failed: ', error);
-      new Notice((error as SafeAny).toString(), ERROR_NOTICE_TIMEOUT);
     }
-    return Promise.reject('You should not be here!');
+  }
+
+  async publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult<WordPressPublishResult>> {
+    try {
+      if (!this.profile.endpoint || this.profile.endpoint.length === 0) {
+        throw new Error(this.plugin.i18n.t('error_noEndpoint'));
+      }
+      const { activeEditor } = this.plugin.app.workspace;
+      if (activeEditor && activeEditor.file) {
+        const activeFile = this.plugin.app.workspace.getActiveFile()
+        if (activeFile === null) {
+          throw new Error(this.plugin.i18n.t('error_noActiveFile'));
+        }
+      } else {
+        throw new Error(this.plugin.i18n.t('error_noEditorOrFile'));
+      }
+
+      // get auth info
+      const auth = await this.getAuth();
+
+      // read note title, content and matter data
+      const title = activeEditor.file.basename;
+      const raw = await this.plugin.app.vault.read(activeEditor.file);
+      const { content, data: matterData } = matter(raw, matterOptions);
+
+      // check if profile selected is matched to the one in note property,
+      // if not, ask whether to update or not
+      await this.checkExistingProfile(matterData);
+
+      // now we're preparing the publishing data
+      let postParams: WordPressPostParams;
+      let result: WordPressClientResult<WordPressPublishResult> | undefined;
+      if (defaultPostParams) {
+        postParams = this.readFromFrontMatter(title, matterData, defaultPostParams);
+        postParams.content = content;
+        result = await this.tryToPublish({
+          activeEditor,
+          auth,
+          postParams,
+          matterData
+        });
+      } else {
+        const categories = await this.getCategories(auth);
+        const selectedCategories = matterData.categories as number[]
+          ?? this.profile.lastSelectedCategories
+          ?? [ 1 ];
+        const postTypes = await this.getPostTypes(auth);
+        if (postTypes.length === 0) {
+          postTypes.push(PostType.Post);
+        }
+        const selectedPostType = matterData.postType ?? PostType.Post;
+        result = await new Promise(resolve => {
+          const publishModal = new WpPublishModal(
+            this.plugin,
+            { items: categories, selected: selectedCategories },
+            { items: postTypes, selected: selectedPostType },
+            async (postParams, matterData) => {
+              postParams = this.readFromFrontMatter(title, matterData, postParams);
+              postParams.content = content;
+              try {
+                const r = await this.tryToPublish({
+                  activeEditor,
+                  auth,
+                  postParams,
+                  matterData
+                });
+                if (r.code === WordPressClientReturnCode.OK) {
+                  publishModal.close();
+                  resolve(r);
+                }
+              } catch (error) {
+                if (error instanceof Error) {
+                  return showError(error);
+                } else {
+                  throw error;
+                }
+              }
+            },
+            matterData);
+          publishModal.open();
+        });
+      }
+      if (result) {
+        return result;
+      } else {
+        throw new Error(this.plugin.i18n.t("message_publishFailed"));
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return showError(error);
+      } else {
+        throw error;
+      }
+    }
   }
 
   private async getTags(tags: string[], certificate: WordPressAuthParams): Promise<Term[]> {
@@ -325,7 +359,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
 
   private readFromFrontMatter(
     noteTitle: string,
-    matterData: { [p: string]: SafeAny },
+    matterData: MatterData,
     params: WordPressPostParams
   ): WordPressPostParams {
     const postParams = { ...params };
@@ -340,8 +374,17 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     if (matterData.categories) {
       postParams.categories = matterData.categories as number[] ?? this.profile.lastSelectedCategories;
     }
-    if (matterData.tags) {
-      postParams.tags = matterData.tags as string[];
+    if (matterData.postType) {
+      postParams.postType = matterData.postType;
+    } else {
+      // if there is no post type in matter-data, assign it as 'post'
+      postParams.postType = PostType.Post;
+    }
+    if (postParams.postType === PostType.Post) {
+      // only 'post' has tags, 'page' must not have any tag
+      if (matterData.tags) {
+        postParams.tags = matterData.tags as string[];
+      }
     }
     return postParams;
   }
@@ -372,6 +415,8 @@ interface Image {
   srcIsUrl: boolean;
   startIndex: number;
   endIndex: number;
+  file?: TFile;
+  content?: ArrayBuffer;
 }
 
 function getImages(content: string): Image[] {
