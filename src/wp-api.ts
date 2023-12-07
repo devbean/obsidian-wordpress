@@ -9,10 +9,11 @@ export const enum CommentStatus {
   Closed = 'closed'
 }
 
-export const enum PostType {
+export const enum PostTypeConst {
   Post = 'post',
   Page = 'page',
 }
+export type PostType = string;
 
 export interface Term {
   id: string;

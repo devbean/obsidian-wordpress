@@ -9,7 +9,7 @@ import {
 } from './wp-client';
 import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
-import { PostType, Term } from './wp-api';
+import { PostType, PostTypeConst, Term } from './wp-api';
 import { SafeAny, showError } from './utils';
 import { WpProfile } from './wp-profile';
 import { Media } from './types';
@@ -46,7 +46,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     certificate: WordPressAuthParams
   ): Promise<WordPressClientResult<WordPressPublishResult>> {
     let publishContent;
-    if (postParams.postType === PostType.Page) {
+    if (postParams.postType === PostTypeConst.Page) {
       publishContent = {
         post_type: postParams.postType,
         post_status: postParams.status,
@@ -126,21 +126,17 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
   }
 
   async getPostTypes(certificate: WordPressAuthParams): Promise<PostType[]> {
-    // const response = await this.client.methodCall('wp.getPostTypes', [
-    //   0,
-    //   certificate.username,
-    //   certificate.password,
-    // ]);
-    // if (isFaultResponse(response)) {
-    //   const fault = `${response.faultCode}: ${response.faultString}`;
-    //   showError(fault);
-    //   throw new Error(fault);
-    // }
-    // return Object.keys(response as SafeAny) ?? [];
-    return [
-      PostType.Post,
-      PostType.Page,
-    ];
+    const response = await this.client.methodCall('wp.getPostTypes', [
+      0,
+      certificate.username,
+      certificate.password,
+    ]);
+    if (isFaultResponse(response)) {
+      const fault = `${response.faultCode}: ${response.faultString}`;
+      showError(fault);
+      throw new Error(fault);
+    }
+    return Object.keys(response as SafeAny) ?? [];
   }
 
   async validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult<boolean>> {

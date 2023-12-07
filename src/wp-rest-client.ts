@@ -10,11 +10,23 @@ import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
 import { PostType, Term } from './wp-api';
 import { RestClient } from './rest-client';
-import { isArray, isFunction, isNumber, isString, template } from 'lodash-es';
+import { isArray, isFunction, isNumber, isObject, isString, template } from 'lodash-es';
 import { SafeAny } from './utils';
 import { WpProfile } from './wp-profile';
 import { FormItemNameMapper, FormItems, Media } from './types';
 
+
+interface WpRestEndpoint {
+  base: string | UrlGetter;
+  newPost: string | UrlGetter;
+  editPost: string | UrlGetter;
+  getCategories: string | UrlGetter;
+  newTag: string | UrlGetter;
+  getTag: string | UrlGetter;
+  validateUser: string | UrlGetter;
+  uploadFile: string | UrlGetter;
+  getPostTypes: string | UrlGetter;
+}
 
 export class WpRestClient extends AbstractWordPressClient {
 
@@ -96,10 +108,12 @@ export class WpRestClient extends AbstractWordPressClient {
   }
 
   async getPostTypes(certificate: WordPressAuthParams): Promise<PostType[]> {
-    return [
-      PostType.Post,
-      PostType.Page,
-    ];
+    const data: SafeAny = await this.client.httpGet(
+      getUrl(this.context.endpoints?.getPostTypes, 'wp-json/wp/v2/types'),
+      {
+        headers: this.context.getHeaders(certificate)
+      });
+    return this.context.responseParser.toPostTypes(data);
   }
 
   async validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult<boolean>> {
@@ -221,18 +235,10 @@ interface WpRestClientContext {
     toWordPressMediaUploadResult: (response: SafeAny) => WordPressMediaUploadResult;
     toTerms: (response: SafeAny) => Term[];
     toTerm: (response: SafeAny) => Term;
+    toPostTypes: (response: SafeAny) => PostType[];
   };
 
-  endpoints?: Partial<{
-    base: string | UrlGetter;
-    newPost: string | UrlGetter;
-    editPost: string | UrlGetter;
-    getCategories: string | UrlGetter;
-    newTag: string | UrlGetter;
-    getTag: string | UrlGetter;
-    validateUser: string | UrlGetter;
-    uploadFile: string | UrlGetter;
-  }>;
+  endpoints?: Partial<WpRestEndpoint>;
 
   needLoginModal?: boolean;
 
@@ -275,7 +281,13 @@ class WpRestClientCommonContext implements WpRestClientContext {
     toTerm: (response: SafeAny): Term => ({
       ...response,
       id: response.id
-    })
+    }),
+    toPostTypes: (response: SafeAny): PostType[] => {
+      if (isObject(response)) {
+        return Object.keys(response);
+      }
+      return [];
+    }
   };
 }
 
@@ -302,15 +314,16 @@ export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
 
   needLoginModal = false;
 
-  endpoints = {
+  endpoints: WpRestEndpoint = {
     base: 'https://public-api.wordpress.com',
-    newPost: () => `/rest/v1/sites/${this.site}/posts/new`,
-    editPost: () => `/rest/v1/sites/${this.site}/posts/<%= postId %>`,
-    getCategories: () => `/rest/v1/sites/${this.site}/categories`,
-    newTag: () => `/rest/v1/sites/${this.site}/tags/new`,
-    getTag: () => `/rest/v1/sites/${this.site}/tags?number=1&search=<%= name %>`,
-    validateUser: () => `/rest/v1/sites/${this.site}/posts?number=1`,
-    uploadFile: () => `/rest/v1/sites/${this.site}/media/new`
+    newPost: () => `/rest/v1.1/sites/${this.site}/posts/new`,
+    editPost: () => `/rest/v1.1/sites/${this.site}/posts/<%= postId %>`,
+    getCategories: () => `/rest/v1.1/sites/${this.site}/categories`,
+    newTag: () => `/rest/v1.1/sites/${this.site}/tags/new`,
+    getTag: () => `/rest/v1.1/sites/${this.site}/tags?number=1&search=<%= name %>`,
+    validateUser: () => `/rest/v1.1/sites/${this.site}/posts?number=1`,
+    uploadFile: () => `/rest/v1.1/sites/${this.site}/media/new`,
+    getPostTypes: () => `/rest/v1.1/sites/${this.site}/post-types`,
   };
 
   constructor(
@@ -368,6 +381,14 @@ export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
     toTerm: (response: SafeAny): Term => ({
       ...response,
       id: response.ID
-    })
+    }),
+    toPostTypes: (response: SafeAny): PostType[] => {
+      if (isNumber(response.found)) {
+        return response
+          .post_types
+          .map((it: { name: string }) => (it.name));
+      }
+      return [];
+    }
   };
 }

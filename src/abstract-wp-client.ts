@@ -10,11 +10,17 @@ import {
   WordPressPublishResult
 } from './wp-client';
 import { WpPublishModal } from './wp-publish-modal';
-import { PostType, Term } from './wp-api';
+import { PostType, PostTypeConst, Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT, WP_DEFAULT_PROFILE_NAME } from './consts';
 import matter from 'gray-matter';
 import yaml from 'js-yaml';
-import { isPromiseFulfilledResult, isValidUrl, openWithBrowser, SafeAny, showError } from './utils';
+import {
+  isPromiseFulfilledResult,
+  isValidUrl,
+  openWithBrowser,
+  SafeAny,
+  showError,
+} from './utils';
 import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
 import { ConfirmCode, openConfirmModal } from './confirm-modal';
@@ -165,7 +171,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         matterData.profileName = this.profile.name;
         matterData.postId = postId;
         matterData.postType = postParams.postType;
-        if (postParams.postType !== PostType.Page) {
+        if (postParams.postType === PostTypeConst.Post) {
           matterData.categories = postParams.categories;
         } else {
           delete matterData.categories;
@@ -297,9 +303,9 @@ export abstract class AbstractWordPressClient implements WordPressClient {
           ?? [ 1 ];
         const postTypes = await this.getPostTypes(auth);
         if (postTypes.length === 0) {
-          postTypes.push(PostType.Post);
+          postTypes.push(PostTypeConst.Post);
         }
-        const selectedPostType = matterData.postType ?? PostType.Post;
+        const selectedPostType = matterData.postType ?? PostTypeConst.Post;
         result = await new Promise(resolve => {
           const publishModal = new WpPublishModal(
             this.plugin,
@@ -371,17 +377,17 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       postParams.postId = matterData.postId;
     }
     postParams.profileName = matterData.profileName ?? WP_DEFAULT_PROFILE_NAME;
-    if (matterData.categories) {
-      postParams.categories = matterData.categories as number[] ?? this.profile.lastSelectedCategories;
-    }
     if (matterData.postType) {
       postParams.postType = matterData.postType;
     } else {
       // if there is no post type in matter-data, assign it as 'post'
-      postParams.postType = PostType.Post;
+      postParams.postType = PostTypeConst.Post;
     }
-    if (postParams.postType === PostType.Post) {
-      // only 'post' has tags, 'page' must not have any tag
+    if (postParams.postType === PostTypeConst.Post) {
+      // only 'post' supports categories and tags
+      if (matterData.categories) {
+        postParams.categories = matterData.categories as number[] ?? this.profile.lastSelectedCategories;
+      }
       if (matterData.tags) {
         postParams.tags = matterData.tags as string[];
       }

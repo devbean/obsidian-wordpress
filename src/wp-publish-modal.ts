@@ -1,7 +1,7 @@
 import { Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { WordPressPostParams } from './wp-client';
-import { CommentStatus, PostStatus, PostType, Term } from './wp-api';
+import { CommentStatus, PostStatus, PostType, PostTypeConst, Term } from './wp-api';
 import { toNumber } from 'lodash-es';
 import { TranslateKey } from './i18n';
 import { MatterData } from './types';
@@ -120,7 +120,7 @@ export class WpPublishModal extends Modal {
         .setCta()
         .onClick(() => {
           if (this.matterData) {
-            if (this.matterData.postType === PostType.Page && (this.matterData.tags || this.matterData.categories)) {
+            if (this.matterData.postType !== PostTypeConst.Post && (this.matterData.tags || this.matterData.categories)) {
               openConfirmModal({
                 message: t('publishModal_wrongMatterDataForPage')
               }, this.plugin)

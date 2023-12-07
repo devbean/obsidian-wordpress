@@ -284,7 +284,7 @@ class WpProfileModal extends Modal {
     AppState.getInstance().codeVerifier = generateCodeVerifier();
     await OAuth2Client.getWpOAuth2Client(this.plugin).getAuthorizeCode({
       redirectUri: WP_OAUTH2_REDIRECT_URI,
-      scope: [ 'posts', 'taxonomy', 'media' ],
+      scope: [ 'posts', 'taxonomy', 'media', 'sites' ],
       blog: this.profileData.endpoint,
       codeVerifier: AppState.getInstance().codeVerifier
     });

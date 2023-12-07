@@ -5,7 +5,7 @@ import { WordPressPostParams } from './wp-client';
 import { I18n } from './i18n';
 import { EventType, WP_OAUTH2_REDIRECT_URI, WP_OAUTH2_URL_ACTION } from './consts';
 import { OAuth2Client } from './oauth2-client';
-import { CommentStatus, PostStatus, PostType } from './wp-api';
+import { CommentStatus, PostStatus, PostTypeConst } from './wp-api';
 import { openProfileChooserModal } from './wp-profile-chooser-modal';
 import { AppState } from './app-state';
 import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
@@ -53,7 +53,7 @@ export default class WordpressPlugin extends Plugin {
             status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
             commentStatus: this.#settings?.defaultCommentStatus ?? CommentStatus.Open,
             categories: defaultProfile.lastSelectedCategories ?? [ 1 ],
-            postType: PostType.Post,
+            postType: PostTypeConst.Post,
             tags: [],
             title: '',
             content: ''
