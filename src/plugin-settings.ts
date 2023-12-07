@@ -96,6 +96,7 @@ export async function upgradeSettings(
         showRibbonIcon: existingSettings.showRibbonIcon,
         defaultPostStatus: existingSettings.defaultPostStatus,
         defaultCommentStatus: existingSettings.defaultCommentStatus,
+        defaultPostType: 'post',
         rememberLastSelectedCategories: existingSettings.rememberLastSelectedCategories,
         showWordPressEditConfirm: existingSettings.showWordPressEditConfirm,
         mathJaxOutputType: existingSettings.mathJaxOutputType

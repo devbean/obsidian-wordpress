@@ -1,6 +1,8 @@
 import { SafeAny } from './utils';
 import { isArray, isString } from 'lodash-es';
 
+export type MatterData = { [p: string]: SafeAny };
+
 export interface Media {
   mimeType: string;
   fileName: string;

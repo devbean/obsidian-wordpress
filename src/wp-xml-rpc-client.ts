@@ -1,4 +1,3 @@
-import { Notice } from 'obsidian';
 import WordpressPlugin from './main';
 import {
   WordPressAuthParams,
@@ -10,9 +9,8 @@ import {
 } from './wp-client';
 import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
-import { Term } from './wp-api';
-import { ERROR_NOTICE_TIMEOUT } from './consts';
-import { SafeAny } from './utils';
+import { PostType, PostTypeConst, Term } from './wp-api';
+import { SafeAny, showError } from './utils';
 import { WpProfile } from './wp-profile';
 import { Media } from './types';
 
@@ -47,19 +45,30 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     postParams: WordPressPostParams,
     certificate: WordPressAuthParams
   ): Promise<WordPressClientResult<WordPressPublishResult>> {
-    const publishContent = {
-      post_type: 'post',
-      post_status: postParams.status,
-      comment_status: postParams.commentStatus,
-      post_title: title,
-      post_content: content,
-      terms: {
-        'category': postParams.categories
-      },
-      terms_names: {
-        'post_tag': postParams.tags
-      }
-    };
+    let publishContent;
+    if (postParams.postType === PostTypeConst.Page) {
+      publishContent = {
+        post_type: postParams.postType,
+        post_status: postParams.status,
+        comment_status: postParams.commentStatus,
+        post_title: title,
+        post_content: content,
+      };
+    } else {
+      publishContent = {
+        post_type: postParams.postType,
+        post_status: postParams.status,
+        comment_status: postParams.commentStatus,
+        post_title: title,
+        post_content: content,
+        terms: {
+          'category': postParams.categories
+        },
+        terms_names: {
+          'post_tag': postParams.tags
+        }
+      };
+    }
     let publishPromise;
     if (postParams.postId) {
       publishPromise = this.client.methodCall('wp.editPost', [
@@ -107,13 +116,27 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     ]);
     if (isFaultResponse(response)) {
       const fault = `${response.faultCode}: ${response.faultString}`;
-      new Notice(fault, ERROR_NOTICE_TIMEOUT);
+      showError(fault);
       throw new Error(fault);
     }
     return (response as SafeAny).map((it: SafeAny) => ({
       ...it,
       id: it.term_id
     })) ?? [];
+  }
+
+  async getPostTypes(certificate: WordPressAuthParams): Promise<PostType[]> {
+    const response = await this.client.methodCall('wp.getPostTypes', [
+      0,
+      certificate.username,
+      certificate.password,
+    ]);
+    if (isFaultResponse(response)) {
+      const fault = `${response.faultCode}: ${response.faultString}`;
+      showError(fault);
+      throw new Error(fault);
+    }
+    return Object.keys(response as SafeAny) ?? [];
   }
 
   async validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult<boolean>> {

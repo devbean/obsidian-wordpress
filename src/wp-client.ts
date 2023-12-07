@@ -1,4 +1,4 @@
-import { CommentStatus, PostStatus } from './wp-api';
+import { CommentStatus, PostStatus, PostType } from './wp-api';
 import { SafeAny } from './utils';
 
 export enum WordPressClientReturnCode {
@@ -11,7 +11,7 @@ interface _wpClientResult {
   /**
    * Response from WordPress server.
    */
-  response: SafeAny;
+  response?: SafeAny;
 
   code: WordPressClientReturnCode;
 }
@@ -45,6 +45,7 @@ export interface WordPressPostParams {
   status: PostStatus;
   commentStatus: CommentStatus;
   categories: number[];
+  postType: PostType;
   tags: string[];
 
   /**
