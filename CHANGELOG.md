@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [0.16.0](https://github.com/devbean/obsidian-wordpress/compare/0.15.0...0.16.0) (2023-12-08)
 
+__For wordpress.com users, in order to fetch types, the new scope `sites` is needed,
+thus wordpress.com token should be refreshed before publishing.__
 
 ### Features
 
