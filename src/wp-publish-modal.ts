@@ -23,7 +23,7 @@ export class WpPublishModal extends Modal {
       items: PostType[],
       selected: PostType
     },
-    private readonly onSubmit: (params: WordPressPostParams, matterData: MatterData) => void,
+    private readonly onSubmit: (params: WordPressPostParams, updateMatterData: (matter: MatterData) => void) => void,
     private readonly matterData: MatterData,
   ) {
     super(plugin.app);
@@ -119,21 +119,23 @@ export class WpPublishModal extends Modal {
         .setButtonText(t('publishModal_publishButtonText'))
         .setCta()
         .onClick(() => {
-          if (this.matterData) {
-            if (this.matterData.postType !== PostTypeConst.Post && (this.matterData.tags || this.matterData.categories)) {
-              openConfirmModal({
-                message: t('publishModal_wrongMatterDataForPage')
-              }, this.plugin)
-                .then(result => {
-                  if (result.code === ConfirmCode.Confirm) {
-                    delete this.matterData?.tags;
-                    delete this.matterData?.categories;
-                    this.onSubmit(params, this.matterData);
-                  }
-                });
-            }
+          if (this.matterData.postType
+            && this.matterData.postType !== PostTypeConst.Post
+            && (this.matterData.tags || this.matterData.categories)
+          ) {
+            openConfirmModal({
+              message: t('publishModal_wrongMatterDataForPage')
+            }, this.plugin)
+              .then(result => {
+                if (result.code === ConfirmCode.Confirm) {
+                  this.onSubmit(params, fm => {
+                    delete fm.categories;
+                    delete fm.tags;
+                  });
+                }
+              });
           } else {
-            this.onSubmit(params, this.matterData);
+            this.onSubmit(params, fm => {});
           }
         })
       );

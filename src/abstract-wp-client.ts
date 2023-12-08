@@ -1,4 +1,4 @@
-import { MarkdownFileInfo, Notice, TFile } from 'obsidian';
+import { Notice, TFile } from 'obsidian';
 import WordpressPlugin from './main';
 import {
   WordPressAuthParams,
@@ -12,12 +12,10 @@ import {
 import { WpPublishModal } from './wp-publish-modal';
 import { PostType, PostTypeConst, Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT, WP_DEFAULT_PROFILE_NAME } from './consts';
-import matter from 'gray-matter';
-import yaml from 'js-yaml';
 import {
   isPromiseFulfilledResult,
   isValidUrl,
-  openWithBrowser,
+  openWithBrowser, processFile,
   SafeAny,
   showError,
 } from './utils';
@@ -28,20 +26,7 @@ import fileTypeChecker from 'file-type-checker';
 import { MatterData, Media } from './types';
 import { openPostPublishedModal } from './post-published-modal';
 import { openLoginModal } from './wp-login-modal';
-
-
-const matterOptions = {
-  engines: {
-    yaml: {
-      parse: (input: string) => yaml.load(input) as object,
-      stringify: (data: object) => {
-        return yaml.dump(data, {
-          styles: { '!!null': 'empty' }
-        });
-      }
-    }
-  }
-};
+import { isFunction } from 'lodash-es';
 
 export abstract class AbstractWordPressClient implements WordPressClient {
 
@@ -139,16 +124,14 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private async tryToPublish(params: {
-    activeEditor: MarkdownFileInfo | null,
     postParams: WordPressPostParams,
     auth: WordPressAuthParams,
-    matterData: MatterData,
+    updateMatterData?: (matter: MatterData) => void,
   }): Promise<WordPressClientResult<WordPressPublishResult>> {
-    const { activeEditor, postParams, auth, matterData } = params;
+    const { postParams, auth, updateMatterData } = params;
     const tagTerms = await this.getTags(postParams.tags, auth);
     postParams.tags = tagTerms.map(term => term.id);
     await this.updatePostImages({
-      activeEditor,
       auth,
       postParams
     });
@@ -167,18 +150,22 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       // post id will be returned if creating, true if editing
       const postId = result.data.postId;
       if (postId) {
-        // save post id to front-matter
-        matterData.profileName = this.profile.name;
-        matterData.postId = postId;
-        matterData.postType = postParams.postType;
-        if (postParams.postType === PostTypeConst.Post) {
-          matterData.categories = postParams.categories;
-        } else {
-          delete matterData.categories;
-          delete matterData.tags;
+        // const modified = matter.stringify(postParams.content, matterData, matterOptions);
+        // this.updateFrontMatter(modified);
+        const file = this.plugin.app.workspace.getActiveFile();
+        if (file) {
+          await this.plugin.app.fileManager.processFrontMatter(file, fm => {
+            fm.profileName = this.profile.name;
+            fm.postId = postId;
+            fm.postType = postParams.postType;
+            if (postParams.postType === PostTypeConst.Post) {
+              fm.categories = postParams.categories;
+            }
+            if (isFunction(updateMatterData)) {
+              updateMatterData(fm);
+            }
+          });
         }
-        const modified = matter.stringify(postParams.content, matterData, matterOptions);
-        this.updateFrontMatter(modified);
 
         if (this.plugin.settings.rememberLastSelectedCategories) {
           this.profile.lastSelectedCategories = (result.data as SafeAny).categories;
@@ -200,16 +187,16 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private async updatePostImages(params: {
-    activeEditor: MarkdownFileInfo | null,
     postParams: WordPressPostParams,
     auth: WordPressAuthParams,
   }): Promise<void> {
-    const { activeEditor, postParams, auth } = params;
+    const { postParams, auth } = params;
 
     const activeFile = this.plugin.app.workspace.getActiveFile();
     if (activeFile === null) {
       throw new Error(this.plugin.i18n.t('error_noActiveFile'));
     }
+    const { activeEditor } = this.plugin.app.workspace;
     if (activeEditor && activeEditor.editor) {
       // process images
       const images = getImages(postParams.content);
@@ -262,23 +249,18 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       if (!this.profile.endpoint || this.profile.endpoint.length === 0) {
         throw new Error(this.plugin.i18n.t('error_noEndpoint'));
       }
-      const { activeEditor } = this.plugin.app.workspace;
-      if (activeEditor && activeEditor.file) {
-        const activeFile = this.plugin.app.workspace.getActiveFile()
-        if (activeFile === null) {
-          throw new Error(this.plugin.i18n.t('error_noActiveFile'));
-        }
-      } else {
-        throw new Error(this.plugin.i18n.t('error_noEditorOrFile'));
+      // const { activeEditor } = this.plugin.app.workspace;
+      const file = this.plugin.app.workspace.getActiveFile()
+      if (file === null) {
+        throw new Error(this.plugin.i18n.t('error_noActiveFile'));
       }
 
       // get auth info
       const auth = await this.getAuth();
 
       // read note title, content and matter data
-      const title = activeEditor.file.basename;
-      const raw = await this.plugin.app.vault.read(activeEditor.file);
-      const { content, data: matterData } = matter(raw, matterOptions);
+      const title = file.basename;
+      const { content, matter: matterData } = await processFile(file, this.plugin.app);
 
       // check if profile selected is matched to the one in note property,
       // if not, ask whether to update or not
@@ -291,10 +273,8 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         postParams = this.readFromFrontMatter(title, matterData, defaultPostParams);
         postParams.content = content;
         result = await this.tryToPublish({
-          activeEditor,
           auth,
-          postParams,
-          matterData
+          postParams
         });
       } else {
         const categories = await this.getCategories(auth);
@@ -311,15 +291,14 @@ export abstract class AbstractWordPressClient implements WordPressClient {
             this.plugin,
             { items: categories, selected: selectedCategories },
             { items: postTypes, selected: selectedPostType },
-            async (postParams, matterData) => {
+            async (postParams: WordPressPostParams, updateMatterData: (matter: MatterData) => void) => {
               postParams = this.readFromFrontMatter(title, matterData, postParams);
               postParams.content = content;
               try {
                 const r = await this.tryToPublish({
-                  activeEditor,
                   auth,
                   postParams,
-                  matterData
+                  updateMatterData
                 });
                 if (r.code === WordPressClientReturnCode.OK) {
                   publishModal.close();
@@ -393,21 +372,6 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       }
     }
     return postParams;
-  }
-
-  private updateFrontMatter(value: string): void {
-    const { activeEditor } = this.plugin.app.workspace;
-    if (activeEditor) {
-      const editor = activeEditor.editor;
-      if (editor) {
-        const { left, top } = editor.getScrollInfo();
-        const position = editor.getCursor();
-
-        editor.setValue(value);
-        editor.scrollTo(left, top);
-        editor.setCursor(position);
-      }
-    }
   }
 
 }

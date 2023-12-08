@@ -1,4 +1,4 @@
-import { Notice, Setting } from 'obsidian';
+import { App, Notice, Setting, TFile } from 'obsidian';
 import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
 import { WordpressPluginSettings } from './plugin-settings';
@@ -9,6 +9,7 @@ import WordpressPlugin from './main';
 import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { format } from 'date-fns';
+import { MatterData } from './types';
 
 export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -111,5 +112,19 @@ export function showError<T>(error: unknown): WordPressClientResult<T> {
       code: WordPressClientReturnCode.Error,
       message: errorMessage,
     }
+  };
+}
+
+export async function processFile(file: TFile, app: App): Promise<{ content: string, matter: MatterData }> {
+  let fm = app.metadataCache.getFileCache(file)?.frontmatter;
+  if (!fm) {
+    await app.fileManager.processFrontMatter(file, matter => {
+      fm = matter
+    });
+  }
+  const raw = await app.vault.read(file);
+  return {
+    content: raw.replace(/^---[\s\S]+?---/, '').trim(),
+    matter: fm ?? {}
   };
 }

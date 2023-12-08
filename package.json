@@ -37,8 +37,6 @@
 		"esbuild": "0.17.3",
 		"eslint-plugin-node": "^11.1.0",
 		"file-type-checker": "^1.0.8",
-		"gray-matter": "^4.0.3",
-		"js-yaml": "^4.1.0",
 		"juice": "^9.1.0",
 		"lodash-es": "^4.17.21",
 		"markdown-it": "^13.0.1",
