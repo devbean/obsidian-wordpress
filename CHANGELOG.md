@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.16.0](https://github.com/devbean/obsidian-wordpress/compare/0.15.0...0.16.0) (2023-12-08)
+
+
+### Features
+
+* Fetch post types from API. ([f952965](https://github.com/devbean/obsidian-wordpress/commit/f952965d70794a2aa431292e0f3a7a7ad4bf5c9e))
+* Now you could select post type when publishing. ([dfb4b11](https://github.com/devbean/obsidian-wordpress/commit/dfb4b11e506da66e70d50c4bdaa8c2b3289b84ce))
+
 ## [0.15.0](https://github.com/devbean/obsidian-wordpress/compare/0.14.0...0.15.0) (2023-10-11)
 
 
