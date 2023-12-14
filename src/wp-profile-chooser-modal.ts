@@ -1,8 +1,7 @@
-import { Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { WpProfile } from './wp-profile';
-import { TranslateKey } from './i18n';
 import { rendererProfile } from './utils';
+import { AbstractModal } from './abstract-modal';
 
 
 export function openProfileChooserModal(
@@ -19,24 +18,20 @@ export function openProfileChooserModal(
 /**
  * WordPress profiles chooser modal.
  */
-class WpProfileChooserModal extends Modal {
+class WpProfileChooserModal extends AbstractModal {
 
   private readonly profiles: WpProfile[];
 
   constructor(
-    private readonly plugin: WordpressPlugin,
+    readonly plugin: WordpressPlugin,
     private readonly onChoose: (profile: WpProfile) => void
   ) {
-    super(plugin.app);
+    super(plugin);
 
     this.profiles = plugin.settings.profiles;
   }
 
   onOpen() {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
-      return this.plugin.i18n.t(key, vars);
-    };
-
     const chooseProfile = (profile: WpProfile): void => {
       this.onChoose(profile);
       this.close();
@@ -52,12 +47,9 @@ class WpProfileChooserModal extends Modal {
       });
     }
 
+    this.createHeader(this.t('profilesChooserModal_title'));
+
     const { contentEl } = this;
-
-    contentEl.createEl('h1', { text: t('profilesChooserModal_title') });
-
-    new Setting(contentEl)
-      .setName(t('profilesChooserModal_pickOne'));
     const content = contentEl.createEl('div');
     renderProfiles();
   }

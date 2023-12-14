@@ -23,6 +23,7 @@
   "ribbon_iconTitle": "WordPress Publish",
   "command_publish": "Publish current note",
   "command_publishWithDefault": "Publish current note with default options",
+  "common_back": "Back",
   "confirmModal_title": "Confirmation",
   "confirmModal_cancel": "Cancel",
   "confirmModal_confirm": "Confirm",

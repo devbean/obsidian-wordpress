@@ -1,9 +1,9 @@
 import { Modal, Setting } from 'obsidian';
 import WordpressPlugin from './main';
-import { TranslateKey } from './i18n';
 import { WpProfile } from './wp-profile';
 import { WordPressAuthParams } from './wp-client';
 import { showError } from './utils';
+import { AbstractModal } from './abstract-modal';
 
 export function openLoginModal(
   plugin: WordpressPlugin,
@@ -30,30 +30,26 @@ export function openLoginModal(
 /**
  * WordPress login modal with username and password inputs.
  */
-export class WpLoginModal extends Modal {
+export class WpLoginModal extends AbstractModal {
 
   constructor(
-    private readonly plugin: WordpressPlugin,
+    readonly plugin: WordpressPlugin,
     private readonly profile: WpProfile,
     private readonly onSubmit: (auth: WordPressAuthParams, modal: Modal) => void
   ) {
-    super(plugin.app);
+    super(plugin);
   }
 
   onOpen() {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
-      return this.plugin.i18n.t(key, vars);
-    };
-
     const { contentEl } = this;
 
-    contentEl.createEl('h1', { text: t('loginModal_title') });
+    this.createHeader(this.t('loginModal_title'));
 
     let username = this.profile.username;
     let password = this.profile.password;
     new Setting(contentEl)
-      .setName(t('loginModal_username'))
-      .setDesc(t('loginModal_usernameDesc', { url: this.profile.endpoint }))
+      .setName(this.t('loginModal_username'))
+      .setDesc(this.t('loginModal_usernameDesc', { url: this.profile.endpoint }))
       .addText(text => {
         text
           .setValue(this.profile.username ?? '')
@@ -71,8 +67,8 @@ export class WpLoginModal extends Modal {
         }
       });
     new Setting(contentEl)
-      .setName(t('loginModal_password'))
-      .setDesc(t('loginModal_passwordDesc', { url: this.profile.endpoint }))
+      .setName(this.t('loginModal_password'))
+      .setDesc(this.t('loginModal_passwordDesc', { url: this.profile.endpoint }))
       .addText(text => {
         text
           .setValue(this.profile.password ?? '')
@@ -90,8 +86,8 @@ export class WpLoginModal extends Modal {
         }
       });
     // new Setting(contentEl)
-    //   .setName(t('loginModal_rememberUsername'))
-    //   .setDesc(t('loginModal_rememberUsernameDesc'))
+    //   .setName(this.t('loginModal_rememberUsername'))
+    //   .setDesc(this.t('loginModal_rememberUsernameDesc'))
     //   .addToggle((toggle) =>
     //     toggle
     //       .setValue(this.profile.saveUsername)
@@ -106,8 +102,8 @@ export class WpLoginModal extends Modal {
     //       }),
     //   );
     // new Setting(contentEl)
-    //   .setName(t('loginModal_rememberPassword'))
-    //   .setDesc(t('loginModal_rememberPasswordDesc'))
+    //   .setName(this.t('loginModal_rememberPassword'))
+    //   .setDesc(this.t('loginModal_rememberPasswordDesc'))
     //   .addToggle((toggle) =>
     //     toggle
     //       .setValue(this.profile.savePassword)
@@ -123,13 +119,13 @@ export class WpLoginModal extends Modal {
     //   );
     new Setting(contentEl)
       .addButton(button => button
-        .setButtonText(t('loginModal_loginButtonText'))
+        .setButtonText(this.t('loginModal_loginButtonText'))
         .setCta()
         .onClick(() => {
           if (!username) {
-            showError(t('error_noUsername'));
+            showError(this.t('error_noUsername'));
           } else if (!password) {
-            showError(t('error_noPassword'));
+            showError(this.t('error_noPassword'));
           }
           if (username && password) {
             this.onSubmit({ username, password }, this);

@@ -1,20 +1,20 @@
-import { Modal, Setting } from 'obsidian';
+import { Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { WordPressPostParams } from './wp-client';
 import { CommentStatus, PostStatus, PostType, PostTypeConst, Term } from './wp-api';
 import { toNumber } from 'lodash-es';
-import { TranslateKey } from './i18n';
 import { MatterData } from './types';
 import { ConfirmCode, openConfirmModal } from './confirm-modal';
+import { AbstractModal } from './abstract-modal';
 
 
 /**
  * WordPress publish modal.
  */
-export class WpPublishModal extends Modal {
+export class WpPublishModal extends AbstractModal {
 
   constructor(
-    private readonly plugin: WordpressPlugin,
+    readonly plugin: WordpressPlugin,
     private readonly categories: {
       items: Term[],
       selected: number[]
@@ -26,7 +26,7 @@ export class WpPublishModal extends Modal {
     private readonly onSubmit: (params: WordPressPostParams, updateMatterData: (matter: MatterData) => void) => void,
     private readonly matterData: MatterData,
   ) {
-    super(plugin.app);
+    super(plugin);
   }
 
   onOpen() {
@@ -49,21 +49,18 @@ export class WpPublishModal extends Modal {
   }
 
   private display(params: WordPressPostParams): void {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
-      return this.plugin.i18n.t(key, vars);
-    };
-
     const { contentEl } = this;
 
     contentEl.empty();
-    contentEl.createEl('h1', { text: t('publishModal_title') });
+
+    this.createHeader(this.t('publishModal_title'));
 
     new Setting(contentEl)
-      .setName(t('publishModal_postStatus'))
+      .setName(this.t('publishModal_postStatus'))
       .addDropdown((dropdown) => {
         dropdown
-          .addOption(PostStatus.Draft, t('publishModal_postStatusDraft'))
-          .addOption(PostStatus.Publish, t('publishModal_postStatusPublish'))
+          .addOption(PostStatus.Draft, this.t('publishModal_postStatusDraft'))
+          .addOption(PostStatus.Publish, this.t('publishModal_postStatusPublish'))
           // .addOption(PostStatus.Future, 'future')
           .setValue(this.plugin.settings.defaultPostStatus)
           .onChange((value) => {
@@ -71,11 +68,11 @@ export class WpPublishModal extends Modal {
           });
       });
     new Setting(contentEl)
-      .setName(t('publishModal_commentStatus'))
+      .setName(this.t('publishModal_commentStatus'))
       .addDropdown((dropdown) => {
         dropdown
-          .addOption(CommentStatus.Open, t('publishModal_commentStatusOpen'))
-          .addOption(CommentStatus.Closed, t('publishModal_commentStatusClosed'))
+          .addOption(CommentStatus.Open, this.t('publishModal_commentStatusOpen'))
+          .addOption(CommentStatus.Closed, this.t('publishModal_commentStatusClosed'))
           .setValue(this.plugin.settings.defaultCommentStatus)
           .onChange((value) => {
             params.commentStatus = value as CommentStatus;
@@ -84,7 +81,7 @@ export class WpPublishModal extends Modal {
 
     if (!this.matterData?.postId) {
       new Setting(contentEl)
-        .setName(t('publishModal_postType'))
+        .setName(this.t('publishModal_postType'))
         .addDropdown((dropdown) => {
           this.postTypes.items.forEach(it => {
             dropdown.addOption(it, it);
@@ -98,10 +95,10 @@ export class WpPublishModal extends Modal {
         });
     }
 
-    if (params.postType !== 'page') {
+    if (params.postType === PostTypeConst.Post) {
       if (this.categories.items.length > 0) {
         new Setting(contentEl)
-          .setName(t('publishModal_category'))
+          .setName(this.t('publishModal_category'))
           .addDropdown((dropdown) => {
             this.categories.items.forEach(it => {
               dropdown.addOption(it.id, it.name);
@@ -116,7 +113,7 @@ export class WpPublishModal extends Modal {
     }
     new Setting(contentEl)
       .addButton(button => button
-        .setButtonText(t('publishModal_publishButtonText'))
+        .setButtonText(this.t('publishModal_publishButtonText'))
         .setCta()
         .onClick(() => {
           if (this.matterData.postType
@@ -124,7 +121,7 @@ export class WpPublishModal extends Modal {
             && (this.matterData.tags || this.matterData.categories)
           ) {
             openConfirmModal({
-              message: t('publishModal_wrongMatterDataForPage')
+              message: this.t('publishModal_wrongMatterDataForPage')
             }, this.plugin)
               .then(result => {
                 if (result.code === ConfirmCode.Confirm) {

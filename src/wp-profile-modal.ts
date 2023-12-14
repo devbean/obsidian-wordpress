@@ -1,6 +1,5 @@
-import { Modal, Notice, Setting } from 'obsidian';
+import { Notice, Setting } from 'obsidian';
 import WordpressPlugin from './main';
-import { TranslateKey } from './i18n';
 import { WpProfile } from './wp-profile';
 import { EventType, WP_OAUTH2_REDIRECT_URI } from './consts';
 import { WordPressClientReturnCode } from './wp-client';
@@ -8,6 +7,7 @@ import { generateCodeVerifier, OAuth2Client } from './oauth2-client';
 import { AppState } from './app-state';
 import { isValidUrl, showError } from './utils';
 import { ApiType } from './plugin-settings';
+import { AbstractModal } from './abstract-modal';
 
 
 export function openProfileModal(
@@ -38,14 +38,14 @@ export function openProfileModal(
 /**
  * WordPress profile modal.
  */
-class WpProfileModal extends Modal {
+class WpProfileModal extends AbstractModal {
 
   private readonly profileData: WpProfile;
 
   private readonly tokenGotRef;
 
   constructor(
-    private readonly plugin: WordpressPlugin,
+    readonly plugin: WordpressPlugin,
     private readonly onSubmit: (profile: WpProfile, atIndex?: number) => void,
     private readonly profile: WpProfile = {
       name: '',
@@ -59,7 +59,7 @@ class WpProfileModal extends Modal {
     },
     private readonly atIndex: number = -1
   ) {
-    super(plugin.app);
+    super(plugin);
 
     this.profileData = Object.assign({}, profile);
     this.tokenGotRef = AppState.getInstance().events.on(EventType.OAUTH2_TOKEN_GOT, async token => {
@@ -73,20 +73,16 @@ class WpProfileModal extends Modal {
   }
 
   onOpen() {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
-      return this.plugin.i18n.t(key, vars);
-    };
-
     const getApiTypeDesc = (apiType: ApiType): string => {
       switch (apiType) {
         case ApiType.XML_RPC:
-          return t('settings_apiTypeXmlRpcDesc');
+          return this.t('settings_apiTypeXmlRpcDesc');
         case ApiType.RestAPI_miniOrange:
-          return t('settings_apiTypeRestMiniOrangeDesc');
+          return this.t('settings_apiTypeRestMiniOrangeDesc');
         case ApiType.RestApi_ApplicationPasswords:
-          return t('settings_apiTypeRestApplicationPasswordsDesc');
+          return this.t('settings_apiTypeRestApplicationPasswordsDesc');
         case ApiType.RestApi_WpComOAuth2:
-          return t('settings_apiTypeRestWpComOAuth2Desc');
+          return this.t('settings_apiTypeRestWpComOAuth2Desc');
         default:
           return '';
       }
@@ -97,8 +93,8 @@ class WpProfileModal extends Modal {
       content.empty();
 
       new Setting(content)
-        .setName(t('profileModal_name'))
-        .setDesc(t('profileModal_nameDesc'))
+        .setName(this.t('profileModal_name'))
+        .setDesc(this.t('profileModal_nameDesc'))
         .addText(text => text
           .setPlaceholder('Profile name')
           .setValue(this.profileData.name ?? '')
@@ -107,10 +103,10 @@ class WpProfileModal extends Modal {
           })
         );
       new Setting(content)
-        .setName(t('settings_url'))
-        .setDesc(t('settings_urlDesc'))
+        .setName(this.t('settings_url'))
+        .setDesc(this.t('settings_urlDesc'))
         .addText(text => text
-          .setPlaceholder(t('settings_urlPlaceholder'))
+          .setPlaceholder(this.t('settings_urlPlaceholder'))
           .setValue(this.profileData.endpoint)
           .onChange((value) => {
             if (this.profileData.endpoint !== value) {
@@ -118,21 +114,21 @@ class WpProfileModal extends Modal {
             }
           }));
       new Setting(content)
-        .setName(t('settings_apiType'))
-        .setDesc(t('settings_apiTypeDesc'))
+        .setName(this.t('settings_apiType'))
+        .setDesc(this.t('settings_apiTypeDesc'))
         .addDropdown((dropdown) => {
           dropdown
-            .addOption(ApiType.XML_RPC, t('settings_apiTypeXmlRpc'))
-            .addOption(ApiType.RestAPI_miniOrange, t('settings_apiTypeRestMiniOrange'))
-            .addOption(ApiType.RestApi_ApplicationPasswords, t('settings_apiTypeRestApplicationPasswords'))
-            .addOption(ApiType.RestApi_WpComOAuth2, t('settings_apiTypeRestWpComOAuth2'))
+            .addOption(ApiType.XML_RPC, this.t('settings_apiTypeXmlRpc'))
+            .addOption(ApiType.RestAPI_miniOrange, this.t('settings_apiTypeRestMiniOrange'))
+            .addOption(ApiType.RestApi_ApplicationPasswords, this.t('settings_apiTypeRestApplicationPasswords'))
+            .addOption(ApiType.RestApi_WpComOAuth2, this.t('settings_apiTypeRestWpComOAuth2'))
             .setValue(this.profileData.apiType)
             .onChange(async (value) => {
               let hasError = false;
               let newApiType = value;
               if (value === ApiType.RestApi_WpComOAuth2) {
                 if (!this.profileData.endpoint.includes('wordpress.com')) {
-                  showError(t('error_notWpCom'));
+                  showError(this.t('error_notWpCom'));
                   hasError = true;
                   newApiType = this.profileData.apiType;
                 }
@@ -161,8 +157,8 @@ class WpProfileModal extends Modal {
       });
       if (this.profileData.apiType === ApiType.XML_RPC) {
         new Setting(content)
-          .setName(t('settings_xmlRpcPath'))
-          .setDesc(t('settings_xmlRpcPathDesc'))
+          .setName(this.t('settings_xmlRpcPath'))
+          .setDesc(this.t('settings_xmlRpcPathDesc'))
           .addText(text => text
             .setPlaceholder('/xmlrpc.php')
             .setValue(this.profileData.xmlRpcPath ?? '')
@@ -171,10 +167,10 @@ class WpProfileModal extends Modal {
             }));
       } else if (this.profileData.apiType === ApiType.RestApi_WpComOAuth2) {
         new Setting(content)
-          .setName(t('settings_wpComOAuth2RefreshToken'))
-          .setDesc(t('settings_wpComOAuth2RefreshTokenDesc'))
+          .setName(this.t('settings_wpComOAuth2RefreshToken'))
+          .setDesc(this.t('settings_wpComOAuth2RefreshTokenDesc'))
           .addButton(button => button
-            .setButtonText(t('settings_wpComOAuth2ValidateTokenButtonText'))
+            .setButtonText(this.t('settings_wpComOAuth2ValidateTokenButtonText'))
             .onClick(() => {
               if (this.profileData.wpComOAuth2Token) {
                 OAuth2Client.getWpOAuth2Client(this.plugin).validateToken({
@@ -184,13 +180,13 @@ class WpProfileModal extends Modal {
                     if (result.code === WordPressClientReturnCode.Error) {
                       showError(result.error?.message + '');
                     } else {
-                      new Notice(t('message_wpComTokenValidated'));
+                      new Notice(this.t('message_wpComTokenValidated'));
                     }
                   });
               }
             }))
           .addButton(button => button
-            .setButtonText(t('settings_wpComOAuth2RefreshTokenButtonText'))
+            .setButtonText(this.t('settings_wpComOAuth2RefreshTokenButtonText'))
             .onClick(async () => {
               await this.refreshWpComToken();
             }));
@@ -198,7 +194,7 @@ class WpProfileModal extends Modal {
 
       if (this.profileData.apiType !== ApiType.RestApi_WpComOAuth2) {
         const usernameSetting = new Setting(content)
-          .setName(t('profileModal_rememberUsername'));
+          .setName(this.t('profileModal_rememberUsername'));
         if (this.profileData.saveUsername) {
           usernameSetting
             .addText(text => text
@@ -216,7 +212,7 @@ class WpProfileModal extends Modal {
           })
         );
         const passwordSetting = new Setting(content)
-          .setName(t('profileModal_rememberPassword'));
+          .setName(this.t('profileModal_rememberPassword'));
         if (this.profileData.savePassword) {
           passwordSetting
             .addText(text => text
@@ -235,7 +231,7 @@ class WpProfileModal extends Modal {
         );
       }
       new Setting(content)
-        .setName(t('profileModal_setDefault'))
+        .setName(this.t('profileModal_setDefault'))
         .addToggle(toggle => toggle
           .setValue(this.profileData.isDefault)
           .onChange((value) => {
@@ -245,17 +241,17 @@ class WpProfileModal extends Modal {
 
       new Setting(content)
         .addButton(button => button
-          .setButtonText(t('profileModal_Save'))
+          .setButtonText(this.t('profileModal_Save'))
           .setCta()
           .onClick(() => {
             if (!isValidUrl(this.profileData.endpoint)) {
-              showError(t('error_invalidUrl'));
+              showError(this.t('error_invalidUrl'));
             } else if (this.profileData.name.length === 0) {
-              showError(t('error_noProfileName'));
+              showError(this.t('error_noProfileName'));
             } else if (this.profileData.saveUsername && !this.profileData.username) {
-              showError(t('error_noUsername'));
+              showError(this.t('error_noUsername'));
             } else if (this.profileData.savePassword && !this.profileData.password) {
-              showError(t('error_noPassword'));
+              showError(this.t('error_noPassword'));
             } else {
               this.onSubmit(this.profileData, this.atIndex);
               this.close();
@@ -264,9 +260,9 @@ class WpProfileModal extends Modal {
         );
     }
 
-    const { contentEl } = this;
+    this.createHeader(this.t('profileModal_title'));
 
-    contentEl.createEl('h1', { text: t('profileModal_title') });
+    const { contentEl } = this;
 
     const content = contentEl.createEl('div');
     renderProfile();

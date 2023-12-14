@@ -23,6 +23,7 @@
   "ribbon_iconTitle": "发布到 WordPress",
   "command_publish": "发布当前笔记",
   "command_publishWithDefault": "使用默认参数发布当前笔记",
+  "common_back": "返回",
   "confirmModal_title": "需要确认",
   "confirmModal_cancel": "取消",
   "confirmModal_confirm": "确认",
