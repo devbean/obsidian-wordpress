@@ -13,35 +13,48 @@ import juice from 'juice';
 import { SafeAny } from './utils';
 import { MathJaxOutputType } from './plugin-settings';
 
+const inlineTokenType = 'math_inline';
+const blockTokenType = 'math_block';
 
 interface MarkdownItMathJax3PluginOptions {
   outputType: MathJaxOutputType;
+}
+
+const pluginOptions: MarkdownItMathJax3PluginOptions = {
+  outputType: MathJaxOutputType.TeX,
 }
 
 interface ConvertOptions {
   display: boolean
 }
 
-export default function MarkdownItMathJax3Plugin(md: MarkdownIt, options: MarkdownItMathJax3PluginOptions): void {
+export const MarkdownItMathJax3PluginInstance = {
+  plugin: plugin,
+  updateOutputType: (type: MathJaxOutputType) => {
+    pluginOptions.outputType = type;
+  },
+}
+
+function plugin(md: MarkdownIt): void {
   // set MathJax as the renderer for markdown-it-simplemath
-  md.inline.ruler.after('escape', 'math_inline', mathInline);
-  md.block.ruler.after('blockquote', 'math_block', mathBlock, {
+  md.inline.ruler.after('escape', inlineTokenType, mathInline);
+  md.block.ruler.after('blockquote', blockTokenType, mathBlock, {
     alt: ['paragraph', 'reference', 'blockquote', 'list'],
   });
-  md.renderer.rules.math_inline = (tokens: Token[], idx: number) => {
+  md.renderer.rules[inlineTokenType] = (tokens: Token[], idx: number) => {
     return renderMath(tokens[idx].content, {
       display: false
-    }, options);
+    });
   };
-  md.renderer.rules.math_block = (tokens: Token[], idx: number) => {
+  md.renderer.rules[blockTokenType] = (tokens: Token[], idx: number) => {
     return renderMath(tokens[idx].content, {
       display: true
-    }, options);
+    });
   };
 }
 
-function renderMath(content: string, convertOptions: ConvertOptions, options: MarkdownItMathJax3PluginOptions): string {
-  if (options.outputType === MathJaxOutputType.SVG) {
+function renderMath(content: string, convertOptions: ConvertOptions): string {
+  if (pluginOptions.outputType === MathJaxOutputType.SVG) {
     const documentOptions = {
       InputJax: new TeX({ packages: AllPackages }),
       OutputJax: new SVG({ fontCache: 'none' })
@@ -154,7 +167,7 @@ function mathInline(state: StateInline, silent: boolean) {
   }
 
   if (!silent) {
-    const token = state.push('math_inline', 'math', 0);
+    const token = state.push(inlineTokenType, 'math', 0);
     token.markup = '$';
     token.content = state.src.slice(start, match);
   }
@@ -214,7 +227,7 @@ function mathBlock(state: StateBlock, start: number, end: number, silent: boolea
 
   state.line = next + 1;
 
-  const token = state.push('math_block', 'math', 0);
+  const token = state.push(blockTokenType, 'math', 0);
   token.block = true;
   token.content =
     (firstLine && firstLine.trim() ? firstLine + '\n' : '') +

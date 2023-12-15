@@ -3,6 +3,8 @@ import Token from 'markdown-it/lib/token';
 import { trim } from 'lodash-es';
 
 
+const tokenType = 'ob_img';
+
 export interface MarkdownItImageActionParams {
   src: string;
   width?: string;
@@ -18,21 +20,21 @@ const pluginOptions: MarkdownItImagePluginOptions = {
 }
 
 export const MarkdownItImagePluginInstance = {
-  plugin: pluginImpl,
+  plugin: plugin,
   doWithImage: (action: (img: MarkdownItImageActionParams) => void) => {
     pluginOptions.doWithImage = action;
   },
 }
 
-function pluginImpl(md: MarkdownIt): void {
-  md.inline.ruler.after('image', 'ob_img', (state, silent) => {
+function plugin(md: MarkdownIt): void {
+  md.inline.ruler.after('image', tokenType, (state, silent) => {
     const regex = /^!\[\[([^|\]\n]+)(\|([^\]\n]+))?\]\]/;
     const match = state.src.slice(state.pos).match(regex);
     if (match) {
       if (silent) {
         return true;
       }
-      const token = state.push('ob_img', 'img', 0);
+      const token = state.push(tokenType, 'img', 0);
       const matched = match[0];
       const src = match[1];
       const size = match[3];
