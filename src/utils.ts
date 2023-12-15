@@ -1,8 +1,7 @@
 import { App, Notice, Setting, TFile } from 'obsidian';
 import { WpProfile } from './wp-profile';
-import { AppState } from './app-state';
 import { WordpressPluginSettings } from './plugin-settings';
-import MarkdownItMathJax3Plugin from './markdown-it-mathjax3-plugin';
+import { MarkdownItMathJax3PluginInstance } from './markdown-it-mathjax3-plugin';
 import { WordPressClientResult, WordPressClientReturnCode, WordPressPostParams } from './wp-client';
 import { getWordPressClient } from './wp-clients';
 import WordpressPlugin from './main';
@@ -10,6 +9,7 @@ import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { format } from 'date-fns';
 import { MatterData } from './types';
+import { MarkdownItCommentPluginInstance } from './markdown-it-comment-plugin';
 
 export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -30,9 +30,8 @@ export function isPromiseFulfilledResult<T>(obj: SafeAny): obj is PromiseFulfill
 }
 
 export function setupMarkdownParser(settings: WordpressPluginSettings): void {
-  AppState.markdownParser.use(MarkdownItMathJax3Plugin, {
-    outputType: settings.mathJaxOutputType
-  });
+  MarkdownItMathJax3PluginInstance.updateOutputType(settings.mathJaxOutputType);
+  MarkdownItCommentPluginInstance.updateConvertMode(settings.commentConvertMode);
 }
 
 

@@ -23,6 +23,11 @@ export const enum MathJaxOutputType {
   SVG = 'svg'
 }
 
+export const enum CommentConvertMode {
+  Ignore = 'ignore',
+  HTML = 'html'
+}
+
 export interface WordpressPluginSettings {
 
   version?: SettingsVersion;
@@ -61,6 +66,8 @@ export interface WordpressPluginSettings {
 
   mathJaxOutputType: MathJaxOutputType;
 
+  commentConvertMode: CommentConvertMode;
+
   enableHtml: boolean;
 
   /**
@@ -78,6 +85,7 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   rememberLastSelectedCategories: true,
   showWordPressEditConfirm: false,
   mathJaxOutputType: MathJaxOutputType.SVG,
+  commentConvertMode: CommentConvertMode.Ignore,
   enableHtml: false,
   replaceMediaLinks: true,
 }
@@ -99,7 +107,8 @@ export async function upgradeSettings(
         defaultPostType: 'post',
         rememberLastSelectedCategories: existingSettings.rememberLastSelectedCategories,
         showWordPressEditConfirm: existingSettings.showWordPressEditConfirm,
-        mathJaxOutputType: existingSettings.mathJaxOutputType
+        mathJaxOutputType: existingSettings.mathJaxOutputType,
+        commentConvertMode: existingSettings.commentConvertMode,
       });
       if (existingSettings.endpoint) {
         const endpoint = existingSettings.endpoint;

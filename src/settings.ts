@@ -3,7 +3,7 @@ import WordpressPlugin from './main';
 import { CommentStatus, PostStatus } from './wp-api';
 import { TranslateKey } from './i18n';
 import { WpProfileManageModal } from './wp-profile-manage-modal';
-import { MathJaxOutputType } from './plugin-settings';
+import { CommentConvertMode, MathJaxOutputType } from './plugin-settings';
 import { WpProfile } from './wp-profile';
 import { setupMarkdownParser } from './utils';
 import { AppState } from './app-state';
@@ -33,6 +33,17 @@ export class WordpressSettingTab extends PluginSettingTab {
       }
     }
 
+    const getCommentConvertModeDesc = (type: CommentConvertMode): string => {
+      switch (type) {
+        case CommentConvertMode.Ignore:
+          return t('settings_commentConvertModeIgnoreDesc');
+        case CommentConvertMode.HTML:
+          return t('settings_commentConvertModeHTMLDesc');
+        default:
+          return '';
+      }
+    }
+
 		const { containerEl } = this;
 
 		containerEl.empty();
@@ -40,6 +51,7 @@ export class WordpressSettingTab extends PluginSettingTab {
     containerEl.createEl('h1', { text: t('settings_title') });
 
     let mathJaxOutputTypeDesc = getMathJaxOutputTypeDesc(this.plugin.settings.mathJaxOutputType);
+    let commentConvertModeDesc = getCommentConvertModeDesc(this.plugin.settings.commentConvertMode);
 
     new Setting(containerEl)
       .setName(t('settings_profiles'))
@@ -148,6 +160,28 @@ export class WordpressSettingTab extends PluginSettingTab {
     });
 
     new Setting(containerEl)
+      .setName(t('settings_commentConvertMode'))
+      .setDesc(t('settings_commentConvertModeDesc'))
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOption(CommentConvertMode.Ignore, t('settings_commentConvertModeIgnore'))
+          .addOption(CommentConvertMode.HTML, t('settings_commentConvertModeHTML'))
+          .setValue(this.plugin.settings.commentConvertMode)
+          .onChange(async (value) => {
+            this.plugin.settings.commentConvertMode = value as CommentConvertMode;
+            commentConvertModeDesc = getCommentConvertModeDesc(this.plugin.settings.commentConvertMode);
+            await this.plugin.saveSettings();
+            this.display();
+
+            setupMarkdownParser(this.plugin.settings);
+          });
+      });
+    containerEl.createEl('p', {
+      text: commentConvertModeDesc,
+      cls: 'setting-item-description'
+    });
+
+    new Setting(containerEl)
       .setName(t('settings_enableHtml'))
       .setDesc(t('settings_enableHtmlDesc'))
       .addToggle((toggle) =>
@@ -157,7 +191,7 @@ export class WordpressSettingTab extends PluginSettingTab {
             this.plugin.settings.enableHtml = value;
             await this.plugin.saveSettings();
 
-            AppState.getInstance().markdownParser.set({
+            AppState.markdownParser.set({
               html: this.plugin.settings.enableHtml
             });
           }),
