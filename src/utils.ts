@@ -30,7 +30,7 @@ export function isPromiseFulfilledResult<T>(obj: SafeAny): obj is PromiseFulfill
 }
 
 export function setupMarkdownParser(settings: WordpressPluginSettings): void {
-  AppState.getInstance().markdownParser.use(MarkdownItMathJax3Plugin, {
+  AppState.markdownParser.use(MarkdownItMathJax3Plugin, {
     outputType: settings.mathJaxOutputType
   });
 }

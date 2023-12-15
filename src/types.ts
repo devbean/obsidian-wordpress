@@ -1,6 +1,10 @@
 import { SafeAny } from './utils';
 import { isArray, isString } from 'lodash-es';
 
+export interface MarkdownItPlugin {
+  updateOptions: <OptionType> (option: OptionType) => void;
+}
+
 export type MatterData = { [p: string]: SafeAny };
 
 export interface Media {

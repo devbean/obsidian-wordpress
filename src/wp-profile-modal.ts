@@ -62,7 +62,7 @@ class WpProfileModal extends AbstractModal {
     super(plugin);
 
     this.profileData = Object.assign({}, profile);
-    this.tokenGotRef = AppState.getInstance().events.on(EventType.OAUTH2_TOKEN_GOT, async token => {
+    this.tokenGotRef = AppState.events.on(EventType.OAUTH2_TOKEN_GOT, async token => {
       this.profileData.wpComOAuth2Token = token;
       if (atIndex >= 0) {
         // if token is undefined, just remove it
@@ -270,19 +270,19 @@ class WpProfileModal extends AbstractModal {
 
   onClose() {
     if (this.tokenGotRef) {
-      AppState.getInstance().events.offref(this.tokenGotRef);
+      AppState.events.offref(this.tokenGotRef);
     }
     const { contentEl } = this;
     contentEl.empty();
   }
 
   private async refreshWpComToken(): Promise<void> {
-    AppState.getInstance().codeVerifier = generateCodeVerifier();
+    AppState.codeVerifier = generateCodeVerifier();
     await OAuth2Client.getWpOAuth2Client(this.plugin).getAuthorizeCode({
       redirectUri: WP_OAUTH2_REDIRECT_URI,
       scope: [ 'posts', 'taxonomy', 'media', 'sites' ],
       blog: this.profileData.endpoint,
-      codeVerifier: AppState.getInstance().codeVerifier
+      codeVerifier: AppState.codeVerifier
     });
   }
 

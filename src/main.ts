@@ -97,7 +97,7 @@ export default class WordpressPlugin extends Plugin {
       }
     }
 
-    AppState.getInstance().markdownParser.set({
+    AppState.markdownParser.set({
       html: this.#settings?.enableHtml ?? false
     });
   }
@@ -152,15 +152,15 @@ export default class WordpressPlugin extends Plugin {
               error: e.error,
               desc: e.error_description.replace(/\+/g,' ')
             }));
-            AppState.getInstance().events.trigger(EventType.OAUTH2_TOKEN_GOT, undefined);
+            AppState.events.trigger(EventType.OAUTH2_TOKEN_GOT, undefined);
           } else if (e.code) {
             const token = await OAuth2Client.getWpOAuth2Client(this).getToken({
               code: e.code,
               redirectUri: WP_OAUTH2_REDIRECT_URI,
-              codeVerifier: AppState.getInstance().codeVerifier
+              codeVerifier: AppState.codeVerifier
             });
             console.log(token);
-            AppState.getInstance().events.trigger(EventType.OAUTH2_TOKEN_GOT, token);
+            AppState.events.trigger(EventType.OAUTH2_TOKEN_GOT, token);
           }
         }
       }
