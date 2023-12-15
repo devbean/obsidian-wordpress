@@ -135,9 +135,10 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       auth,
       postParams
     });
+    const html = AppState.getInstance().markdownParser.render(postParams.content);
     const result = await this.publish(
       postParams.title ?? 'A post from Obsidian!',
-      AppState.getInstance().markdownParser.render(postParams.content) ?? '',
+      html,
       postParams,
       auth);
     if (result.code === WordPressClientReturnCode.Error) {
@@ -223,9 +224,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
               content: content
             }, auth);
             if (result.code === WordPressClientReturnCode.OK) {
-              if (this.plugin.settings.replaceMediaLinks) {
-                postParams.content = postParams.content.replace(img.original, `![${imgFile.name}](${result.data.url})`);
-              }
+              postParams.content = postParams.content.replace(img.original, `![${imgFile.name}](${result.data.url})`);
             } else {
               if (result.error.code === WordPressClientReturnCode.ServerInternalError) {
                 new Notice(result.error.message, ERROR_NOTICE_TIMEOUT);
@@ -236,10 +235,12 @@ export abstract class AbstractWordPressClient implements WordPressClient {
               }
             }
           }
-          activeEditor.editor.setValue(postParams.content);
         } else {
           // src is a url, skip uploading
         }
+      }
+      if (this.plugin.settings.replaceMediaLinks) {
+        activeEditor.editor.setValue(postParams.content);
       }
     }
   }
