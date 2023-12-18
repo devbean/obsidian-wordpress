@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.17.0](https://github.com/devbean/obsidian-wordpress/compare/0.16.0...0.17.0) (2023-12-18)
+
+
+### Features
+
+* Obsidian comments could be ignored or convert to HTML comments. ([296e1e0](https://github.com/devbean/obsidian-wordpress/commit/296e1e0cf422e101ab87d4bf8312187468832552))
+
+
+### Bug Fixes
+
+* Image src is not correct if replace media links is disabled. ([60cf917](https://github.com/devbean/obsidian-wordpress/commit/60cf9173220d45ae37f6c80c1c40e32dcd1470fa))
+* No back button for modals on some mobile. ([98258bc](https://github.com/devbean/obsidian-wordpress/commit/98258bc1b707650e121cd6f0b3367d7d268741f8))
+
 ## [0.16.0](https://github.com/devbean/obsidian-wordpress/compare/0.15.0...0.16.0) (2023-12-08)
 
 __For wordpress.com users, in order to fetch types, the new scope `sites` is needed,
