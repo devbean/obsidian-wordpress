@@ -1,7 +1,8 @@
 export const enum PostStatus {
   Draft = 'draft',
   Publish = 'publish',
-  // Future = 'future'
+  Private = 'private',
+  Future = 'future'
 }
 
 export const enum CommentStatus {

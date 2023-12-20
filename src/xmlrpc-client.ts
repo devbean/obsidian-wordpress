@@ -103,7 +103,7 @@ export class XmlRpcClient {
       value.appendChild(boolean);
     } else if (isDate(data)) {
       const date = doc.createElement('dateTime.iso8601');
-      date.appendText(format(data as Date, 'yyyyMMddTHH:mm:ss'));
+      date.appendText(format(data as Date, "yyyyMMdd'T'HH:mm:ss"));
       value.appendChild(date);
     } else if (isArray(data)) {
       const array = doc.createElement('array');

@@ -6,12 +6,17 @@ import { toNumber } from 'lodash-es';
 import { MatterData } from './types';
 import { ConfirmCode, openConfirmModal } from './confirm-modal';
 import { AbstractModal } from './abstract-modal';
+import IMask, { DynamicMaskType, InputMask } from 'imask';
+import { SafeAny } from './utils';
+import { format, parse } from 'date-fns';
 
 
 /**
  * WordPress publish modal.
  */
 export class WpPublishModal extends AbstractModal {
+
+  private dateInputMask: InputMask<DynamicMaskType> | null = null;
 
   constructor(
     readonly plugin: WordpressPlugin,
@@ -46,6 +51,9 @@ export class WpPublishModal extends AbstractModal {
   onClose() {
     const { contentEl } = this;
     contentEl.empty();
+    if (this.dateInputMask) {
+      this.dateInputMask.destroy();
+    }
   }
 
   private display(params: WordPressPostParams): void {
@@ -61,19 +69,103 @@ export class WpPublishModal extends AbstractModal {
         dropdown
           .addOption(PostStatus.Draft, this.t('publishModal_postStatusDraft'))
           .addOption(PostStatus.Publish, this.t('publishModal_postStatusPublish'))
-          // .addOption(PostStatus.Future, 'future')
-          .setValue(this.plugin.settings.defaultPostStatus)
+          .addOption(PostStatus.Private, this.t('publishModal_postStatusPrivate'))
+          .addOption(PostStatus.Future, this.t('publishModal_postStatusFuture'))
+          .setValue(params.status)
           .onChange((value) => {
             params.status = value as PostStatus;
+            this.display(params);
           });
       });
+
+    if (params.status === PostStatus.Future) {
+      new Setting(contentEl)
+        .setName(this.t('publishModal_postDateTime'))
+        .setDesc(this.t('publishModal_postDateTimeDesc'))
+        .addText(text => {
+          const dateFormat = 'yyyy-MM-dd';
+          const dateTimeFormat = 'yyyy-MM-dd HH:mm:ss';
+          const dateBlocks = {
+            yyyy: {
+              mask: IMask.MaskedRange,
+              from: 1970,
+              to: 9999,
+            },
+            MM: {
+              mask: IMask.MaskedRange,
+              from: 1,
+              to: 12,
+            },
+            dd: {
+              mask: IMask.MaskedRange,
+              from: 1,
+              to: 31,
+            },
+          };
+          const dateMask = {
+            mask: Date,
+            lazy: false,
+            overwrite: true,
+          };
+          if (this.dateInputMask) {
+            this.dateInputMask.destroy();
+          }
+          this.dateInputMask = IMask(text.inputEl, [
+            {
+              ...dateMask,
+              pattern: dateFormat,
+              blocks: dateBlocks,
+              format: (date: SafeAny) => format(date, dateFormat),
+              parse: (str: string) => parse(str, dateFormat, new Date())
+            },
+            {
+              ...dateMask,
+              pattern: dateTimeFormat,
+              blocks: {
+                ...dateBlocks,
+                HH: {
+                  mask: IMask.MaskedRange,
+                  from: 0,
+                  to: 23,
+                },
+                mm: {
+                  mask: IMask.MaskedRange,
+                  from: 0,
+                  to: 59,
+                },
+                ss: {
+                  mask: IMask.MaskedRange,
+                  from: 0,
+                  to: 59,
+                },
+              },
+              format: (date: SafeAny) => format(date, dateTimeFormat),
+              parse: (str: string) => parse(str, dateTimeFormat, new Date())
+            }
+          ]);
+
+          this.dateInputMask.on('accept', () => {
+            if (this.dateInputMask) {
+              if (this.dateInputMask.masked.isComplete) {
+                text.inputEl.style.borderColor = '';
+                params.datetime = this.dateInputMask.typedValue;
+              } else {
+                text.inputEl.style.borderColor = 'red';
+              }
+            }
+          });
+        });
+    } else {
+      delete params.datetime;
+    }
+
     new Setting(contentEl)
       .setName(this.t('publishModal_commentStatus'))
       .addDropdown((dropdown) => {
         dropdown
           .addOption(CommentStatus.Open, this.t('publishModal_commentStatusOpen'))
           .addOption(CommentStatus.Closed, this.t('publishModal_commentStatusClosed'))
-          .setValue(this.plugin.settings.defaultCommentStatus)
+          .setValue(params.commentStatus)
           .onChange((value) => {
             params.commentStatus = value as CommentStatus;
           });

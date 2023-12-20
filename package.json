@@ -37,6 +37,7 @@
 		"esbuild": "0.17.3",
 		"eslint-plugin-node": "^11.1.0",
 		"file-type-checker": "^1.0.8",
+		"imask": "^7.2.1",
 		"juice": "^10.0.0",
 		"lodash-es": "^4.17.21",
 		"markdown-it": "^13.0.1",

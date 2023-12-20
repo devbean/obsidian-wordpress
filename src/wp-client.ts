@@ -69,6 +69,8 @@ export interface WordPressPostParams {
    * WordPress profile name.
    */
   profileName?: string;
+
+  datetime?: Date;
 }
 
 export interface WordPressPublishParams extends WordPressAuthParams {

@@ -8,12 +8,13 @@ import {
 } from './wp-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import WordpressPlugin from './main';
-import { PostType, Term } from './wp-api';
+import { PostStatus, PostType, Term } from './wp-api';
 import { RestClient } from './rest-client';
 import { isArray, isFunction, isNumber, isObject, isString, template } from 'lodash-es';
 import { SafeAny } from './utils';
 import { WpProfile } from './wp-profile';
 import { FormItemNameMapper, FormItems, Media } from './types';
+import { formatISO } from 'date-fns';
 
 
 interface WpRestEndpoint {
@@ -65,6 +66,10 @@ export class WpRestClient extends AbstractWordPressClient {
     } else {
       url = getUrl(this.context.endpoints?.newPost, 'wp-json/wp/v2/posts');
     }
+    const extra: Record<string, string> = {};
+    if (postParams.status === PostStatus.Future) {
+      extra.date = formatISO(postParams.datetime ?? new Date());
+    }
     const resp: SafeAny = await this.client.httpPost(
       url,
       {
@@ -73,7 +78,8 @@ export class WpRestClient extends AbstractWordPressClient {
         status: postParams.status,
         comment_status: postParams.commentStatus,
         categories: postParams.categories,
-        tags: postParams.tags ?? []
+        tags: postParams.tags ?? [],
+        ...extra
       },
       {
         headers: this.context.getHeaders(certificate)

@@ -9,7 +9,7 @@ import {
 } from './wp-client';
 import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
-import { PostType, PostTypeConst, Term } from './wp-api';
+import { PostStatus, PostType, PostTypeConst, Term } from './wp-api';
 import { SafeAny, showError } from './utils';
 import { WpProfile } from './wp-profile';
 import { Media } from './types';
@@ -67,6 +67,12 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         terms_names: {
           'post_tag': postParams.tags
         }
+      };
+    }
+    if (postParams.status === PostStatus.Future) {
+      publishContent = {
+        ...publishContent,
+        post_date: postParams.datetime ?? new Date()
       };
     }
     let publishPromise;

@@ -83,7 +83,7 @@ export class WordpressSettingTab extends PluginSettingTab {
         dropdown
           .addOption(PostStatus.Draft, t('settings_defaultPostStatusDraft'))
           .addOption(PostStatus.Publish, t('settings_defaultPostStatusPublish'))
-          // .addOption(PostStatus.Future, 'future')
+          .addOption(PostStatus.Private, t('settings_defaultPostStatusPrivate'))
           .setValue(this.plugin.settings.defaultPostStatus)
           .onChange(async (value) => {
             this.plugin.settings.defaultPostStatus = value as PostStatus;
