@@ -240,7 +240,18 @@ export abstract class AbstractWordPressClient implements WordPressClient {
         }
       }
       if (this.plugin.settings.replaceMediaLinks) {
-        activeEditor.editor.setValue(postParams.content);
+        const newFrontmatter = String(activeEditor.rawFrontmatter || '').trim();
+        const newContent = [];
+
+        if (newFrontmatter) {
+          newContent.push('---');
+          newContent.push(newFrontmatter);
+          newContent.push('---');
+          newContent.push('');
+        }
+        newContent.push(postParams.content);
+
+        activeEditor.editor.setValue(newContent.join("\n"));
       }
     }
   }
