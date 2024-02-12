@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.18.0](https://github.com/devbean/obsidian-wordpress/compare/0.17.0...0.18.0) (2023-12-20)
+
+
+### Features
+
+* Now you can publish private or scheduled posts. ([7a19a5f](https://github.com/devbean/obsidian-wordpress/commit/7a19a5f9abe5bdc5da8a90dfb7128cd8e448f19a))
+
 ## [0.17.0](https://github.com/devbean/obsidian-wordpress/compare/0.16.0...0.17.0) (2023-12-18)
 
 
