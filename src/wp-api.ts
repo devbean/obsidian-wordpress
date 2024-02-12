@@ -14,7 +14,12 @@ export const enum PostTypeConst {
   Post = 'post',
   Page = 'page',
 }
-export type PostType = string;
+
+export interface PostTypeObj {
+  slug: string;
+  name: string;
+}
+export type PostType = string | PostTypeObj;
 
 export interface Term {
   id: string;

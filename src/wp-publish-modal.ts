@@ -172,14 +172,21 @@ export class WpPublishModal extends AbstractModal {
       });
 
     if (!this.matterData?.postId) {
+      const defaultType = params.postType
+      const defaultTypeSlug = 'string' === typeof defaultType ? defaultType : defaultType.slug;
+
       new Setting(contentEl)
         .setName(this.t('publishModal_postType'))
         .addDropdown((dropdown) => {
           this.postTypes.items.forEach(it => {
-            dropdown.addOption(it, it);
+            if ('string' === typeof it) {
+              dropdown.addOption(it, it);
+            } else {
+              dropdown.addOption(it.slug , it.name);
+            }
           });
           dropdown
-            .setValue(params.postType)
+            .setValue(defaultTypeSlug)
             .onChange((value) => {
               params.postType = value as PostType;
               this.display(params);

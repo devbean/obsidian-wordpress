@@ -115,7 +115,7 @@ export class WpRestClient extends AbstractWordPressClient {
 
   async getPostTypes(certificate: WordPressAuthParams): Promise<PostType[]> {
     const data: SafeAny = await this.client.httpGet(
-      getUrl(this.context.endpoints?.getPostTypes, 'wp-json/wp/v2/types'),
+      getUrl(this.context.endpoints?.getPostTypes, 'wp-json/wp/v2/types?context=edit'),
       {
         headers: this.context.getHeaders(certificate)
       });
@@ -290,7 +290,10 @@ class WpRestClientCommonContext implements WpRestClientContext {
     }),
     toPostTypes: (response: SafeAny): PostType[] => {
       if (isObject(response)) {
-        return Object.keys(response);
+        return Object.entries(response)
+          // We only publish to viewable post types, and never to an attachment
+          .filter(([slug, { viewable }]) => viewable && 'attachment' !== slug)
+          .map(([slug, { labels :{singular_name} }]: [string, { labels: {singular_name: string} }]) => ({slug, name: singular_name}));
       }
       return [];
     }
