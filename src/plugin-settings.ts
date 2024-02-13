@@ -74,6 +74,11 @@ export interface WordpressPluginSettings {
    * Whether media links should be replaced after uploading to WordPress.
    */
   replaceMediaLinks: boolean;
+
+  /**
+   * Whether to publish the post contents with additional block-editor markup.
+   */
+  publishAsBlocks: boolean;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {

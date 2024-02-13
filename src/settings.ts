@@ -208,6 +208,18 @@ export class WordpressSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+
+    new Setting(containerEl)
+      .setName(t('settings_publishAsBlocks'))
+      .setDesc(t('settings_publishAsBlocksDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.publishAsBlocks)
+          .onChange(async (value) => {
+            this.plugin.settings.publishAsBlocks = value;
+            await this.plugin.saveSettings();
+          }),
+      );
 	}
 
 }
