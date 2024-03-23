@@ -106,7 +106,7 @@ export class WpRestClient extends AbstractWordPressClient {
 
   async getCategories(certificate: WordPressAuthParams): Promise<Term[]> {
     const data = await this.client.httpGet(
-      getUrl(this.context.endpoints?.getCategories, 'wp-json/wp/v2/categories'),
+      getUrl(this.context.endpoints?.getCategories, 'wp-json/wp/v2/categories?per_page=100'),
       {
         headers: this.context.getHeaders(certificate)
       });
