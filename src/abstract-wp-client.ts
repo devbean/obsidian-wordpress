@@ -1,4 +1,5 @@
 import { Notice, TFile } from 'obsidian';
+import { convertHtmlToBlocks } from './html-to-blocks';
 import WordpressPlugin from './main';
 import {
   WordPressAuthParams,
@@ -135,7 +136,10 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       auth,
       postParams
     });
-    const html = AppState.markdownParser.render(postParams.content);
+    let html = AppState.markdownParser.render(postParams.content);
+    if (this.plugin.settings.publishAsBlocks) {
+      html = convertHtmlToBlocks(html);
+    }
     const result = await this.publish(
       postParams.title ?? 'A post from Obsidian!',
       html,
