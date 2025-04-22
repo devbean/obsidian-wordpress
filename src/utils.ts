@@ -104,7 +104,7 @@ export function showError<T>(error: unknown): WordPressClientResult<T> {
   } else {
     errorMessage = (error as SafeAny).toString();
   }
-  new Notice(errorMessage, ERROR_NOTICE_TIMEOUT);
+  new Notice(`❌ ${ errorMessage }`, ERROR_NOTICE_TIMEOUT);
   return {
     code: WordPressClientReturnCode.Error as const,
     error: {
