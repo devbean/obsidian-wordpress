@@ -203,18 +203,17 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       const images = getImages(postParams.content);
       for (const img of images) {
         if (!img.srcIsUrl) {
-          const splitFile = img.src.split('.');
-          const ext = splitFile.pop();
-          const fileName = splitFile.join('.');
-          // @ts-expect-error
-          let filePath = (await this.plugin.app.vault.getAvailablePathForAttachments(
-            fileName,
-            ext,
-            activeFile
-          )) as string;
-          const pathRegex = /(.*) \d+\.(.*)/;
-          filePath = filePath.replace(pathRegex, '$1.$2');
-          const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+
+          img.src = decodeURI(img.src);
+          const fileName = img.src.split("/").pop();
+
+          if ( fileName === undefined )
+            continue;
+
+          let normPath = this.plugin.app.metadataCache.getFirstLinkpathDest(img.src, fileName);
+
+          const imgFile = normPath;
+
           if (imgFile instanceof TFile) {
             const content = await this.plugin.app.vault.readBinary(imgFile);
             const fileType = fileTypeChecker.detectFile(content);
