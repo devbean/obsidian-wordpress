@@ -125,7 +125,7 @@ export class WpRestClient extends AbstractWordPressClient {
   async validateUser(certificate: WordPressAuthParams): Promise<WordPressClientResult<boolean>> {
     try {
       const data = await this.client.httpGet(
-        getUrl(this.context.endpoints?.validateUser, `wp-json/wp/v2/users?search=xxx`),
+        getUrl(this.context.endpoints?.validateUser, `wp-json/wp/v2/users/me`),
         {
           headers: this.context.getHeaders(certificate)
         });

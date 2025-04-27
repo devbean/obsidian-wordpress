@@ -80524,17 +80524,12 @@ var AbstractWordPressClient = class {
       const images = getImages(postParams.content);
       for (const img of images) {
         if (!img.srcIsUrl) {
-          const splitFile = img.src.split(".");
-          const ext = splitFile.pop();
-          const fileName = splitFile.join(".");
-          let filePath = await this.plugin.app.vault.getAvailablePathForAttachments(
-            fileName,
-            ext,
-            activeFile
-          );
-          const pathRegex = /(.*) \d+\.(.*)/;
-          filePath = filePath.replace(pathRegex, "$1.$2");
-          const imgFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+          img.src = decodeURI(img.src);
+          const fileName = img.src.split("/").pop();
+          if (fileName === void 0)
+            continue;
+          let normPath = this.plugin.app.metadataCache.getFirstLinkpathDest(img.src, fileName);
+          const imgFile = normPath;
           if (imgFile instanceof import_obsidian8.TFile) {
             const content = await this.plugin.app.vault.readBinary(imgFile);
             const fileType = import_file_type_checker.default.detectFile(content);
@@ -81083,7 +81078,7 @@ var WpRestClient = class extends AbstractWordPressClient {
   async getCategories(certificate) {
     var _a;
     const data = await this.client.httpGet(
-      getUrl((_a = this.context.endpoints) == null ? void 0 : _a.getCategories, "wp-json/wp/v2/categories"),
+      getUrl((_a = this.context.endpoints) == null ? void 0 : _a.getCategories, "wp-json/wp/v2/categories?per_page=100"),
       {
         headers: this.context.getHeaders(certificate)
       }
@@ -81104,7 +81099,7 @@ var WpRestClient = class extends AbstractWordPressClient {
     var _a;
     try {
       const data = await this.client.httpGet(
-        getUrl((_a = this.context.endpoints) == null ? void 0 : _a.validateUser, `wp-json/wp/v2/users?search=xxx`),
+        getUrl((_a = this.context.endpoints) == null ? void 0 : _a.validateUser, `wp-json/wp/v2/users/me`),
         {
           headers: this.context.getHeaders(certificate)
         }
