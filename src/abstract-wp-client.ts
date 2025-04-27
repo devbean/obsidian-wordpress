@@ -12,13 +12,7 @@ import {
 import { WpPublishModal } from './wp-publish-modal';
 import { PostType, PostTypeConst, Term } from './wp-api';
 import { ERROR_NOTICE_TIMEOUT, WP_DEFAULT_PROFILE_NAME } from './consts';
-import {
-  isPromiseFulfilledResult,
-  isValidUrl,
-  openWithBrowser, processFile,
-  SafeAny,
-  showError,
-} from './utils';
+import { isPromiseFulfilledResult, isValidUrl, openWithBrowser, processFile, SafeAny, showError, } from './utils';
 import { WpProfile } from './wp-profile';
 import { AppState } from './app-state';
 import { ConfirmCode, openConfirmModal } from './confirm-modal';
@@ -203,17 +197,12 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       const images = getImages(postParams.content);
       for (const img of images) {
         if (!img.srcIsUrl) {
-
           img.src = decodeURI(img.src);
           const fileName = img.src.split("/").pop();
-
-          if ( fileName === undefined )
+          if (fileName === undefined) {
             continue;
-
-          let normPath = this.plugin.app.metadataCache.getFirstLinkpathDest(img.src, fileName);
-
-          const imgFile = normPath;
-
+          }
+          const imgFile = this.plugin.app.metadataCache.getFirstLinkpathDest(img.src, fileName);
           if (imgFile instanceof TFile) {
             const content = await this.plugin.app.vault.readBinary(imgFile);
             const fileType = fileTypeChecker.detectFile(content);
