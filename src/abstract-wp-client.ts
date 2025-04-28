@@ -212,7 +212,13 @@ export abstract class AbstractWordPressClient implements WordPressClient {
               content: content
             }, auth);
             if (result.code === WordPressClientReturnCode.OK) {
-              postParams.content = postParams.content.replace(img.original, `![${imgFile.name}](${result.data.url})`);
+              if(img.width && img.height){
+                  postParams.content = postParams.content.replace(img.original, `![[${result.data.url}|${img.width}x${img.height}]]`);
+              }else if (img.width){
+                  postParams.content = postParams.content.replace(img.original, `![[${result.data.url}|${img.width}]]`);
+              }else{
+                  postParams.content = postParams.content.replace(img.original, `![[${result.data.url}]]`);
+              }
             } else {
               if (result.error.code === WordPressClientReturnCode.ServerInternalError) {
                 new Notice(result.error.message, ERROR_NOTICE_TIMEOUT);
@@ -250,7 +256,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       // read note title, content and matter data
       const title = file.basename;
       const { content, matter: matterData } = await processFile(file, this.plugin.app);
-
+      
       // check if profile selected is matched to the one in note property,
       // if not, ask whether to update or not
       await this.checkExistingProfile(matterData);
