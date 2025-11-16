@@ -4,9 +4,10 @@ on:
   push:
     tags:
       - "*"
+  workflow_dispatch:
 
 env:
-  PLUGIN_NAME: obsidian-wordpress
+  PLUGIN_NAME: obsidian-wordpress-reloaded
 
 jobs:
   build:

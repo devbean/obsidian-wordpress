@@ -147,10 +147,10 @@ export class WpPublishModal extends AbstractModal {
           this.dateInputMask.on('accept', () => {
             if (this.dateInputMask) {
               if (this.dateInputMask.masked.isComplete) {
-                text.inputEl.style.borderColor = '';
+                text.inputEl.classList.remove('obsidian-wordpress-reloaded-date-input-invalid');
                 params.datetime = this.dateInputMask.typedValue;
               } else {
-                text.inputEl.style.borderColor = 'red';
+                text.inputEl.classList.add('obsidian-wordpress-reloaded-date-input-invalid');
               }
             }
           });

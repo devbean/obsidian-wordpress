@@ -12,6 +12,7 @@ import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSett
 import { PassCrypto } from './pass-crypto';
 import { doClientPublish, setupMarkdownParser, showError } from './utils';
 import { cloneDeep } from 'lodash-es';
+import { Logger } from './logger';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -30,7 +31,7 @@ export default class WordpressPlugin extends Plugin {
   private ribbonWpIcon: HTMLElement | null = null;
 
   async onload() {
-    console.log('loading obsidian-wordpress plugin');
+    Logger.log('loading obsidian-wordpress-reloaded plugin');
 
     await this.loadSettings();
     // lang should be load early, but after settings
@@ -159,7 +160,7 @@ export default class WordpressPlugin extends Plugin {
               redirectUri: WP_OAUTH2_REDIRECT_URI,
               codeVerifier: AppState.codeVerifier
             });
-            console.log(token);
+            Logger.log(token);
             AppState.events.trigger(EventType.OAUTH2_TOKEN_GOT, token);
           }
         }

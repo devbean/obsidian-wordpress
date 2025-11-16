@@ -13,6 +13,20 @@ export interface Media {
   content: ArrayBuffer;
 }
 
+/**
+ * Rest client options for making HTTP requests
+ */
+export interface RestClientOptions {
+    /**
+     * The base URL for REST API requests
+     */
+    url: URL;
+}
+export interface XmlRpcOptions {
+  url: URL;
+  xmlRpcPath: string;
+}
+
 export function isMedia(obj: SafeAny): obj is Media {
   return (
     typeof obj === 'object'

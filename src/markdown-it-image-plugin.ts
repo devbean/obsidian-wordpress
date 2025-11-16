@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it';
 import Token from 'markdown-it/lib/token';
 import { trim } from 'lodash-es';
-
+import { Logger } from './logger';
 
 const tokenType = 'ob_img';
 
@@ -31,13 +31,17 @@ function plugin(md: MarkdownIt): void {
     const regex = /^!\[\[([^|\]\n]+)(\|([^\]\n]+))?\]\]/;
     const match = state.src.slice(state.pos).match(regex);
     if (match) {
-      if (silent) {
-        return true;
-      }
-      const token = state.push(tokenType, 'img', 0);
       const matched = match[0];
       const src = match[1];
       const size = match[3];
+      if (silent) {
+        Logger.log(`MarkdownItImagePlugin: silent match src ${src}, size ${size}`);
+        return true;
+      }
+      const token = state.push(tokenType, 'img', 0);
+      
+      Logger.log('image src', src);
+      Logger.log('image size', size);
       let width: string | undefined;
       let height: string | undefined;
       if (size) {
@@ -80,6 +84,7 @@ function plugin(md: MarkdownIt): void {
     const src = token.attrs?.[0]?.[1];
     const width = token.attrs?.[1]?.[1];
     const height = token.attrs?.[2]?.[1];
+    Logger.log(`MarkdownItImagePlugin: render image src ${src}, width ${width}, height ${height}`);
     if (width) {
       if (height) {
         return `<img src="${src}" width="${width}" height="${height}" alt="">`;

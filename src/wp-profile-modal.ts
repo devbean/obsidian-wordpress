@@ -3,12 +3,12 @@ import WordpressPlugin from './main';
 import { WpProfile } from './wp-profile';
 import { EventType, WP_OAUTH2_REDIRECT_URI } from './consts';
 import { WordPressClientReturnCode } from './wp-client';
-import { generateCodeVerifier, OAuth2Client } from './oauth2-client';
+import { generateCodeVerifier, OAuth2Client, WordPressOAuth2Token } from './oauth2-client';
 import { AppState } from './app-state';
-import { isValidUrl, showError } from './utils';
+import { isValidUrl, SafeAny, showError } from './utils';
 import { ApiType } from './plugin-settings';
 import { AbstractModal } from './abstract-modal';
-
+import { Logger } from './logger';
 
 export function openProfileModal(
   plugin: WordpressPlugin,
@@ -62,14 +62,24 @@ class WpProfileModal extends AbstractModal {
     super(plugin);
 
     this.profileData = Object.assign({}, profile);
-    this.tokenGotRef = AppState.events.on(EventType.OAUTH2_TOKEN_GOT, async token => {
-      this.profileData.wpComOAuth2Token = token;
+    this.tokenGotRef = AppState.events.on(EventType.OAUTH2_TOKEN_GOT, async token=> {
+      const tokenData = token as WordPressOAuth2Token;
+      this.#onTokenGot(tokenData);
       if (atIndex >= 0) {
         // if token is undefined, just remove it
-        this.plugin.settings.profiles[atIndex].wpComOAuth2Token = token;
+        this.plugin.settings.profiles[atIndex].wpComOAuth2Token = tokenData;
         await this.plugin.saveSettings();
       }
     });
+  }
+
+  #onTokenGot = (tokenData: SafeAny) => {
+    Logger.log('WpProfileModal.onTokenGot', tokenData);
+    if (tokenData) {
+      this.profile.wpComOAuth2Token = tokenData;
+      this.close();
+      this.onSubmit?.(this.profile, this.atIndex);
+    }
   }
 
   onOpen() {

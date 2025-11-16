@@ -1,10 +1,7 @@
-import { requestUrl } from 'obsidian';
+import { request } from 'obsidian';
 import { getBoundary, SafeAny } from './utils';
-import { FormItemNameMapper, FormItems } from './types';
-
-interface RestOptions {
-  url: URL;
-}
+import { FormItemNameMapper, FormItems, RestClientOptions } from './types';
+import { Logger } from './logger';
 
 export class RestClient {
 
@@ -15,9 +12,9 @@ export class RestClient {
   private readonly href: string;
 
   constructor(
-    private readonly options: RestOptions
+    private readonly options: RestClientOptions
   ) {
-    console.log(options);
+    Logger.log('RestClient', options);
 
     this.href = this.options.url.href;
     if (this.href.endsWith('/')) {
@@ -41,18 +38,16 @@ export class RestClient {
       headers: {},
       ...options
     };
-    console.log('REST GET', endpoint, opts);
-    const response = await requestUrl({
+    Logger.log('RestClient httpGet', { endpoint, opts });
+    const response = await request({
       url: endpoint,
       method: 'GET',
       headers: {
-        'content-type': 'application/json',
-        'user-agent': 'obsidian.md',
+        'User-Agent': 'obsidian.md',
         ...opts.headers
       }
     });
-    console.log('GET response', response);
-    return response.json;
+    return JSON.parse(response);
   }
 
   async httpPost(
@@ -76,25 +71,26 @@ export class RestClient {
         boundary,
         nameMapper: options.formItemNameMapper
       });
-      predefinedHeaders['content-type'] = `multipart/form-data; boundary=${boundary}`;
+      predefinedHeaders['Content-Type'] = `multipart/form-data; boundary=${boundary}`;
     } else if (body instanceof ArrayBuffer) {
       requestBody = body;
     } else {
       requestBody = JSON.stringify(body);
-      predefinedHeaders['content-type'] = 'application/json';
+      predefinedHeaders['Content-Type'] = 'application/json';
     }
-    const response = await requestUrl({
+    const headers = {
+      'User-Agent': 'obsidian.md',
+      ...predefinedHeaders,
+      ...options.headers
+    };
+    Logger.log('RestClient httpPost', { endpoint, body, headers });
+    const response = await request({
       url: endpoint,
       method: 'POST',
-      headers: {
-        'user-agent': 'obsidian.md',
-        ...predefinedHeaders,
-        ...options.headers
-      },
+      headers,
       body: requestBody
     });
-    console.log('POST response', response);
-    return response.json;
+    return JSON.parse(response);
   }
 
 }

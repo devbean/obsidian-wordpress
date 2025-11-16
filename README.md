@@ -1,12 +1,26 @@
-# obsidian-wordpress
+# obsidian-wordpress-reloaded
 
-[<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="BuyMeACoffee" width="100">](https://www.buymeacoffee.com/devbean)
+This is a maintained fork of the [original obsidian-wordpress plugin](https://github.com/devbean/obsidian-wordpress).
+
+## Why this fork?
+
+The original plugin is no longer actively maintained. This fork aims to:
+- Keep the plugin up-to-date with Obsidian's latest API
+- Fix bugs and issues
+- Add new features
+- Provide active maintenance and support
 
 This plugin makes you publish Obsidian documents to WordPress.
 
-There are some introduction videos you can watch:
+There are some introduction videos you can watch (from the original plugin):
 * [YouTube (Chinese) by 简睿学堂-emisjerry](https://youtu.be/7YECfr_W1WM)
 * [Bilibili (Chinese) by 简睿学堂-emisjerry](https://www.bilibili.com/video/BV1FT411A77m/?vd_source=8d3e1ef8cd3aab146af84cfad2f5076f)
+
+## Features
+
+All features from the original plugin, plus:
+- Upload raw markdown content (new)
+- More features coming soon...
 
 ## Usages
 
@@ -48,4 +62,15 @@ Traditionally, it is done by installing plugins. WordPress 5.6 was introduced
 application passwords to do similar things. So if you are OK with WordPress 5.6,
 application passwords is preferred as no plugin in needed.
 
-Read [this page](https://devbean.github.io/obsidian-wordpress) for more information.
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Credits
+
+- Original plugin by [devbean](https://github.com/devbean)
+- Current maintainer: [bugparty](https://github.com/bugparty)
+
+## License
+
+Apache License 2.0, same as the original plugin.

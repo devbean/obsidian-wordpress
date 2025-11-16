@@ -79,6 +79,8 @@
   "settings_commentConvertModeHTMLDesc": "Convert Obsidian notes comments to HTML comments.",
   "settings_enableHtml": "Enable HTML",
   "settings_enableHtmlDesc": "Enable HTML tags in notes. This might cause XSS attack to your WordPress.",
+  "settings_uploadRawMarkdown": "Upload Raw Markdown",
+  "settings_uploadRawMarkdownDesc": "Upload the raw markdown content instead of converting to HTML. This requires your WordPress site to have a markdown parser plugin installed.",
   "settings_replaceMediaLinks": "Replace media links",
   "settings_replaceMediaLinksDesc": "Replace media links to WordPress URLs after uploading.",
   "loginModal_title": "WordPress Login",

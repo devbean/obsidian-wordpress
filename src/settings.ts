@@ -198,6 +198,18 @@ export class WordpressSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName(t('settings_uploadRawMarkdown'))
+      .setDesc(t('settings_uploadRawMarkdownDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.uploadRawMarkdown)
+          .onChange(async (value) => {
+            this.plugin.settings.uploadRawMarkdown = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
       .setName(t('settings_replaceMediaLinks'))
       .setDesc(t('settings_replaceMediaLinksDesc'))
       .addToggle((toggle) =>

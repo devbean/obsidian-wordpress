@@ -7,3 +7,7 @@
 .modal-header h1 {
   margin: 0;
 }
+
+.obsidian-wordpress-reloaded-date-input-invalid {
+  border-color: var(--text-error) !important;
+}

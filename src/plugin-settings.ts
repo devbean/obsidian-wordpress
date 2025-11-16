@@ -5,7 +5,7 @@ import { isNil, isUndefined } from 'lodash-es';
 import { SafeAny } from './utils';
 import { PassCrypto } from './pass-crypto';
 import { WP_DEFAULT_PROFILE_NAME } from './consts';
-
+import { Logger } from './logger';
 
 export const enum SettingsVersion {
   V2 = '2'
@@ -71,6 +71,11 @@ export interface WordpressPluginSettings {
   enableHtml: boolean;
 
   /**
+   * Whether to upload raw markdown content instead of converting to HTML.
+   */
+  uploadRawMarkdown: boolean;
+
+  /**
    * Whether media links should be replaced after uploading to WordPress.
    */
   replaceMediaLinks: boolean;
@@ -87,6 +92,7 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   mathJaxOutputType: MathJaxOutputType.SVG,
   commentConvertMode: CommentConvertMode.Ignore,
   enableHtml: false,
+  uploadRawMarkdown: false,
   replaceMediaLinks: true,
 }
 
@@ -94,7 +100,7 @@ export async function upgradeSettings(
   existingSettings: SafeAny,
   to: SettingsVersion
 ): Promise<{ needUpgrade: boolean, settings: WordpressPluginSettings }> {
-  console.log(existingSettings, to);
+  Logger.log('upgradeSettings', existingSettings, to);
   if (isUndefined(existingSettings.version)) {
     // V1
     if (to === SettingsVersion.V2) {

@@ -15,7 +15,7 @@ import { SafeAny } from './utils';
 import { WpProfile } from './wp-profile';
 import { FormItemNameMapper, FormItems, Media } from './types';
 import { formatISO } from 'date-fns';
-
+import { Logger } from './logger';
 
 interface WpRestEndpoint {
   base: string | UrlGetter;
@@ -84,7 +84,7 @@ export class WpRestClient extends AbstractWordPressClient {
       {
         headers: this.context.getHeaders(certificate)
       });
-    console.log('WpRestClient response', resp);
+    Logger.log('WpRestClient response', resp);
     try {
       const result = this.context.responseParser.toWordPressPublishResult(postParams, resp);
       return {
@@ -162,7 +162,7 @@ export class WpRestClient extends AbstractWordPressClient {
         {
           headers: this.context.getHeaders(certificate)
         });
-      console.log('WpRestClient newTag response', resp);
+      Logger.log('WpRestClient newTag response', resp);
       return this.context.responseParser.toTerm(resp);
     } else {
       return exists[0];
@@ -171,6 +171,7 @@ export class WpRestClient extends AbstractWordPressClient {
 
   async uploadMedia(media: Media, certificate: WordPressAuthParams): Promise<WordPressClientResult<WordPressMediaUploadResult>> {
     try {
+      Logger.log('uploadMedia', media);
       const formItems = new FormItems();
       formItems.append('file', media);
 
@@ -190,7 +191,7 @@ export class WpRestClient extends AbstractWordPressClient {
         response
       };
     } catch (e: SafeAny) {
-      console.error('uploadMedia', e);
+      Logger.error('uploadMedia', e);
       return {
         code: WordPressClientReturnCode.Error,
         error: {
@@ -302,7 +303,7 @@ export class WpRestClientMiniOrangeContext extends WpRestClientCommonContext {
 
   constructor() {
     super();
-    console.log(`${this.name} loaded`);
+    Logger.log(`${this.name} loaded`);
   }
 }
 
@@ -311,7 +312,7 @@ export class WpRestClientAppPasswordContext extends WpRestClientCommonContext {
 
   constructor() {
     super();
-    console.log(`${this.name} loaded`);
+    Logger.log(`${this.name} loaded`);
   }
 }
 
@@ -336,7 +337,7 @@ export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
     private readonly site: string,
     private readonly accessToken: string
   ) {
-    console.log(`${this.name} loaded`);
+    Logger.log(`${this.name} loaded`);
   }
 
   formItemNameMapper(name: string, isArray: boolean): string {

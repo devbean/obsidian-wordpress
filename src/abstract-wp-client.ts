@@ -129,10 +129,14 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       auth,
       postParams
     });
-    const html = AppState.markdownParser.render(postParams.content);
+    
+    let content = postParams.content;
+    if (!this.plugin.settings.uploadRawMarkdown) {
+      content = AppState.markdownParser.render(postParams.content);
+    }
     const result = await this.publish(
       postParams.title ?? 'A post from Obsidian!',
-      html,
+      content,
       postParams,
       auth);
     if (result.code === WordPressClientReturnCode.Error) {

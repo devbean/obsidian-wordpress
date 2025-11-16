@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-wordpress",
-	"version": "0.18.0",
-	"description": "A plugin for publishing Obsidian documents to WordPress.",
+	"name": "obsidian-wordpress-reloaded",
+	"version": "1.1.1",
+	"description": "A plugin for publishing Obsidian documents to WordPress. Seamlessly sync your notes to WordPress blogs, supporting Markdown formatting, images, and custom publishing options. Maintain your content workflow within Obsidian while sharing with your WordPress audience.forked from https://github.com/devbean/obsidian-wordpress",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

@@ -79,6 +79,8 @@
   "settings_commentConvertModeHTMLDesc": "将笔记中的注释转换为 HTML 注释",
   "settings_enableHtml": "启用 HTML",
   "settings_enableHtmlDesc": "启用笔记中的 HTML 标签。这可能导致针对 WordPress 的 XSS 攻击",
+  "settings_uploadRawMarkdown": "上传原始 Markdown",
+  "settings_uploadRawMarkdownDesc": "上传原始 Markdown 内容而不是转换为 HTML。这需要你的 WordPress 站点安装 Markdown 解析插件。",
   "settings_replaceMediaLinks": "替换媒体链接",
   "settings_replaceMediaLinksDesc": "上传成功之后，将文档中的路径替换为 WordPress 链接",
   "loginModal_title": "WordPress 登录",
