@@ -74,6 +74,31 @@ export interface WordpressPluginSettings {
    * Whether media links should be replaced after uploading to WordPress.
    */
   replaceMediaLinks: boolean;
+
+  /**
+   * Whether pandoc-style citations should be converted to Zotpress shortcodes.
+   */
+  formatZotpressShortcodes: boolean;
+
+  /**
+   * Resolve pandoc citekeys via Better BibTeX before formatting Zotpress shortcodes.
+   */
+  zotpressResolveViaBetterBibTeX: boolean;
+
+  /**
+   * Better BibTeX JSON-RPC endpoint URL.
+   */
+  zotpressBetterBibTeXEndpointUrl: string;
+
+  /**
+   * Optional selector for Better BibTeX library parameter.
+   */
+  zotpressBetterBibTeXLibrarySelector: string;
+
+  /**
+   * Fallback Zotpress library id used when it cannot be inferred from lookup responses.
+   */
+  zotpressLibraryId: string;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
@@ -88,6 +113,11 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   commentConvertMode: CommentConvertMode.Ignore,
   enableHtml: false,
   replaceMediaLinks: true,
+  formatZotpressShortcodes: false,
+  zotpressResolveViaBetterBibTeX: true,
+  zotpressBetterBibTeXEndpointUrl: 'http://localhost:23119/better-bibtex/json-rpc',
+  zotpressBetterBibTeXLibrarySelector: '',
+  zotpressLibraryId: '',
 }
 
 export async function upgradeSettings(

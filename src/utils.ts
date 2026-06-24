@@ -10,6 +10,7 @@ import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { format } from 'date-fns';
 import { MatterData } from './types';
 import { MarkdownItCommentPluginInstance } from './markdown-it-comment-plugin';
+import { MarkdownItCitationPluginInstance } from './markdown-it-citation-plugin';
 
 export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -32,6 +33,9 @@ export function isPromiseFulfilledResult<T>(obj: SafeAny): obj is PromiseFulfill
 export function setupMarkdownParser(settings: WordpressPluginSettings): void {
   MarkdownItMathJax3PluginInstance.updateOutputType(settings.mathJaxOutputType);
   MarkdownItCommentPluginInstance.updateConvertMode(settings.commentConvertMode);
+  MarkdownItCitationPluginInstance.updateEnabled(
+    settings.formatZotpressShortcodes && !settings.zotpressResolveViaBetterBibTeX,
+  );
 }
 
 
