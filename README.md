@@ -60,7 +60,7 @@ When bibliography auto-append is needed, the plugin appends:
 
 # Bibliography
 
-[zotpressInTextBib]
+[zotpressInTextBib style="apa" sortby="author" sort="ASC"]
 ```
 
 ### Required plugins and local services

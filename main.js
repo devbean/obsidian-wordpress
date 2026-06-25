@@ -78178,14 +78178,14 @@ var AbstractWordPressClient = class {
 
 # Bibliography
 
-[zotpressInTextBib]`;
+[zotpressInTextBib style="apa" sortby="author" sort="ASC"]`;
   }
   hasConvertibleDoubleBracketCitation(content) {
     const citationRegex = /\[\[\s*@[^\]\n]+\s*\]\]/;
     return citationRegex.test(content);
   }
   hasZotpressInTextBibliography(content) {
-    const bibliographyRegex = /\[zotpressInTextBib\]/i;
+    const bibliographyRegex = /\[zotpressInTextBib(\s[^\]]*)?\]/i;
     return bibliographyRegex.test(content);
   }
   hasZotpressInTextCitation(content) {

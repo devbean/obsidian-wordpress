@@ -224,7 +224,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
     }
 
     const separator = publishContent.endsWith('\n') ? '' : '\n\n';
-    return `${publishContent}${separator}---\n\n# Bibliography\n\n[zotpressInTextBib]`;
+    return `${publishContent}${separator}---\n\n# Bibliography\n\n[zotpressInTextBib style="apa" sortby="author" sort="ASC"]`;
   }
 
   private hasConvertibleDoubleBracketCitation(content: string): boolean {
@@ -233,7 +233,7 @@ export abstract class AbstractWordPressClient implements WordPressClient {
   }
 
   private hasZotpressInTextBibliography(content: string): boolean {
-    const bibliographyRegex = /\[zotpressInTextBib\]/i;
+    const bibliographyRegex = /\[zotpressInTextBib(\s[^\]]*)?\]/i;
     return bibliographyRegex.test(content);
   }
 
