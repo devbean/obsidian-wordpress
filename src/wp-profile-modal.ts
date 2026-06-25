@@ -8,6 +8,7 @@ import { AppState } from './app-state';
 import { isValidUrl, showError } from './utils';
 import { ApiType } from './plugin-settings';
 import { AbstractModal } from './abstract-modal';
+import { WordPressOAuth2Token } from './oauth2-client';
 
 
 export function openProfileModal(
@@ -63,10 +64,11 @@ class WpProfileModal extends AbstractModal {
 
     this.profileData = Object.assign({}, profile);
     this.tokenGotRef = AppState.events.on(EventType.OAUTH2_TOKEN_GOT, async token => {
-      this.profileData.wpComOAuth2Token = token;
+      const tokenData = token as WordPressOAuth2Token | undefined;
+      this.profileData.wpComOAuth2Token = tokenData;
       if (atIndex >= 0) {
         // if token is undefined, just remove it
-        this.plugin.settings.profiles[atIndex].wpComOAuth2Token = token;
+        this.plugin.settings.profiles[atIndex].wpComOAuth2Token = tokenData;
         await this.plugin.saveSettings();
       }
     });

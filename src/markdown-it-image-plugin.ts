@@ -1,5 +1,4 @@
 import MarkdownIt from 'markdown-it';
-import Token from 'markdown-it/lib/token';
 import { trim } from 'lodash-es';
 
 
@@ -75,7 +74,7 @@ function plugin(md: MarkdownIt): void {
       return false;
     }
   });
-  md.renderer.rules.ob_img = (tokens: Token[], idx: number) => {
+  md.renderer.rules.ob_img = (tokens, idx) => {
     const token = tokens[idx];
     const src = token.attrs?.[0]?.[1];
     const width = token.attrs?.[1]?.[1];

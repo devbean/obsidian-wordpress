@@ -208,6 +208,78 @@ export class WordpressSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+
+    new Setting(containerEl)
+      .setName(t('settings_formatZotpressShortcodes'))
+      .setDesc(t('settings_formatZotpressShortcodesDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.formatZotpressShortcodes)
+          .onChange(async (value) => {
+            this.plugin.settings.formatZotpressShortcodes = value;
+            await this.plugin.saveSettings();
+
+            setupMarkdownParser(this.plugin.settings);
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName(t('settings_zotpressResolveViaBetterBibTeX'))
+      .setDesc(t('settings_zotpressResolveViaBetterBibTeXDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.zotpressResolveViaBetterBibTeX)
+          .setDisabled(!this.plugin.settings.formatZotpressShortcodes)
+          .onChange(async (value) => {
+            this.plugin.settings.zotpressResolveViaBetterBibTeX = value;
+            await this.plugin.saveSettings();
+
+            setupMarkdownParser(this.plugin.settings);
+            this.display();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName(t('settings_zotpressBetterBibTeXEndpointUrl'))
+      .setDesc(t('settings_zotpressBetterBibTeXEndpointUrlDesc'))
+      .addText((text) =>
+        text
+          .setPlaceholder('http://localhost:23119/better-bibtex/json-rpc')
+          .setValue(this.plugin.settings.zotpressBetterBibTeXEndpointUrl)
+          .setDisabled(!this.plugin.settings.zotpressResolveViaBetterBibTeX || !this.plugin.settings.formatZotpressShortcodes)
+          .onChange(async (value) => {
+            this.plugin.settings.zotpressBetterBibTeXEndpointUrl = value.trim();
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName(t('settings_zotpressBetterBibTeXLibrarySelector'))
+      .setDesc(t('settings_zotpressBetterBibTeXLibrarySelectorDesc'))
+      .addText((text) =>
+        text
+          .setPlaceholder('My Library')
+          .setValue(this.plugin.settings.zotpressBetterBibTeXLibrarySelector)
+          .setDisabled(!this.plugin.settings.zotpressResolveViaBetterBibTeX || !this.plugin.settings.formatZotpressShortcodes)
+          .onChange(async (value) => {
+            this.plugin.settings.zotpressBetterBibTeXLibrarySelector = value.trim();
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName(t('settings_zotpressLibraryId'))
+      .setDesc(t('settings_zotpressLibraryIdDesc'))
+      .addText((text) =>
+        text
+          .setPlaceholder('16058788')
+          .setValue(this.plugin.settings.zotpressLibraryId)
+          .setDisabled(!this.plugin.settings.zotpressResolveViaBetterBibTeX || !this.plugin.settings.formatZotpressShortcodes)
+          .onChange(async (value) => {
+            this.plugin.settings.zotpressLibraryId = value.trim();
+            await this.plugin.saveSettings();
+          }),
+      );
 	}
 
 }

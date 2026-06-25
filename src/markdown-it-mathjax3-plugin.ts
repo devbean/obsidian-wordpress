@@ -1,10 +1,7 @@
 import MarkdownIt from 'markdown-it';
-import StateInline from 'markdown-it/lib/rules_inline/state_inline';
-import StateBlock from 'markdown-it/lib/rules_block/state_block';
 import { TeX } from 'mathjax-full/js/input/tex';
 import { AllPackages } from 'mathjax-full/js/input/tex/AllPackages';
 import { SVG } from 'mathjax-full/js/output/svg';
-import Token from 'markdown-it/lib/token';
 import { liteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor';
 import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html';
 import { AssistiveMmlHandler } from 'mathjax-full/js/a11y/assistive-mml';
@@ -12,6 +9,9 @@ import { mathjax } from 'mathjax-full/js/mathjax';
 import juice from 'juice';
 import { SafeAny } from './utils';
 import { MathJaxOutputType } from './plugin-settings';
+
+type StateInline = SafeAny;
+type StateBlock = SafeAny;
 
 const inlineTokenType = 'math_inline';
 const blockTokenType = 'math_block';
@@ -41,12 +41,12 @@ function plugin(md: MarkdownIt): void {
   md.block.ruler.after('blockquote', blockTokenType, mathBlock, {
     alt: ['paragraph', 'reference', 'blockquote', 'list'],
   });
-  md.renderer.rules[inlineTokenType] = (tokens: Token[], idx: number) => {
+  md.renderer.rules[inlineTokenType] = (tokens, idx) => {
     return renderMath(tokens[idx].content, {
       display: false
     });
   };
-  md.renderer.rules[blockTokenType] = (tokens: Token[], idx: number) => {
+  md.renderer.rules[blockTokenType] = (tokens, idx) => {
     return renderMath(tokens[idx].content, {
       display: true
     });

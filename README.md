@@ -34,6 +34,69 @@ tags:
 Note content here.
 ```
 
+## Zotero and Zotpress Citation Support
+
+This plugin can convert pandoc-style citations in your note to Zotpress shortcodes when publishing.
+
+Supported source format in Obsidian:
+
+```markdown
+[[@citekey]]
+[[@key1; @key2]]
+[[@key,pp. 21-24]]
+```
+
+Published shortcode output examples:
+
+```text
+[zotpressInText item="{16058788:9ZU64DIJ}"]
+[zotpressInText item="{16058788:7D6FGXB2},{16058788:W8HPAWWQ}"]
+```
+
+When bibliography auto-append is needed, the plugin appends:
+
+```markdown
+---
+
+# Bibliography
+
+[zotpressInTextBib style="apa" sortby="author" sort="ASC"]
+```
+
+### Required plugins and local services
+
+To make citekey to item-key conversion work, you need all of the following:
+
+1. WordPress plugin: Zotpress installed and activated on your WordPress site.
+2. Zotero desktop app: running locally while publishing from Obsidian.
+3. Zotero add-on: Better BibTeX for Zotero installed and enabled.
+4. Better BibTeX JSON-RPC server reachable from Obsidian (default endpoint is `http://localhost:23119/better-bibtex/json-rpc`).
+
+Optional but common in Obsidian workflows:
+
+1. A citation management plugin that helps insert citekeys (for example, plugins that insert `[@key]` style references).
+
+### New related settings
+
+In plugin settings:
+
+1. Format Zotpress shortcodes
+  - Enables citation conversion during publish.
+2. Resolve citekeys via Better BibTeX
+  - Resolves citekeys like `@key` to Zotero library ID and item key.
+3. Better BibTeX JSON-RPC endpoint
+  - URL for Better BibTeX local API. Default: `http://localhost:23119/better-bibtex/json-rpc`.
+4. Better BibTeX library selector
+  - Optional selector passed to Better BibTeX when resolving items. Examples: `My Library`, `*`, or a library ID.
+5. Fallback Zotpress library id
+  - Used when library ID cannot be inferred from lookup response.
+
+### Behavior and fallback
+
+1. If resolution succeeds, citekeys are replaced with Zotpress-compatible `{libraryID:itemKey}` tuples.
+2. If some citekeys cannot be resolved, unresolved citations are left unchanged in the content.
+3. If Better BibTeX is unreachable, publish still continues and the plugin shows a warning notice.
+
 ## Limits
 
 This plugin uses XML-RPC or REST protocol to publish to WordPress.

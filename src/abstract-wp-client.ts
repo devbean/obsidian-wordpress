@@ -21,6 +21,7 @@ import { MatterData, Media } from './types';
 import { openPostPublishedModal } from './post-published-modal';
 import { openLoginModal } from './wp-login-modal';
 import { isFunction } from 'lodash-es';
+import { convertPandocCitationsToZotpress } from './zotpress-citation-resolver';
 
 export abstract class AbstractWordPressClient implements WordPressClient {
 
@@ -129,7 +130,8 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       auth,
       postParams
     });
-    const html = AppState.markdownParser.render(postParams.content);
+    const publishContent = await this.preparePublishContent(postParams.content);
+    const html = AppState.markdownParser.render(publishContent);
     const result = await this.publish(
       postParams.title ?? 'A post from Obsidian!',
       html,
@@ -179,6 +181,66 @@ export abstract class AbstractWordPressClient implements WordPressClient {
       }
     }
     return result;
+  }
+
+  private async preparePublishContent(content: string): Promise<string> {
+    if (!this.plugin.settings.formatZotpressShortcodes) {
+      return content;
+    }
+
+    let publishContent = content;
+    if (this.plugin.settings.zotpressResolveViaBetterBibTeX) {
+      const conversion = await convertPandocCitationsToZotpress(content, {
+        enabled: true,
+        endpointUrl: this.plugin.settings.zotpressBetterBibTeXEndpointUrl,
+        librarySelector: this.plugin.settings.zotpressBetterBibTeXLibrarySelector,
+        fallbackLibraryId: this.plugin.settings.zotpressLibraryId,
+      });
+      publishContent = conversion.content;
+
+      if (conversion.lookupError) {
+        new Notice(this.plugin.i18n.t('message_zotpressLookupFailed', {
+          message: conversion.lookupError,
+        }), ERROR_NOTICE_TIMEOUT);
+      }
+
+      if (conversion.unresolvedCitekeys.length > 0) {
+        new Notice(this.plugin.i18n.t('message_zotpressUnresolvedCitekeys', {
+          citekeys: conversion.unresolvedCitekeys.join(', '),
+        }), ERROR_NOTICE_TIMEOUT);
+      }
+    }
+
+    if (this.hasZotpressInTextBibliography(publishContent)) {
+      return publishContent;
+    }
+
+    const hasZotpressCitations = this.hasZotpressInTextCitation(publishContent);
+    const hasLegacyDoubleBracketCitations = this.hasConvertibleDoubleBracketCitation(publishContent);
+    const shouldAppendBib = hasZotpressCitations
+      || (!this.plugin.settings.zotpressResolveViaBetterBibTeX && hasLegacyDoubleBracketCitations);
+    if (!shouldAppendBib) {
+      return publishContent;
+    }
+
+    const separator = publishContent.endsWith('\n') ? '' : '\n\n';
+    return `${publishContent}${separator}---\n\n# Bibliography\n\n[zotpressInTextBib style="apa" sortby="author" sort="ASC"]`;
+  }
+
+  private hasConvertibleDoubleBracketCitation(content: string): boolean {
+    const citationRegex = /\[\[\s*@[^\]\n]+\s*\]\]/;
+    return citationRegex.test(content);
+  }
+
+  private hasZotpressInTextBibliography(content: string): boolean {
+    const bibliographyRegex = /\[zotpressInTextBib(\s[^\]]*)?\]/i;
+    return bibliographyRegex.test(content);
+  }
+
+  private hasZotpressInTextCitation(content: string): boolean {
+    // Matches both single ([zotpressInText item=]) and multi ([zotpress items=]) shortcodes
+    const citationRegex = /\[zotpress(?:InText)?\s+items?=/i;
+    return citationRegex.test(content);
   }
 
   private async updatePostImages(params: {
