@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it';
-import Token from 'markdown-it/lib/token';
+import Token from 'markdown-it/lib/token.mjs';
 import { trim } from 'lodash-es';
 
 
@@ -37,36 +37,41 @@ function plugin(md: MarkdownIt): void {
       const token = state.push(tokenType, 'img', 0);
       const matched = match[0];
       const src = match[1];
-      const size = match[3];
+      const suffix = match[3];
+      let alt: string | undefined;
       let width: string | undefined;
       let height: string | undefined;
-      if (size) {
-        const sepIndex = size.indexOf('x'); // width x height
-        if (sepIndex > 0) {
-          width = trim(size.substring(0, sepIndex));
-          height = trim(size.substring(sepIndex + 1));
-          token.attrs = [
-            [ 'src', src ],
-            [ 'width', width ],
-            [ 'height', height ],
-          ];
+      if (suffix) {
+        if (/^\d+(x\d+)?$/.test(suffix.trim())) {
+          const sepIndex = suffix.indexOf('x'); // width x height
+          if (sepIndex > 0) {
+            width = trim(suffix.substring(0, sepIndex));
+            height = trim(suffix.substring(sepIndex + 1));
+          } else {
+            width = trim(suffix);
+          }
         } else {
-          width = trim(size);
-          token.attrs = [
-            [ 'src', src ],
-            [ 'width', width ],
-          ];
+          // the suffix is an alt text: ![[image.png|some alt]]
+          alt = suffix.trim();
         }
-      } else {
-        token.attrs = [
-          [ 'src', src ],
-        ];
+      }
+      token.attrs = [
+        [ 'src', src ],
+      ];
+      if (alt) {
+        token.attrs.push([ 'alt', alt ]);
+      }
+      if (width) {
+        token.attrs.push([ 'width', width ]);
+      }
+      if (height) {
+        token.attrs.push([ 'height', height ]);
       }
       if (pluginOptions.doWithImage) {
         pluginOptions.doWithImage({
-          src: token.attrs?.[0]?.[1],
-          width: token.attrs?.[1]?.[1],
-          height: token.attrs?.[2]?.[1],
+          src,
+          width,
+          height,
         });
       }
       state.pos += matched.length;
@@ -77,16 +82,24 @@ function plugin(md: MarkdownIt): void {
   });
   md.renderer.rules.ob_img = (tokens: Token[], idx: number) => {
     const token = tokens[idx];
-    const src = token.attrs?.[0]?.[1];
-    const width = token.attrs?.[1]?.[1];
-    const height = token.attrs?.[2]?.[1];
-    if (width) {
-      if (height) {
-        return `<img src="${src}" width="${width}" height="${height}" alt="">`;
-      }
-      return `<img src="${src}" width="${width}" alt="">`;
-    } else {
-      return `<img src="${src}" alt="">`;
+    const attrs = token.attrs ?? [];
+    const src = attrs.find(([ name ]) => name === 'src')?.[1];
+    const alt = attrs.find(([ name ]) => name === 'alt')?.[1];
+    const width = attrs.find(([ name ]) => name === 'width')?.[1];
+    const height = attrs.find(([ name ]) => name === 'height')?.[1];
+    if (!src || !md.validateLink(src)) {
+      return '';
     }
+    let html = `<img src="${md.utils.escapeHtml(src)}"`;
+    if (alt) {
+      html += ` alt="${md.utils.escapeHtml(alt)}"`;
+    }
+    if (width) {
+      html += ` width="${md.utils.escapeHtml(width)}"`;
+    }
+    if (height) {
+      html += ` height="${md.utils.escapeHtml(height)}"`;
+    }
+    return `${html}>`;
   };
 }

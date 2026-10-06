@@ -62,4 +62,53 @@ function plugin(md: MarkdownIt): void {
       return '';
     }
   };
+
+  // multi-line comment block:
+  //
+  //     %%
+  //     commented content
+  //     %%
+  //
+  // The inline rule takes care of single-line comments, so the block rule
+  // only engages when the first line has no closing `%%`.
+  md.block.ruler.before('paragraph', `${tokenType}_block`, (state, startLine, endLine, silent) => {
+    const startPos = state.bMarks[startLine] + state.tShift[startLine];
+    const maxPos = state.eMarks[startLine];
+    const firstLine = state.src.slice(startPos, maxPos).trim();
+    if (!firstLine.startsWith('%%')) {
+      return false;
+    }
+    // there is a closing `%%` in the first line, let the inline rule handle it
+    if (firstLine.slice(2).includes('%%')) {
+      return false;
+    }
+    if (silent) {
+      return true;
+    }
+
+    const content: string[] = [];
+    let nextLine = startLine + 1;
+    while (nextLine < endLine) {
+      const lineStart = state.bMarks[nextLine] + state.tShift[nextLine];
+      const lineEnd = state.eMarks[nextLine];
+      const line = state.src.slice(lineStart, lineEnd);
+      const trimmed = line.trim();
+      if (trimmed.endsWith('%%')) {
+        const stripped = trimmed.replace(/%%\s*$/, '');
+        if (stripped.trim().length > 0) {
+          content.push(stripped);
+        }
+        nextLine++;
+        break;
+      }
+      content.push(line);
+      nextLine++;
+    }
+
+    const token = state.push(tokenType, 'comment', 0);
+    token.content = content.join('\n').trim();
+    token.map = [ startLine, nextLine ];
+    state.line = nextLine;
+    return true;
+  });
 }

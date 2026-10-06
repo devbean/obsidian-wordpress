@@ -27,8 +27,6 @@ export class XmlRpcClient {
   constructor(
     private readonly options: XmlRpcOptions
   ) {
-    console.log(options);
-
     this.href = this.options.url.href;
     if (this.href.endsWith('/')) {
       this.href = this.href.substring(0, this.href.length - 1);
@@ -50,7 +48,6 @@ export class XmlRpcClient {
     params: unknown
   ): Promise<unknown> {
     const xml = this.objectToXml(method, params);
-    console.log(`Endpoint: ${this.endpoint}, ${method}, request: ${xml}`, params);
     return request({
       url: this.endpoint,
       method: 'POST',
@@ -128,8 +125,18 @@ export class XmlRpcClient {
       value.appendChild(struct);
     } else {
       const string = doc.createElement('string');
-      const cdata = doc.createCDATASection((data as SafeAny).toString());
-      string.appendChild(cdata);
+      const text = (data as SafeAny).toString();
+      // a CDATA section cannot contain the `]]>` sequence, split it
+      // into multiple sections with a text node in between
+      const parts = text.split(']]>');
+      parts.forEach((part: string, index: number) => {
+        if (index > 0) {
+          string.appendChild(doc.createTextNode(']]>'));
+        }
+        if (part.length > 0 || parts.length === 1) {
+          string.appendChild(doc.createCDATASection(part));
+        }
+      });
       value.appendChild(string);
     }
   }
@@ -153,7 +160,6 @@ export class XmlRpcClient {
         .children[0];
       response = this.fromElement(responseValue);
     }
-    console.log(`response: ${xml}`, response);
     return response;
   }
 

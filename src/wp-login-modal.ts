@@ -11,9 +11,16 @@ export function openLoginModal(
   validateUser: (auth: WordPressAuthParams) => Promise<boolean>,
 ): Promise<{ auth: WordPressAuthParams, loginModal: Modal }> {
   return new Promise((resolve, reject) => {
+    let completed = false;
     const modal = new WpLoginModal(plugin, profile, async (auth, loginModal) => {
-      const validate = await validateUser(auth);
+      let validate: boolean;
+      try { validate = await validateUser(auth); }
+      catch (error) { if (!completed) showError(error); return; }
+      if (completed) return;
       if (validate) {
+        completed = true;
+        profile.username = auth.username ?? undefined;
+        profile.password = auth.password ?? undefined;
         resolve({
           auth,
           loginModal
@@ -22,6 +29,8 @@ export function openLoginModal(
       } else {
         showError(plugin.i18n.t('error_invalidUser'));
       }
+    }, () => {
+      if (!completed) { completed = true; reject(new Error(plugin.i18n.t('message_publishCancelled'))); }
     });
     modal.open();
   });
@@ -35,7 +44,8 @@ export class WpLoginModal extends AbstractModal {
   constructor(
     readonly plugin: WordpressPlugin,
     private readonly profile: WpProfile,
-    private readonly onSubmit: (auth: WordPressAuthParams, modal: Modal) => void
+    private readonly onSubmit: (auth: WordPressAuthParams, modal: Modal) => void,
+    private readonly onCancel?: () => void,
   ) {
     super(plugin);
   }
@@ -137,5 +147,6 @@ export class WpLoginModal extends AbstractModal {
   onClose() {
     const { contentEl } = this;
     contentEl.empty();
+    this.onCancel?.();
   }
 }

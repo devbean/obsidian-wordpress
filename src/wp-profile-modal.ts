@@ -3,18 +3,31 @@ import WordpressPlugin from './main';
 import { WpProfile } from './wp-profile';
 import { EventType, WP_OAUTH2_REDIRECT_URI } from './consts';
 import { WordPressClientReturnCode } from './wp-client';
-import { generateCodeVerifier, OAuth2Client } from './oauth2-client';
+import { generateCodeVerifier, OAuth2Client, WordPressOAuth2Token } from './oauth2-client';
 import { AppState } from './app-state';
 import { isValidUrl, showError } from './utils';
+import { getWordPressClient } from './wp-clients';
 import { ApiType } from './plugin-settings';
 import { AbstractModal } from './abstract-modal';
+
+/**
+ * Accepts bare hosts like `1.2.3.4:8080` or `mywp.example.com`
+ * and completes them with the `http://` scheme.
+ */
+export function normalizeEndpoint(endpoint: string): string {
+  const trimmed = endpoint.trim().replace(/\/+$/, '');
+  if (trimmed.length > 0 && !/^https?:\/\//i.test(trimmed)) {
+    return `http://${trimmed}`;
+  }
+  return trimmed;
+}
 
 
 export function openProfileModal(
   plugin: WordpressPlugin,
   profile: WpProfile = {
     name: '',
-    apiType: ApiType.XML_RPC,
+    apiType: ApiType.RestApi_ApplicationPasswords,
     endpoint: '',
     xmlRpcPath: '/xmlrpc.php',
     saveUsername: false,
@@ -49,7 +62,7 @@ class WpProfileModal extends AbstractModal {
     private readonly onSubmit: (profile: WpProfile, atIndex?: number) => void,
     private readonly profile: WpProfile = {
       name: '',
-      apiType: ApiType.XML_RPC,
+      apiType: ApiType.RestApi_ApplicationPasswords,
       endpoint: '',
       xmlRpcPath: '/xmlrpc.php',
       saveUsername: false,
@@ -62,11 +75,11 @@ class WpProfileModal extends AbstractModal {
     super(plugin);
 
     this.profileData = Object.assign({}, profile);
-    this.tokenGotRef = AppState.events.on(EventType.OAUTH2_TOKEN_GOT, async token => {
-      this.profileData.wpComOAuth2Token = token;
+    this.tokenGotRef = AppState.events.on(EventType.OAUTH2_TOKEN_GOT, async (token: unknown) => {
+      this.profileData.wpComOAuth2Token = token as WordPressOAuth2Token;
       if (atIndex >= 0) {
         // if token is undefined, just remove it
-        this.plugin.settings.profiles[atIndex].wpComOAuth2Token = token;
+        this.plugin.settings.profiles[atIndex].wpComOAuth2Token = token as WordPressOAuth2Token;
         await this.plugin.saveSettings();
       }
     });
@@ -193,42 +206,42 @@ class WpProfileModal extends AbstractModal {
       }
 
       if (this.profileData.apiType !== ApiType.RestApi_WpComOAuth2) {
-        const usernameSetting = new Setting(content)
-          .setName(this.t('profileModal_rememberUsername'));
-        if (this.profileData.saveUsername) {
-          usernameSetting
-            .addText(text => text
-              .setValue(this.profileData.username ?? '')
-              .onChange((value) => {
-                this.profileData.username = value;
-              })
-            );
-        }
-        usernameSetting.addToggle(toggle => toggle
-          .setValue(this.profileData.saveUsername)
-          .onChange(save => {
-            this.profileData.saveUsername = save;
-            renderProfile();
-          })
-        );
-        const passwordSetting = new Setting(content)
-          .setName(this.t('profileModal_rememberPassword'));
-        if (this.profileData.savePassword) {
-          passwordSetting
-            .addText(text => text
+        new Setting(content)
+          .setName(this.t('loginModal_username'))
+          .addText(text => text
+            .setPlaceholder(this.t('loginModal_username'))
+            .setValue(this.profileData.username ?? '')
+            .onChange((value) => {
+              this.profileData.username = value;
+            }))
+          .addToggle(toggle => toggle
+            .setValue(this.profileData.saveUsername)
+            .setTooltip(this.t('profileModal_rememberUsername'))
+            .onChange(save => {
+              this.profileData.saveUsername = save;
+            }));
+        new Setting(content)
+          .setName(this.t('loginModal_password'))
+          .addText(text => {
+            text.inputEl.type = 'password';
+            text.setPlaceholder(this.t('loginModal_password'))
               .setValue(this.profileData.password ?? '')
               .onChange((value) => {
                 this.profileData.password = value;
-              })
-            );
-        }
-        passwordSetting.addToggle(toggle => toggle
-          .setValue(this.profileData.savePassword)
-          .onChange(save => {
-            this.profileData.savePassword = save;
-            renderProfile();
+              });
           })
-        );
+          .addToggle(toggle => toggle
+            .setValue(this.profileData.savePassword)
+            .setTooltip(this.t('profileModal_rememberPassword'))
+            .onChange(save => {
+              this.profileData.savePassword = save;
+            }));
+        new Setting(content)
+          .addButton(button => button
+            .setButtonText(this.t('profileModal_testConnection'))
+            .onClick(async () => {
+              await this.testConnection();
+            }));
       }
       new Setting(content)
         .setName(this.t('profileModal_setDefault'))
@@ -244,6 +257,7 @@ class WpProfileModal extends AbstractModal {
           .setButtonText(this.t('profileModal_Save'))
           .setCta()
           .onClick(() => {
+            this.profileData.endpoint = normalizeEndpoint(this.profileData.endpoint);
             if (!isValidUrl(this.profileData.endpoint)) {
               showError(this.t('error_invalidUrl'));
             } else if (this.profileData.name.length === 0) {
@@ -284,6 +298,44 @@ class WpProfileModal extends AbstractModal {
       blog: this.profileData.endpoint,
       codeVerifier: AppState.codeVerifier
     });
+  }
+
+  /**
+   * Checks whether the entered address and credentials work
+   * without saving the profile.
+   */
+  private async testConnection(): Promise<void> {
+    const endpoint = normalizeEndpoint(this.profileData.endpoint);
+    if (!isValidUrl(endpoint)) {
+      showError(this.t('error_invalidUrl'));
+      return;
+    }
+    if (!this.profileData.username) {
+      showError(this.t('error_noUsername'));
+      return;
+    }
+    if (!this.profileData.password) {
+      showError(this.t('error_noPassword'));
+      return;
+    }
+    new Notice(this.t('message_testingConnection'));
+    const profile: WpProfile = {
+      ...this.profileData,
+      endpoint,
+    };
+    const client = getWordPressClient(this.plugin, profile);
+    if (!client) {
+      return;
+    }
+    const result = await client.validateUser({
+      username: this.profileData.username,
+      password: this.profileData.password
+    });
+    if (result.code === WordPressClientReturnCode.OK) {
+      new Notice(this.t('message_connectionOk'));
+    } else {
+      showError(result.error?.message ?? this.t('error_invalidUser'));
+    }
   }
 
 }

@@ -1,5 +1,6 @@
 import { CommentStatus, PostStatus, PostType } from './wp-api';
 import { SafeAny } from './utils';
+import type { BatchPublishOptions, BatchPublishPlan, BatchPublishResult } from './batch-publish';
 
 export enum WordPressClientReturnCode {
   OK,
@@ -71,6 +72,21 @@ export interface WordPressPostParams {
   profileName?: string;
 
   datetime?: Date;
+
+  /**
+   * Post excerpt, read from the note frontmatter.
+   */
+  excerpt?: string;
+
+  /**
+   * Post slug (permalink name), read from the note frontmatter.
+   */
+  slug?: string;
+
+  /**
+   * Post date in the note frontmatter, e.g. `2026-10-02 12:00:00`.
+   */
+  date?: string;
 }
 
 export interface WordPressPublishParams extends WordPressAuthParams {
@@ -81,6 +97,11 @@ export interface WordPressPublishParams extends WordPressAuthParams {
 export interface WordPressPublishResult {
   postId: string;
   categories: number[];
+
+  /**
+   * The permalink of the published post, if known.
+   */
+  link?: string;
 }
 
 export interface WordPressMediaUploadResult {
@@ -98,6 +119,8 @@ export interface WordPressClient {
    * @param defaultPostParams Use this parameter instead of popup publish modal if this is not undefined.
    */
   publishPost(defaultPostParams?: WordPressPostParams): Promise<WordPressClientResult<WordPressPublishResult>>;
+
+  publishBatch(plan: BatchPublishPlan, options?: BatchPublishOptions & {status?: PostStatus}): Promise<BatchPublishResult>;
 
   /**
    * Checks if the login certificate is OK.

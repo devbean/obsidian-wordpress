@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian';
+import { Menu, Notice, Plugin, TAbstractFile, TFile, TFolder } from 'obsidian';
 import { WordpressSettingTab } from './settings';
 import { addIcons } from './icons';
 import { WordPressPostParams } from './wp-client';
@@ -8,10 +8,11 @@ import { OAuth2Client } from './oauth2-client';
 import { CommentStatus, PostStatus, PostTypeConst } from './wp-api';
 import { openProfileChooserModal } from './wp-profile-chooser-modal';
 import { AppState } from './app-state';
-import { DEFAULT_SETTINGS, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
+import { DEFAULT_SETTINGS, settingsForPersistence, SettingsVersion, upgradeSettings, WordpressPluginSettings } from './plugin-settings';
 import { PassCrypto } from './pass-crypto';
 import { doClientPublish, setupMarkdownParser, showError } from './utils';
-import { cloneDeep } from 'lodash-es';
+import { BatchPublishModal } from './batch-publish-modal';
+import { collectBatchFiles } from './batch-publish';
 
 export default class WordpressPlugin extends Plugin {
 
@@ -28,6 +29,8 @@ export default class WordpressPlugin extends Plugin {
   }
 
   private ribbonWpIcon: HTMLElement | null = null;
+  private batchOpen = false;
+  private activeBatchModal: BatchPublishModal | null = null;
 
   async onload() {
     console.log('loading obsidian-wordpress plugin');
@@ -73,10 +76,32 @@ export default class WordpressPlugin extends Plugin {
       }
     });
 
+    this.addCommand({id:'batchPublish',name:this.i18n.t('command_batchPublish'),callback:() => this.openBatchPublish()});
+    const batchMenuContexts = new WeakMap<Menu, {selection: TAbstractFile[], multiple: boolean}>();
+    const addBatchMenu = (menu: Menu, selection: TAbstractFile[], multiple = false): void => {
+      if (!selection.some(file => file instanceof TFolder || (file instanceof TFile && file.extension.toLowerCase() === 'md'))) return;
+      const existing = batchMenuContexts.get(menu);
+      if (existing) {
+        if (multiple || !existing.multiple) {
+          existing.selection = [...selection];
+          existing.multiple = multiple;
+        }
+        return;
+      }
+      // Capture the context before the explorer clears its selection on close.
+      const context = {selection: [...selection], multiple};
+      batchMenuContexts.set(menu,context);
+      menu.addItem(item => item.setTitle(this.i18n.t('command_batchPublish')).setIcon('wp-logo')
+        .onClick(() => this.openBatchPublish(context.selection)));
+    };
+    this.registerEvent(this.app.workspace.on('file-menu',(menu,file) => addBatchMenu(menu,[file])));
+    this.registerEvent(this.app.workspace.on('files-menu',(menu,files) => addBatchMenu(menu,files,true)));
+
     this.addSettingTab(new WordpressSettingTab(this));
   }
 
   onunload() {
+    this.activeBatchModal?.close();
   }
 
   async loadSettings() {
@@ -103,17 +128,7 @@ export default class WordpressPlugin extends Plugin {
   }
 
   async saveSettings() {
-    const settings = cloneDeep(this.settings);
-    for (let i = 0; i < settings.profiles.length; i++) {
-      const profile = settings.profiles[i];
-      const password = profile.password;
-      if (password) {
-        const crypto = new PassCrypto();
-        profile.encryptedPassword = await crypto.encrypt(password);
-        delete profile.password;
-      }
-    }
-    await this.saveData(settings);
+    await this.saveData(await settingsForPersistence(this.settings));
   }
 
   updateRibbonIcon(): void {
@@ -143,6 +158,18 @@ export default class WordpressPlugin extends Plugin {
     }
   }
 
+  private openBatchPublish(selection: TAbstractFile[] = []): void {
+    if (!this.settings.profiles.length) { showError(this.i18n.t('error_noProfile')); return; }
+    if (this.batchOpen) { new Notice(this.i18n.t('batch_alreadyOpen')); return; }
+    this.batchOpen = true;
+    const initialFolder = selection.length === 1 && selection[0] instanceof TFolder ? selection[0].path : '';
+    const modal = new BatchPublishModal(this,collectBatchFiles(this.app,selection),() => {
+      if (this.activeBatchModal === modal) {this.activeBatchModal = null;this.batchOpen = false;}
+    },initialFolder);
+    this.activeBatchModal = modal;
+    modal.open();
+  }
+
   private registerProtocolHandler(): void {
     this.registerObsidianProtocolHandler(WP_OAUTH2_URL_ACTION, async (e) => {
       if (e.action === WP_OAUTH2_URL_ACTION) {
@@ -159,7 +186,6 @@ export default class WordpressPlugin extends Plugin {
               redirectUri: WP_OAUTH2_REDIRECT_URI,
               codeVerifier: AppState.codeVerifier
             });
-            console.log(token);
             AppState.events.trigger(EventType.OAUTH2_TOKEN_GOT, token);
           }
         }

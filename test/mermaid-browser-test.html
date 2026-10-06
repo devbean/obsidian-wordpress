@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>mermaid browser test</title>
+</head>
+<body>
+<div id="out">running…</div>
+<div id="errs" style="color:#c00; white-space:pre-wrap; font-size:12px"></div>
+<div id="render" style="border:1px solid #ccc; min-height:120px; margin-top:1em"></div>
+<script>
+window.__errs = [];
+function __showErr(m) {
+  window.__errs.push(m);
+  var el = document.getElementById('errs');
+  if (el) el.textContent = window.__errs.join('\n');
+}
+window.onerror = function(msg, src, line, col) { __showErr('error: ' + msg + ' @' + line + ':' + col); };
+window.addEventListener('unhandledrejection', function(e) {
+  var r = e.reason;
+  __showErr('rejection: ' + (r && (r.message || r.str || String(r))));
+});
+</script>
+<script src="mermaid-browser-test.js"></script>
+</body>
+</html>

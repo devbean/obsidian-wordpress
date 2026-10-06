@@ -46,7 +46,6 @@ export class WpProfileManageModal extends AbstractModal {
               profile,
               index
             );
-            console.log('updateProfile', newProfile, atIndex);
             if (!isNil(atIndex) && atIndex > -1) {
               if (newProfile.isDefault) {
                 this.profiles.forEach(it => it.isDefault = false);
@@ -85,7 +84,6 @@ export class WpProfileManageModal extends AbstractModal {
           const { profile } = await openProfileModal(
             this.plugin
           );
-          console.log('appendProfile', profile);
           // if no profile, make the first one default
           if (this.profiles.length === 0) {
             profile.isDefault = true;

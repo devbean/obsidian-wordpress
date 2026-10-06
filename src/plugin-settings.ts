@@ -1,7 +1,7 @@
 import { LanguageWithAuto } from './i18n';
 import { WpProfile } from './wp-profile';
 import { CommentStatus, PostStatus } from './wp-api';
-import { isNil, isUndefined } from 'lodash-es';
+import { cloneDeep, isNil, isUndefined } from 'lodash-es';
 import { SafeAny } from './utils';
 import { PassCrypto } from './pass-crypto';
 import { WP_DEFAULT_PROFILE_NAME } from './consts';
@@ -74,6 +74,19 @@ export interface WordpressPluginSettings {
    * Whether media links should be replaced after uploading to WordPress.
    */
   replaceMediaLinks: boolean;
+
+  /**
+   * Whether unpublished notes referenced by wikilinks should be
+   * published automatically (with default options) before the
+   * current note.
+   */
+  autoPublishLinkedNotes: boolean;
+
+  /**
+   * Cache of uploaded media, keyed by site/account and vault file path.
+   * Used to avoid uploading the same file again on re-publishing.
+   */
+  mediaUploadCache?: Record<string, { url: string, mtime: number }>;
 }
 
 export const DEFAULT_SETTINGS: WordpressPluginSettings = {
@@ -87,14 +100,30 @@ export const DEFAULT_SETTINGS: WordpressPluginSettings = {
   mathJaxOutputType: MathJaxOutputType.SVG,
   commentConvertMode: CommentConvertMode.Ignore,
   enableHtml: false,
-  replaceMediaLinks: true,
+  replaceMediaLinks: false,
+  autoPublishLinkedNotes: false,
+}
+
+/** Keep temporary credentials in memory unless explicitly remembered. */
+export async function settingsForPersistence(settings: WordpressPluginSettings): Promise<WordpressPluginSettings> {
+  const saved = cloneDeep(settings);
+  for (const profile of saved.profiles) {
+    if (!profile.saveUsername) delete profile.username;
+    if (!profile.savePassword) {
+      delete profile.password;
+      delete profile.encryptedPassword;
+    } else if (profile.password) {
+      profile.encryptedPassword = await new PassCrypto().encrypt(profile.password);
+      delete profile.password;
+    }
+  }
+  return saved;
 }
 
 export async function upgradeSettings(
   existingSettings: SafeAny,
   to: SettingsVersion
 ): Promise<{ needUpgrade: boolean, settings: WordpressPluginSettings }> {
-  console.log(existingSettings, to);
   if (isUndefined(existingSettings.version)) {
     // V1
     if (to === SettingsVersion.V2) {

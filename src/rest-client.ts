@@ -17,7 +17,6 @@ export class RestClient {
   constructor(
     private readonly options: RestOptions
   ) {
-    console.log(options);
 
     this.href = this.options.url.href;
     if (this.href.endsWith('/')) {
@@ -41,7 +40,6 @@ export class RestClient {
       headers: {},
       ...options
     };
-    console.log('REST GET', endpoint, opts);
     const response = await requestUrl({
       url: endpoint,
       method: 'GET',
@@ -51,7 +49,6 @@ export class RestClient {
         ...opts.headers
       }
     });
-    console.log('GET response', response);
     return response.json;
   }
 
@@ -93,7 +90,6 @@ export class RestClient {
       },
       body: requestBody
     });
-    console.log('POST response', response);
     return response.json;
   }
 

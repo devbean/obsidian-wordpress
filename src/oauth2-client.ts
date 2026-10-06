@@ -62,7 +62,6 @@ export class OAuth2Client {
     private readonly options: OAuth2Options,
     private readonly plugin: WordpressPlugin
   ) {
-    console.log(options);
   }
 
   async getAuthorizeCode(params: GetAuthorizeCodeParams): Promise<void> {
@@ -114,7 +113,6 @@ export class OAuth2Client {
       body: generateQueryString(body)
     })
       .then(response => {
-        console.log('getToken response', response);
         const resp = response.json;
         return {
           accessToken: resp.access_token,
@@ -139,7 +137,6 @@ export class OAuth2Client {
           'User-Agent': 'obsidian.md'
         }
       });
-      console.log('validateToken response', response);
       return {
         code: WordPressClientReturnCode.OK,
         data: 'done',

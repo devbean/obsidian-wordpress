@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting } from 'obsidian';
+import { Notice, PluginSettingTab, Setting } from 'obsidian';
 import WordpressPlugin from './main';
 import { CommentStatus, PostStatus } from './wp-api';
 import { TranslateKey } from './i18n';
@@ -208,6 +208,29 @@ export class WordpressSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+
+    new Setting(containerEl)
+      .setName(t('settings_autoPublishLinkedNotes'))
+      .setDesc(t('settings_autoPublishLinkedNotesDesc'))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.autoPublishLinkedNotes)
+          .onChange(async (value) => {
+            this.plugin.settings.autoPublishLinkedNotes = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName(t('settings_clearMediaCache'))
+      .setDesc(t('settings_clearMediaCacheDesc'))
+      .addButton(button => button
+        .setButtonText(t('settings_clearMediaCacheButtonText'))
+        .onClick(async () => {
+          this.plugin.settings.mediaUploadCache = {};
+          await this.plugin.saveSettings();
+          new Notice(t('message_mediaCacheCleared'));
+        }));
 	}
 
 }

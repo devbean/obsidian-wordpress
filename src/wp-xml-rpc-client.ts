@@ -11,6 +11,7 @@ import { XmlRpcClient } from './xmlrpc-client';
 import { AbstractWordPressClient } from './abstract-wp-client';
 import { PostStatus, PostType, PostTypeConst, Term } from './wp-api';
 import { SafeAny, showError } from './utils';
+import { isString } from 'lodash-es';
 import { WpProfile } from './wp-profile';
 import { Media } from './types';
 
@@ -45,7 +46,7 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
     postParams: WordPressPostParams,
     certificate: WordPressAuthParams
   ): Promise<WordPressClientResult<WordPressPublishResult>> {
-    let publishContent;
+    let publishContent: SafeAny;
     if (postParams.postType === PostTypeConst.Page) {
       publishContent = {
         post_type: postParams.postType,
@@ -69,11 +70,21 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         }
       };
     }
-    if (postParams.status === PostStatus.Future) {
-      publishContent = {
-        ...publishContent,
-        post_date: postParams.datetime ?? new Date()
-      };
+    if (postParams.excerpt) {
+      publishContent.post_excerpt = postParams.excerpt;
+    }
+    if (postParams.slug) {
+      publishContent.post_name = postParams.slug;
+    }
+    if (postParams.date) {
+      const date = new Date(postParams.date);
+      if (!isNaN(date.getTime())) {
+        // frontmatter dates are wall times in the site timezone,
+        // so they map to post_date rather than post_date_gmt
+        publishContent.post_date = date;
+      }
+    } else if (postParams.status === PostStatus.Future) {
+      publishContent.post_date = postParams.datetime ?? new Date();
     }
     let publishPromise;
     if (postParams.postId) {
@@ -103,14 +114,40 @@ export class WpXmlRpcClient extends AbstractWordPressClient {
         response
       };
     }
+    const postId = postParams.postId ?? (response as string);
+    const postLink = await this.getPostLink(postId, certificate);
     return {
       code: WordPressClientReturnCode.OK,
       data: {
-        postId: postParams.postId ?? (response as string),
-        categories: postParams.categories
+        postId,
+        categories: postParams.categories,
+        link: postLink
       },
       response
     };
+  }
+
+  /**
+   * Fetches the permalink of the published post. Returns `undefined`
+   * if the link could not be fetched, it is not critical.
+   */
+  private async getPostLink(postId: string, certificate: WordPressAuthParams): Promise<string | undefined> {
+    try {
+      const response = await this.client.methodCall('wp.getPost', [
+        0,
+        certificate.username,
+        certificate.password,
+        postId,
+        [ 'link' ]
+      ]);
+      if (!isFaultResponse(response)) {
+        const link = (response as SafeAny)?.link;
+        return isString(link) && link.length > 0 ? link : undefined;
+      }
+    } catch {
+      // the permalink is not critical, ignore errors
+    }
+    return undefined;
   }
 
   async getCategories(certificate: WordPressAuthParams): Promise<Term[]> {

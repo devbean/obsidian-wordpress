@@ -17,6 +17,7 @@ import { format, parse } from 'date-fns';
 export class WpPublishModal extends AbstractModal {
 
   private dateInputMask: InputMask<DynamicMaskType> | null = null;
+  private published = false;
 
   constructor(
     readonly plugin: WordpressPlugin,
@@ -30,6 +31,7 @@ export class WpPublishModal extends AbstractModal {
     },
     private readonly onSubmit: (params: WordPressPostParams, updateMatterData: (matter: MatterData) => void) => void,
     private readonly matterData: MatterData,
+    private readonly onCancel?: () => void,
   ) {
     super(plugin);
   }
@@ -54,6 +56,12 @@ export class WpPublishModal extends AbstractModal {
     if (this.dateInputMask) {
       this.dateInputMask.destroy();
     }
+    if (!this.published) this.onCancel?.();
+  }
+
+  closeAfterPublish(): void {
+    this.published = true;
+    this.close();
   }
 
   private display(params: WordPressPostParams): void {

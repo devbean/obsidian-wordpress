@@ -67,8 +67,19 @@ export class WpRestClient extends AbstractWordPressClient {
       url = getUrl(this.context.endpoints?.newPost, 'wp-json/wp/v2/posts');
     }
     const extra: Record<string, string> = {};
-    if (postParams.status === PostStatus.Future) {
+    if (postParams.date) {
+      const date = new Date(postParams.date);
+      if (!isNaN(date.getTime())) {
+        extra.date_gmt = date.toISOString();
+      }
+    } else if (postParams.status === PostStatus.Future) {
       extra.date = formatISO(postParams.datetime ?? new Date());
+    }
+    if (postParams.excerpt) {
+      extra.excerpt = postParams.excerpt;
+    }
+    if (postParams.slug) {
+      extra.slug = postParams.slug;
     }
     const resp: SafeAny = await this.client.httpPost(
       url,
@@ -84,7 +95,6 @@ export class WpRestClient extends AbstractWordPressClient {
       {
         headers: this.context.getHeaders(certificate)
       });
-    console.log('WpRestClient response', resp);
     try {
       const result = this.context.responseParser.toWordPressPublishResult(postParams, resp);
       return {
@@ -162,7 +172,6 @@ export class WpRestClient extends AbstractWordPressClient {
         {
           headers: this.context.getHeaders(certificate)
         });
-      console.log('WpRestClient newTag response', resp);
       return this.context.responseParser.toTerm(resp);
     } else {
       return exists[0];
@@ -268,7 +277,8 @@ class WpRestClientCommonContext implements WpRestClientContext {
       if (response.id) {
         return {
           postId: postParams.postId ?? response.id,
-          categories: postParams.categories ?? response.categories
+          categories: postParams.categories ?? response.categories,
+          link: response.link
         }
       }
       throw new Error('xx');
@@ -302,7 +312,6 @@ export class WpRestClientMiniOrangeContext extends WpRestClientCommonContext {
 
   constructor() {
     super();
-    console.log(`${this.name} loaded`);
   }
 }
 
@@ -311,7 +320,6 @@ export class WpRestClientAppPasswordContext extends WpRestClientCommonContext {
 
   constructor() {
     super();
-    console.log(`${this.name} loaded`);
   }
 }
 
@@ -336,7 +344,6 @@ export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
     private readonly site: string,
     private readonly accessToken: string
   ) {
-    console.log(`${this.name} loaded`);
   }
 
   formItemNameMapper(name: string, isArray: boolean): string {
@@ -357,7 +364,8 @@ export class WpRestClientWpComOAuth2Context implements WpRestClientContext {
       if (response.ID) {
         return {
           postId: postParams.postId ?? response.ID,
-          categories: postParams.categories ?? Object.values(response.categories).map((cat: SafeAny) => cat.ID)
+          categories: postParams.categories ?? Object.values(response.categories).map((cat: SafeAny) => cat.ID),
+          link: response.URL
         };
       }
       throw new Error('xx');

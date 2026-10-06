@@ -7,3 +7,17 @@
 .modal-header h1 {
   margin: 0;
 }
+
+.wp-batch-modal { width: min(760px, 94vw); }
+.wp-batch-modal .modal-content { max-height: 80vh; overflow-y: auto; }
+.wp-batch-file-list { max-height: 32vh; overflow-y: auto; border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 8px; }
+.wp-batch-file { display: flex; gap: 10px; padding: 6px; align-items: center; overflow-wrap: anywhere; }
+.wp-batch-file input { flex-shrink: 0; }
+.wp-batch-search { width: 100%; margin-bottom: 8px; }
+.wp-batch-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin: 12px 0; }
+.wp-batch-summary { font-weight: 600; overflow-wrap: anywhere; }
+.wp-batch-preview-list { margin: 12px 0; }
+.wp-batch-preview-list summary { font-weight: 600; cursor: pointer; }
+.wp-batch-preview-list ul { max-height: 22vh; overflow-y: auto; overflow-wrap: anywhere; }
+.wp-batch-warning { color: var(--text-warning); }
+.wp-batch-modal progress { width: 100%; }
